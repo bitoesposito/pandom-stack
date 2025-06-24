@@ -43,15 +43,12 @@ export class DatabaseService {
       this.logger.log('Starting transaction...');
       await queryRunner.startTransaction();
 
-      // Create user_profiles table first
+      // Create user_profiles table first (simplified structure)
       this.logger.log('Creating user_profiles table...');
       await queryRunner.query(`
         CREATE TABLE IF NOT EXISTS user_profiles (
           uuid UUID PRIMARY KEY DEFAULT gen_random_uuid(),
           display_name VARCHAR(100),
-          slug VARCHAR(100) UNIQUE,
-          avatar_url TEXT,
-          description TEXT,
           tags TEXT[],
           metadata JSONB DEFAULT '{}'::jsonb,
           created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -148,12 +145,12 @@ export class DatabaseService {
       );
 
       if (!existingAdmin.length) {
-        // Create admin profile first
+        // Create admin profile first (simplified structure)
         const adminProfile = await queryRunner.query(
-          `INSERT INTO user_profiles (display_name, slug)
-           VALUES ($1, $2)
+          `INSERT INTO user_profiles (display_name)
+           VALUES ($1)
            RETURNING uuid`,
-          [adminEmail, 'admin']
+          [adminEmail]
         );
 
         const hashedPassword = await bcrypt.hash(adminPassword, 10);

@@ -3,14 +3,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { AuthController } from './auth.controller';
+import { AuthService } from './auth.service';
 import { User } from './entities/user.entity';
 import { RolesGuard } from './guards/roles.guard';
-import { MailService } from 'src/common/services/mail.service';
-import { AuthService } from './auth.service';
-import { SecurityHeadersInterceptor } from '../common/interceptors/security-headers.interceptor';
-import { LoggerService } from '../common/services/logger.service';
-import { SessionService } from '../common/services/session.service';
-import { APP_INTERCEPTOR } from '@nestjs/core';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { PassportModule } from '@nestjs/passport';
 
@@ -39,15 +34,8 @@ import { PassportModule } from '@nestjs/passport';
     providers: [
         AuthService,
         RolesGuard,
-        MailService,
-        LoggerService,
-        SessionService,
         JwtStrategy,
-        {
-            provide: APP_INTERCEPTOR,
-            useClass: SecurityHeadersInterceptor,
-        }
     ],
-    exports: [AuthService, RolesGuard, MailService, LoggerService, SessionService],
+    exports: [AuthService, RolesGuard],
 })
 export class AuthModule {}

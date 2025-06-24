@@ -1,0 +1,567 @@
+{
+	"info": {
+		"_postman_id": "pandom-stack-api",
+		"name": "Pandom Stack API",
+		"description": "Complete API collection for Pandom Stack backend - Auth, Users, Security, Resilience & Admin endpoints",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "pandom-stack"
+	},
+	"item": [
+		{
+			"name": "🔐 AUTH",
+			"item": [
+				{
+					"name": "Register User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\",\n  \"first_name\": \"{{first_name}}\",\n  \"last_name\": \"{{last_name}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/register",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"register"
+							]
+						},
+						"description": "Register a new user account"
+					},
+					"response": []
+				},
+				{
+					"name": "Login User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						},
+						"description": "Login and return JWT token"
+					},
+					"response": []
+				},
+				{
+					"name": "Logout User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/auth/logout",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"logout"
+							]
+						},
+						"description": "Perform logout and invalidate token"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Current User",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/auth/me",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"me"
+							]
+						},
+						"description": "Returns logged user authentication data"
+					},
+					"response": []
+				},
+				{
+					"name": "Verify Email",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"token\": \"{{verification_token}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/verify",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"verify"
+							]
+						},
+						"description": "Verify email via token"
+					},
+					"response": []
+				},
+				{
+					"name": "Forgot Password",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"{{email}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/forgot-password",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"forgot-password"
+							]
+						},
+						"description": "Send password reset link"
+					},
+					"response": []
+				},
+				{
+					"name": "Reset Password",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"token\": \"{{reset_token}}\",\n  \"password\": \"{{new_password}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/reset-password",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"reset-password"
+							]
+						},
+						"description": "Reset password via token"
+					},
+					"response": []
+				}
+			],
+			"description": "Authentication endpoints for user registration, login, and account management"
+		},
+		{
+			"name": "👤 PROFILE",
+			"item": [
+				{
+					"name": "Get User Profile",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/profile",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"profile"
+							]
+						},
+						"description": "Retrieve logged user profile data"
+					},
+					"response": []
+				},
+				{
+					"name": "Update User Profile",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"first_name\": \"{{first_name}}\",\n  \"last_name\": \"{{last_name}}\",\n  \"phone\": \"{{phone}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/profile",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"profile"
+							]
+						},
+						"description": "Update general profile data"
+					},
+					"response": []
+				}
+			],
+			"description": "User profile management endpoints"
+		},
+		{
+			"name": "🛡 SECURITY",
+			"item": [
+				{
+					"name": "Get Security Logs",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/security/logs",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"security",
+								"logs"
+							]
+						},
+						"description": "List recent activities and access logs"
+					},
+					"response": []
+				},
+				{
+					"name": "Get User Sessions",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/security/sessions",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"security",
+								"sessions"
+							]
+						},
+						"description": "View active sessions/tokens"
+					},
+					"response": []
+				},
+				{
+					"name": "Download Personal Data",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/security/download-data",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"security",
+								"download-data"
+							]
+						},
+						"description": "Download personal data (GDPR compliance)"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Account",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/security/delete-account",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"security",
+								"delete-account"
+							]
+						},
+						"description": "Delete user account"
+					},
+					"response": []
+				}
+			],
+			"description": "Security and privacy management endpoints"
+		},
+		{
+			"name": "⚙️ RESILIENCE",
+			"item": [
+				{
+					"name": "System Status",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/resilience/status",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"resilience",
+								"status"
+							]
+						},
+						"description": "System status (healthcheck)"
+					},
+					"response": []
+				},
+				{
+					"name": "Offline Data Export",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/resilience/offline-data",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"resilience",
+								"offline-data"
+							]
+						},
+						"description": "Export essential data in offline format"
+					},
+					"response": []
+				}
+			],
+			"description": "System resilience and backup endpoints"
+		},
+		{
+			"name": "👨‍💼 ADMIN",
+			"item": [
+				{
+					"name": "Get All Users",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/admin/users",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"users"
+							]
+						},
+						"description": "List all users (Admin only)"
+					},
+					"response": []
+				},
+				{
+					"name": "Suspend User",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/admin/users/{{user_uuid}}/suspend",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"users",
+								"{{user_uuid}}",
+								"suspend"
+							]
+						},
+						"description": "Suspend user account (Admin only)"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete User",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/admin/users/{{user_uuid}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"users",
+								"{{user_uuid}}"
+							]
+						},
+						"description": "Delete a specific user (Admin only)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get System Metrics",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/admin/metrics",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"metrics"
+							]
+						},
+						"description": "System metrics and analytics (Admin only)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Audit Logs",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/admin/audit-logs",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"audit-logs"
+							]
+						},
+						"description": "View audit logs (Admin only)"
+					},
+					"response": []
+				}
+			],
+			"description": "Administrative endpoints for user management and system oversight"
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:3000",
+			"type": "string"
+		}
+	]
+} 

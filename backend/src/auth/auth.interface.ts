@@ -35,10 +35,21 @@ export interface JwtPayload {
  */
 export interface LoginResponse {
     access_token: string;  // JWT token
+    refresh_token: string; // Refresh token
+    expires_in: number;    // Token expiration time in seconds
     user: {
         uuid: string;      // User UUID
         email: string;     // User email
         role: UserRole;    // User role
+        is_active: boolean;
+        is_verified: boolean;
+        is_configured: boolean;
+        last_login_at: string;
+    };
+    profile?: {
+        uuid: string;
+        display_name: string;
+        tags?: string[];
     };
 }
 

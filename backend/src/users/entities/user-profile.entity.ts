@@ -1,5 +1,5 @@
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, OneToOne, JoinColumn } from 'typeorm';
-import { User } from './user.entity';
+import { User } from '../../auth/entities/user.entity';
 
 /**
  * UserProfile entity representing a user's profile information
@@ -12,15 +12,6 @@ export class UserProfile {
 
   @Column({ name: 'display_name', nullable: true, length: 100 })
   display_name: string;
-
-  @Column({ nullable: true, unique: true, length: 100 })
-  slug: string;
-
-  @Column({ name: 'avatar_url', nullable: true, type: 'text' })
-  avatar_url: string;
-
-  @Column({ nullable: true, type: 'text' })
-  description: string;
 
   @Column({ type: 'text', array: true, default: [] })
   tags: string[];

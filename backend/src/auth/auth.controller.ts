@@ -1,14 +1,12 @@
-import { Body, Controller, Post, HttpCode, HttpStatus, ValidationPipe, UsePipes, BadRequestException, UnauthorizedException, InternalServerErrorException, Get, Req, UseGuards } from '@nestjs/common';
-import { LoginResponse } from './auth.interface';
-import { LoginDto, ForgotPasswordDto, ResetPasswordDto } from './auth.dto';
-import { ApiResponseDto } from 'src/common/common.interface';
-import { AuthService } from './auth.service';
+import { Body, Controller, Post, Get, HttpCode, HttpStatus, UseGuards, Req } from '@nestjs/common';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
-import { Request } from 'express';
+import { LoginDto, RegisterDto, ForgotPasswordDto, ResetPasswordDto, VerifyEmailDto } from './auth.dto';
+import { ApiResponseDto } from '../common/common.interface';
+import { AuthService } from './auth.service';
 
 /**
  * Controller handling authentication-related endpoints
- * Manages user login, password recovery, and authentication processes
+ * Manages user registration, login, logout, verification, and password recovery
  */
 @Controller('auth')
 export class AuthController {
@@ -17,81 +15,72 @@ export class AuthController {
     ) { }
 
     /**
-     * Handles user login requests
-     * Validates input data and returns JWT token on success
-     * 
-     * @param loginDto - Login credentials (email and password)
-     * @returns Promise<ApiResponseDto<LoginResponse>> - Login response with JWT token and user data
-     * @throws BadRequestException - If input validation fails
-     * @throws UnauthorizedException - If credentials are invalid
-     * @throws InternalServerErrorException - If server error occurs
+     * Register a new user
+     * POST /auth/register
+     */
+    @Post('register')
+    @HttpCode(HttpStatus.CREATED)
+    async register(@Body() registerDto: RegisterDto): Promise<ApiResponseDto<any>> {
+        return this.authService.register(registerDto);
+    }
+
+    /**
+     * Login and return JWT
+     * POST /auth/login
      */
     @Post('login')
     @HttpCode(HttpStatus.OK)
-    @UsePipes(new ValidationPipe({
-        transform: true,
-        whitelist: true,
-        forbidNonWhitelisted: true,
-        exceptionFactory: (errors) => {
-            const messages = errors.map(error => {
-                if (error.constraints) {
-                    return Object.values(error.constraints).join(', ');
-                }
-                return 'Invalid input';
-            });
-            throw new BadRequestException(messages.join(', '));
-        }
-    }))
-    async login(@Body() loginDto: LoginDto): Promise<ApiResponseDto<LoginResponse>> {
-        try {
-            return await this.authService.login(loginDto.email, loginDto.password);
-        } catch (error) {
-            if (error instanceof UnauthorizedException) {
-                return ApiResponseDto.error<LoginResponse>(error.message, HttpStatus.UNAUTHORIZED);
-            }
-            if (error instanceof InternalServerErrorException) {
-                return ApiResponseDto.error<LoginResponse>(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
-            }
-            return ApiResponseDto.error<LoginResponse>('An unexpected error occurred', HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+    async login(@Body() loginDto: LoginDto): Promise<ApiResponseDto<any>> {
+        return this.authService.login(loginDto);
     }
 
     /**
-     * Handles password recovery requests
-     * Sends a password reset link if the email is registered
-     * 
-     * @param forgotPasswordDto - Email address for password recovery
-     * @returns Promise<ApiResponseDto<any>> - Success response with token expiry
-     * @throws BadRequestException - If input validation fails
-     * @throws HttpException - If rate limit exceeded or other errors occur
+     * Perform logout
+     * POST /auth/logout
      */
-    @Post('recover')
+    @Post('logout')
     @HttpCode(HttpStatus.OK)
-    @UsePipes(new ValidationPipe({
-        transform: true,
-        whitelist: true,
-        forbidNonWhitelisted: true
-    }))
-    async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto): Promise<ApiResponseDto<any>> {
-        return this.authService.forgotPassword(forgotPasswordDto.email);
+    @UseGuards(JwtAuthGuard)
+    async logout(@Req() req: any): Promise<ApiResponseDto<null>> {
+        return this.authService.logout(req.user.uuid);
     }
 
     /**
-     * Handles password reset requests
-     * Verifies the reset token and updates the user's password
-     * 
-     * @param resetPasswordDto - Reset password data (token and new password)
-     * @returns Promise<ApiResponseDto<null>> - Success response
-     * @throws BadRequestException - If input validation fails
-     * @throws HttpException - If token is invalid or expired
+     * Returns logged user data
+     * GET /auth/me
+     */
+    @Get('me')
+    @UseGuards(JwtAuthGuard)
+    async getMe(@Req() req: any): Promise<ApiResponseDto<any>> {
+        return this.authService.getMe(req.user.uuid);
+    }
+
+    /**
+     * Verify email via token
+     * POST /auth/verify
      */
     @Post('verify')
     @HttpCode(HttpStatus.OK)
-    @UsePipes(new ValidationPipe({
-        transform: true,
-        whitelist: true,
-        forbidNonWhitelisted: true
-    }))
+    async verifyEmail(@Body() verifyEmailDto: VerifyEmailDto): Promise<ApiResponseDto<null>> {
+        return this.authService.verifyEmail(verifyEmailDto);
+    }
+
+    /**
+     * Send password reset link
+     * POST /auth/forgot-password
+     */
+    @Post('forgot-password')
+    @HttpCode(HttpStatus.OK)
+    async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto): Promise<ApiResponseDto<any>> {
+        return this.authService.forgotPassword(forgotPasswordDto);
+    }
+
+    /**
+     * Reset password via token
+     * POST /auth/reset-password
+     */
+    @Post('reset-password')
+    @HttpCode(HttpStatus.OK)
     async resetPassword(@Body() resetPasswordDto: ResetPasswordDto): Promise<ApiResponseDto<null>> {
         return this.authService.resetPassword(resetPasswordDto);
     }
