@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en" >
+<head>
+  <meta charset="utf-8">
+  <title>PANDOM - Stack boilerplate</title>
+  <base href="/">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/x-icon" href="/favicon.svg">
+  
+  <script>
+    // Set initial theme class based on system preference
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const savedTheme = localStorage.getItem('theme');
+    const isDark = savedTheme ? savedTheme === 'dark' : prefersDark;
+    if (isDark) {
+      document.documentElement.classList.add('my-app-dark');
+    } else {
+      document.documentElement.classList.add('surface-50');
+    }
+  </script>
+</head>
+<body>
+  <app-root></app-root>
+</body>
+</html>

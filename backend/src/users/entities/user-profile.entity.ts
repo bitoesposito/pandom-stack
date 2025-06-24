@@ -1,0 +1,40 @@
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, OneToOne, JoinColumn } from 'typeorm';
+import { User } from './user.entity';
+
+/**
+ * UserProfile entity representing a user's profile information
+ * Maps to the 'user_profiles' table in the database
+ */
+@Entity('user_profiles')
+export class UserProfile {
+  @PrimaryGeneratedColumn('uuid')
+  uuid: string;
+
+  @Column({ name: 'display_name', nullable: true, length: 100 })
+  display_name: string;
+
+  @Column({ nullable: true, unique: true, length: 100 })
+  slug: string;
+
+  @Column({ name: 'avatar_url', nullable: true, type: 'text' })
+  avatar_url: string;
+
+  @Column({ nullable: true, type: 'text' })
+  description: string;
+
+  @Column({ type: 'text', array: true, default: [] })
+  tags: string[];
+
+  @Column({ type: 'jsonb', default: {} })
+  metadata: Record<string, any>;
+
+  @CreateDateColumn({ name: 'created_at' })
+  created_at: Date;
+
+  @UpdateDateColumn({ name: 'updated_at' })
+  updated_at: Date;
+
+  @OneToOne(() => User, user => user.profile)
+  @JoinColumn({ name: 'uuid', referencedColumnName: 'profile_uuid' })
+  user: User;
+} 

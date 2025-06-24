@@ -1,0 +1,49 @@
+{
+  "auth": {
+    "login": {
+      "login": "Login",
+      "email-address": "Email Address",
+      "password": "Password",
+      "recover-password": "Recover Password",
+      "password-reset-success": "Password reset successfully.",
+      "password-recovery-sent": "If the email is registered, you will receive a link to reset your password.",
+      "fill-required-fields": "Please fill in all required fields correctly",
+      "login-failed": "Login failed",
+      "login-error": "An error occurred during login"
+    },
+    "recover": {
+      "title": "Recover Password",
+      "email-address": "Email Address",
+      "email-placeholder": "Enter email address",
+      "recovery-message": "If the email exists in the system, you will receive a link to reset your password.",
+      "send-request": "Send Request",
+      "back-to-login": "Back to Login"
+    },
+    "verify": {
+      "title": "Verify",
+      "password": "Password",
+      "confirm-password": "Confirm Password",
+      "password-placeholder": "Enter new password",
+      "confirm-password-placeholder": "Confirm new password",
+      "select-password": "Select a password",
+      "password-requirements": {
+        "lowercase": "At least one lowercase letter",
+        "uppercase": "At least one uppercase letter",
+        "number": "At least one number",
+        "min-length": "Minimum 8 characters",
+        "symbol": "At least one symbol"
+      },
+      "verify-button": "Verify",
+      "back-to-login": "Back to login",
+      "confirm-dialog": {
+        "message": "Confirm that you want to proceed with verification",
+        "header": "Complete verification",
+        "cancel": "Cancel",
+        "confirm": "Confirm"
+      },
+      "success": "Password has been updated successfully",
+      "error": "An error occurred while updating password",
+      "token-error": "Invalid or missing token"
+    }
+  }
+}
