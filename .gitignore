@@ -128,4 +128,7 @@ yarn.lock
 pnpm-lock.yaml
 
 # Local development
-.local 
+.local
+
+# Windows specific
+desktop.ini

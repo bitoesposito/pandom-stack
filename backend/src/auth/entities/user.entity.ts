@@ -20,8 +20,7 @@ export class User {
     @Column({
         type: 'enum',
         enum: UserRole,
-        default: UserRole.user,
-        length: 20
+        default: UserRole.user
     })
     role: UserRole;
 
@@ -49,7 +48,7 @@ export class User {
     @Column({ name: 'last_login_at', nullable: true, type: 'timestamp' })
     last_login_at: Date | null;
 
-    @Column({ name: 'profile_uuid', nullable: true, unique: true })
+    @Column({ name: 'profile_uuid', nullable: true, unique: true, type: 'uuid' })
     profile_uuid: string | null;
 
     @CreateDateColumn({ name: 'created_at' })

@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, OneToOne, JoinColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, OneToOne } from 'typeorm';
 import { User } from '../../auth/entities/user.entity';
 
 /**
@@ -26,6 +26,5 @@ export class UserProfile {
   updated_at: Date;
 
   @OneToOne(() => User, user => user.profile)
-  @JoinColumn({ name: 'uuid', referencedColumnName: 'profile_uuid' })
   user: User;
 } 

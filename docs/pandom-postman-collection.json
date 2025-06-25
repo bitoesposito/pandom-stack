@@ -535,6 +535,156 @@
 				}
 			],
 			"description": "Administrative endpoints for user management and system oversight"
+		},
+		{
+			"name": "🗄️ DATABASE",
+			"item": [
+				{
+					"name": "Initialize Database",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/database/init",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"database",
+								"init"
+							]
+						},
+						"description": "Initialize database tables and create admin user (Admin only)"
+					},
+					"response": []
+				},
+				{
+					"name": "Run Migrations",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/database/migrate",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"database",
+								"migrate"
+							]
+						},
+						"description": "Run pending database migrations (Admin only)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Migration Status",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/database/migrations",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"database",
+								"migrations"
+							]
+						},
+						"description": "Get migration status and history (Admin only)"
+					},
+					"response": []
+				},
+				{
+					"name": "Database Health Check",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/database/health",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"database",
+								"health"
+							]
+						},
+						"description": "Check database connection and health status (Admin only)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Database Stats",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/database/stats",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"database",
+								"stats"
+							]
+						},
+						"description": "Get database statistics and table information (Admin only)"
+					},
+					"response": []
+				},
+				{
+					"name": "Reset Database",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/database/reset",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"database",
+								"reset"
+							]
+						},
+						"description": "Reset database (drop all tables and reinitialize) - USE WITH CAUTION (Admin only)"
+					},
+					"response": []
+				}
+			],
+			"description": "Database management and administration endpoints"
 		}
 	],
 	"event": [

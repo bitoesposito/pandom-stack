@@ -5,6 +5,7 @@ import { ConfigService } from '@nestjs/config';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { User } from './entities/user.entity';
+import { UserProfile } from '../users/entities/user-profile.entity';
 import { RolesGuard } from './guards/roles.guard';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { PassportModule } from '@nestjs/passport';
@@ -15,8 +16,8 @@ import { PassportModule } from '@nestjs/passport';
  */
 @Module({
     imports: [
-        // Database configuration for User entity
-        TypeOrmModule.forFeature([User]),
+        // Database configuration for User and UserProfile entities
+        TypeOrmModule.forFeature([User, UserProfile]),
         
         // JWT configuration with async options
         JwtModule.registerAsync({

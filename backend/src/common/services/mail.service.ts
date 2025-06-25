@@ -11,7 +11,7 @@ export class MailService {
 
     constructor(private configService: ConfigService) {
         this.initializeTransporter();
-        this.frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'http://localhost:4200';
+        this.frontendUrl = this.configService.get<string>('FE_URL') || 'http://localhost:4200';
     }
 
     private async initializeTransporter() {
