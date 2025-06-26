@@ -84,3 +84,13 @@ export class VerifyEmailDto {
     @IsNotEmpty({ message: 'Verification token is required' })
     token: string;
 }
+
+/**
+ * Data Transfer Object for resending verification email
+ * Contains validation rules for email
+ */
+export class ResendVerificationDto {
+    @IsEmail({}, { message: 'Invalid email format' })
+    @IsNotEmpty({ message: 'Email is required' })
+    email: string;
+}

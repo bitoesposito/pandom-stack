@@ -1,12 +1,12 @@
 import { Body, Controller, Post, Get, HttpCode, HttpStatus, UseGuards, Req } from '@nestjs/common';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
-import { LoginDto, RegisterDto, ForgotPasswordDto, ResetPasswordDto, VerifyEmailDto } from './auth.dto';
+import { LoginDto, RegisterDto, ForgotPasswordDto, ResetPasswordDto, VerifyEmailDto, ResendVerificationDto } from './auth.dto';
 import { ApiResponseDto } from '../common/common.interface';
 import { AuthService } from './auth.service';
 
 /**
  * Controller handling authentication-related endpoints
- * Manages user registration, login, logout, verification, and password recovery
+ * Manages user registration, login, verification, and password recovery
  */
 @Controller('auth')
 export class AuthController {
@@ -32,17 +32,6 @@ export class AuthController {
     @HttpCode(HttpStatus.OK)
     async login(@Body() loginDto: LoginDto): Promise<ApiResponseDto<any>> {
         return this.authService.login(loginDto);
-    }
-
-    /**
-     * Perform logout
-     * POST /auth/logout
-     */
-    @Post('logout')
-    @HttpCode(HttpStatus.OK)
-    @UseGuards(JwtAuthGuard)
-    async logout(@Req() req: any): Promise<ApiResponseDto<null>> {
-        return this.authService.logout(req.user.uuid);
     }
 
     /**
@@ -83,5 +72,15 @@ export class AuthController {
     @HttpCode(HttpStatus.OK)
     async resetPassword(@Body() resetPasswordDto: ResetPasswordDto): Promise<ApiResponseDto<null>> {
         return this.authService.resetPassword(resetPasswordDto);
+    }
+
+    /**
+     * Resend verification email
+     * POST /auth/resend-verification
+     */
+    @Post('resend-verification')
+    @HttpCode(HttpStatus.OK)
+    async resendVerification(@Body() resendVerificationDto: ResendVerificationDto): Promise<ApiResponseDto<null>> {
+        return this.authService.resendVerificationEmail(resendVerificationDto.email);
     }
 }

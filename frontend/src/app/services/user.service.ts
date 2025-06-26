@@ -5,6 +5,7 @@ import { environment } from '../../environments/environment';
 import { ApiResponse } from '../models/api.models';
 import { User, UserDetails, UserEmail } from '../models/user.models';
 import { map } from 'rxjs/operators';
+import { AuthService } from './auth.service';
 
 @Injectable({
   providedIn: 'root'
@@ -13,10 +14,13 @@ import { map } from 'rxjs/operators';
 export class UserService {
   private readonly API_URL = environment.apiUrl;
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private authService: AuthService
+  ) {}
 
   private getHeaders(): HttpHeaders {
-    const token = localStorage.getItem('access_token');
+    const token = this.authService.getToken();
     return new HttpHeaders().set('Authorization', `Bearer ${token}`);
   }
   

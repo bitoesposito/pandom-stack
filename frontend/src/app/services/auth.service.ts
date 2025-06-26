@@ -64,6 +64,16 @@ export class AuthService {
   }
 
   /**
+   * Logout user by clearing all authentication data from localStorage
+   */
+  logout(): void {
+    localStorage.removeItem('access_token');
+    // Remove any other auth-related data that might be stored
+    localStorage.removeItem('user_data');
+    localStorage.removeItem('refresh_token');
+  }
+
+  /**
    * Checks if user is authenticated
    * @returns boolean indicating if user is authenticated
    */

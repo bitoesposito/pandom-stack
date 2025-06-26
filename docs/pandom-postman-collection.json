@@ -2,13 +2,13 @@
 	"info": {
 		"_postman_id": "pandom-stack-api",
 		"name": "Pandom Stack API",
-		"description": "Complete API collection for Pandom Stack backend - Auth, Users, Security, Resilience & Admin endpoints",
+		"description": "Complete API collection for Pandom Stack backend - Authentication, User Management, Security, Resilience & Administrative endpoints",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "pandom-stack"
 	},
 	"item": [
 		{
-			"name": "🔐 AUTH",
+			"name": "Authentication",
 			"item": [
 				{
 					"name": "Register User",
@@ -22,7 +22,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\",\n  \"first_name\": \"{{first_name}}\",\n  \"last_name\": \"{{last_name}}\"\n}"
+							"raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\",\n  \"display_name\": \"{{display_name}}\"\n}"
 						},
 						"url": {
 							"raw": "{{base_url}}/auth/register",
@@ -34,7 +34,7 @@
 								"register"
 							]
 						},
-						"description": "Register a new user account"
+						"description": "Register a new user account. A verification OTP will be sent to the provided email address."
 					},
 					"response": []
 				},
@@ -62,31 +62,7 @@
 								"login"
 							]
 						},
-						"description": "Login and return JWT token"
-					},
-					"response": []
-				},
-				{
-					"name": "Logout User",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{auth_token}}"
-							}
-						],
-						"url": {
-							"raw": "{{base_url}}/auth/logout",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"auth",
-								"logout"
-							]
-						},
-						"description": "Perform logout and invalidate token"
+						"description": "Authenticate user and return JWT access and refresh tokens"
 					},
 					"response": []
 				},
@@ -110,7 +86,7 @@
 								"me"
 							]
 						},
-						"description": "Returns logged user authentication data"
+						"description": "Retrieve current authenticated user data and profile information"
 					},
 					"response": []
 				},
@@ -126,7 +102,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"token\": \"{{verification_token}}\"\n}"
+							"raw": "{\n  \"token\": \"{{verification_otp}}\"\n}"
 						},
 						"url": {
 							"raw": "{{base_url}}/auth/verify",
@@ -138,7 +114,35 @@
 								"verify"
 							]
 						},
-						"description": "Verify email via token"
+						"description": "Verify email address using the 6-digit OTP code sent during registration"
+					},
+					"response": []
+				},
+				{
+					"name": "Resend Verification Email",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"{{email}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/resend-verification",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"resend-verification"
+							]
+						},
+						"description": "Resend email verification OTP to the specified email address"
 					},
 					"response": []
 				},
@@ -166,7 +170,7 @@
 								"forgot-password"
 							]
 						},
-						"description": "Send password reset link"
+						"description": "Send password reset OTP to the specified email address"
 					},
 					"response": []
 				},
@@ -182,7 +186,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"token\": \"{{reset_token}}\",\n  \"password\": \"{{new_password}}\"\n}"
+							"raw": "{\n  \"token\": \"{{reset_otp}}\",\n  \"password\": \"{{new_password}}\"\n}"
 						},
 						"url": {
 							"raw": "{{base_url}}/auth/reset-password",
@@ -194,15 +198,15 @@
 								"reset-password"
 							]
 						},
-						"description": "Reset password via token"
+						"description": "Reset password using the 6-digit OTP code sent via email"
 					},
 					"response": []
 				}
 			],
-			"description": "Authentication endpoints for user registration, login, and account management"
+			"description": "Authentication endpoints for user registration, login, email verification, and password management"
 		},
 		{
-			"name": "👤 PROFILE",
+			"name": "User Profile",
 			"item": [
 				{
 					"name": "Get User Profile",
@@ -215,15 +219,16 @@
 							}
 						],
 						"url": {
-							"raw": "{{base_url}}/profile",
+							"raw": "{{base_url}}/users/profile",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
+								"users",
 								"profile"
 							]
 						},
-						"description": "Retrieve logged user profile data"
+						"description": "Retrieve current user profile data including display name, tags, and metadata"
 					},
 					"response": []
 				},
@@ -243,26 +248,27 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"first_name\": \"{{first_name}}\",\n  \"last_name\": \"{{last_name}}\",\n  \"phone\": \"{{phone}}\"\n}"
+							"raw": "{\n  \"display_name\": \"{{display_name}}\",\n  \"tags\": [\"{{tags}}\"],\n  \"metadata\": {\n    \"bio\": \"{{bio}}\",\n    \"location\": \"{{location}}\"\n  }\n}"
 						},
 						"url": {
-							"raw": "{{base_url}}/profile",
+							"raw": "{{base_url}}/users/profile",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
+								"users",
 								"profile"
 							]
 						},
-						"description": "Update general profile data"
+						"description": "Update user profile information including display name, tags, and custom metadata"
 					},
 					"response": []
 				}
 			],
-			"description": "User profile management endpoints"
+			"description": "User profile management endpoints for retrieving and updating profile information"
 		},
 		{
-			"name": "🛡 SECURITY",
+			"name": "Security",
 			"item": [
 				{
 					"name": "Get Security Logs",
@@ -284,7 +290,7 @@
 								"logs"
 							]
 						},
-						"description": "List recent activities and access logs"
+						"description": "Retrieve recent security activities and access logs for the authenticated user"
 					},
 					"response": []
 				},
@@ -308,7 +314,7 @@
 								"sessions"
 							]
 						},
-						"description": "View active sessions/tokens"
+						"description": "View active sessions and authentication tokens for the current user"
 					},
 					"response": []
 				},
@@ -332,7 +338,7 @@
 								"download-data"
 							]
 						},
-						"description": "Download personal data (GDPR compliance)"
+						"description": "Download personal data export in JSON format (GDPR compliance)"
 					},
 					"response": []
 				},
@@ -356,15 +362,15 @@
 								"delete-account"
 							]
 						},
-						"description": "Delete user account"
+						"description": "Permanently delete user account and all associated data"
 					},
 					"response": []
 				}
 			],
-			"description": "Security and privacy management endpoints"
+			"description": "Security and privacy management endpoints for user data control and account security"
 		},
 		{
-			"name": "⚙️ RESILIENCE",
+			"name": "Resilience",
 			"item": [
 				{
 					"name": "System Status",
@@ -381,7 +387,7 @@
 								"status"
 							]
 						},
-						"description": "System status (healthcheck)"
+						"description": "Check system health status and service availability"
 					},
 					"response": []
 				},
@@ -400,15 +406,15 @@
 								"offline-data"
 							]
 						},
-						"description": "Export essential data in offline format"
+						"description": "Export essential system data in offline-compatible format"
 					},
 					"response": []
 				}
 			],
-			"description": "System resilience and backup endpoints"
+			"description": "System resilience and backup endpoints for monitoring and data export"
 		},
 		{
-			"name": "👨‍💼 ADMIN",
+			"name": "Administration",
 			"item": [
 				{
 					"name": "Get All Users",
@@ -430,7 +436,7 @@
 								"users"
 							]
 						},
-						"description": "List all users (Admin only)"
+						"description": "Retrieve list of all registered users with pagination support (Administrator access required)"
 					},
 					"response": []
 				},
@@ -456,7 +462,7 @@
 								"suspend"
 							]
 						},
-						"description": "Suspend user account (Admin only)"
+						"description": "Temporarily suspend user account access (Administrator access required)"
 					},
 					"response": []
 				},
@@ -481,7 +487,7 @@
 								"{{user_uuid}}"
 							]
 						},
-						"description": "Delete a specific user (Admin only)"
+						"description": "Permanently delete a specific user account and all associated data (Administrator access required)"
 					},
 					"response": []
 				},
@@ -505,7 +511,7 @@
 								"metrics"
 							]
 						},
-						"description": "System metrics and analytics (Admin only)"
+						"description": "Retrieve system performance metrics and analytics data (Administrator access required)"
 					},
 					"response": []
 				},
@@ -529,15 +535,15 @@
 								"audit-logs"
 							]
 						},
-						"description": "View audit logs (Admin only)"
+						"description": "View comprehensive audit logs of system activities (Administrator access required)"
 					},
 					"response": []
 				}
 			],
-			"description": "Administrative endpoints for user management and system oversight"
+			"description": "Administrative endpoints for user management, system monitoring, and oversight operations"
 		},
 		{
-			"name": "🗄️ DATABASE",
+			"name": "Database Management",
 			"item": [
 				{
 					"name": "Initialize Database",
@@ -559,7 +565,7 @@
 								"init"
 							]
 						},
-						"description": "Initialize database tables and create admin user (Admin only)"
+						"description": "Initialize database tables and create default administrator user (Administrator access required)"
 					},
 					"response": []
 				},
@@ -583,7 +589,7 @@
 								"migrate"
 							]
 						},
-						"description": "Run pending database migrations (Admin only)"
+						"description": "Execute pending database migrations to update schema (Administrator access required)"
 					},
 					"response": []
 				},
@@ -607,7 +613,7 @@
 								"migrations"
 							]
 						},
-						"description": "Get migration status and history (Admin only)"
+						"description": "Retrieve migration status, history, and pending migrations (Administrator access required)"
 					},
 					"response": []
 				},
@@ -631,12 +637,12 @@
 								"health"
 							]
 						},
-						"description": "Check database connection and health status (Admin only)"
+						"description": "Perform comprehensive database connection and health status check (Administrator access required)"
 					},
 					"response": []
 				},
 				{
-					"name": "Get Database Stats",
+					"name": "Get Database Statistics",
 					"request": {
 						"method": "GET",
 						"header": [
@@ -655,7 +661,7 @@
 								"stats"
 							]
 						},
-						"description": "Get database statistics and table information (Admin only)"
+						"description": "Retrieve detailed database statistics, table information, and performance metrics (Administrator access required)"
 					},
 					"response": []
 				},
@@ -679,12 +685,12 @@
 								"reset"
 							]
 						},
-						"description": "Reset database (drop all tables and reinitialize) - USE WITH CAUTION (Admin only)"
+						"description": "Reset database by dropping all tables and reinitializing schema - USE WITH EXTREME CAUTION (Administrator access required)"
 					},
 					"response": []
 				}
 			],
-			"description": "Database management and administration endpoints"
+			"description": "Database management and administration endpoints for schema operations and maintenance"
 		}
 	],
 	"event": [

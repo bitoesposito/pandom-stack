@@ -1,26 +1,23 @@
-import { Module, Global } from '@nestjs/common';
-import { LoggerService } from '../services/logger.service';
-import { SessionService } from '../services/session.service';
-import { MailService } from '../services/mail.service';
-import { SecurityHeadersInterceptor } from '../interceptors/security-headers.interceptor';
-import { APP_INTERCEPTOR } from '@nestjs/core';
+import { Module } from '@nestjs/common';
+import { MailModule } from './mail.module';
+import { MinioModule } from './minio.module';
+import { SessionModule } from './session.module';
+import { ImageOptimizerModule } from './image-optimizer.module';
+import { EmailController } from '../controllers/email.controller';
 
-@Global()
 @Module({
-  providers: [
-    LoggerService,
-    SessionService,
-    MailService,
-    {
-      provide: APP_INTERCEPTOR,
-      useClass: SecurityHeadersInterceptor,
-    },
+  imports: [
+    MailModule,
+    MinioModule,
+    SessionModule,
+    ImageOptimizerModule,
   ],
+  controllers: [EmailController],
   exports: [
-    LoggerService,
-    SessionService,
-    MailService,
-    SecurityHeadersInterceptor,
+    MailModule,
+    MinioModule,
+    SessionModule,
+    ImageOptimizerModule,
   ],
 })
 export class CommonModule {} 

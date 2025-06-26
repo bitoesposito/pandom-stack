@@ -1,6 +1,14 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
+import { TemplateService, EmailTemplateType, EmailTemplateData } from './template.service';
+
+export interface EmailOptions {
+  to: string;
+  templateType: EmailTemplateType;
+  subject?: string;
+  data: EmailTemplateData;
+}
 
 @Injectable()
 export class MailService {
@@ -9,9 +17,13 @@ export class MailService {
     private frontendUrl: string;
     private fromEmail: string;
 
-    constructor(private configService: ConfigService) {
+    constructor(
+        private configService: ConfigService,
+        private templateService: TemplateService
+    ) {
         this.initializeTransporter();
         this.frontendUrl = this.configService.get<string>('FE_URL') || 'http://localhost:4200';
+        this.fromEmail = this.configService.get<string>('SMTP_USER') || 'noreply@pandomstack.com';
     }
 
     private async initializeTransporter() {
@@ -42,40 +54,93 @@ export class MailService {
         }
     }
 
-    async sendEmail(to: string, token: string, type: 'verification' | 'reset'): Promise<void> {
+    /**
+     * Send email using template system
+     * @param options - Email options including template type and data
+     * @returns Promise<void>
+     */
+    async sendEmail(options: EmailOptions): Promise<void> {
         try {
-            const subject = type === 'verification' 
-                ? 'Verify your email address'
-                : 'Reset your password';
+            const { to, templateType, subject, data } = options;
 
-            const verificationUrl = `${this.frontendUrl}/verify?token=${token}`;
-            const resetUrl = `${this.frontendUrl}/verify?token=${token}`;
-            const url = type === 'verification' ? verificationUrl : resetUrl;
+            // Get default subject if not provided
+            const emailSubject = subject || this.getDefaultSubject(templateType);
 
-            const html = `
-                <body
-                    style="font-family: Arial, sans-serif;color: #f8fafc; max-width: 600px; margin: 0 auto; padding: 20px;">
-                    <h1 style="color: #2c3e50;">${subject}</h1>
-                    <p>For ${type === 'verification' ? 'verify your account' : 'reset your password'}, click the button below:</p>
-                    <p style="margin: 20px 0;">
-                        <a href="${url}" style="background-color: #3498db; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">${type === 'verification' ? 'Verify account' : 'Reset password'}</a>
-                    </p>
-                    <hr>
-                    <p style="color: #94a3b8; font-size: 0.9em;">If you didn't request this, you can safely ignore this email.</p>
-                </body>
-            `;
+            // Get processed template
+            const html = await this.templateService.getEmailTemplate(templateType, data);
 
             await this.transporter.sendMail({
-                from: this.configService.get<string>('SMTP_USER'),
+                from: this.fromEmail,
                 to,
-                subject,
+                subject: emailSubject,
                 html,
             });
 
-            this.logger.log(`Email sent successfully to ${to}`);
+            this.logger.log(`Email sent successfully to ${to} using template: ${templateType}`);
         } catch (error) {
-            this.logger.error(`Failed to send email to ${to}:`, error);
+            this.logger.error(`Failed to send email to ${options.to}:`, error);
             throw error;
         }
+    }
+
+    /**
+     * Send verification email
+     * @param to - Recipient email
+     * @param token - Verification token
+     * @returns Promise<void>
+     */
+    async sendVerificationEmail(to: string, token: string): Promise<void> {
+        await this.sendEmail({
+            to,
+            templateType: 'verification',
+            data: {
+                verificationCode: token
+            }
+        });
+    }
+
+    /**
+     * Send password reset email
+     * @param to - Recipient email
+     * @param token - Reset token
+     * @returns Promise<void>
+     */
+    async sendPasswordResetEmail(to: string, token: string): Promise<void> {
+        await this.sendEmail({
+            to,
+            templateType: 'reset',
+            data: {
+                resetCode: token
+            }
+        });
+    }
+
+    /**
+     * Get default subject for template type
+     * @param templateType - Type of email template
+     * @returns string - Default subject
+     */
+    private getDefaultSubject(templateType: EmailTemplateType): string {
+        const subjects = {
+            verification: 'Verify your email address',
+            reset: 'Reset your password'
+        };
+
+        return subjects[templateType] || 'Message from Pandom Stack';
+    }
+
+    /**
+     * Get available template types
+     * @returns Promise<string[]> - List of available templates
+     */
+    async getAvailableTemplates(): Promise<string[]> {
+        return this.templateService.getAvailableTemplates();
+    }
+
+    /**
+     * Clear template cache
+     */
+    clearTemplateCache(): void {
+        this.templateService.clearCache();
     }
 } 

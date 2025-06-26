@@ -9,6 +9,7 @@ import { UserProfile } from '../users/entities/user-profile.entity';
 import { RolesGuard } from './guards/roles.guard';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { PassportModule } from '@nestjs/passport';
+import { MailModule } from '../common/modules/mail.module';
 
 /**
  * Authentication module configuration
@@ -30,6 +31,7 @@ import { PassportModule } from '@nestjs/passport';
             }),
         }),
         PassportModule,
+        MailModule,
     ],
     controllers: [AuthController],
     providers: [

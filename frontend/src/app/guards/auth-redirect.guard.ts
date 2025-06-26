@@ -1,9 +1,11 @@
 import { CanActivateFn, Router } from '@angular/router';
 import { inject } from '@angular/core';
+import { AuthService } from '../services/auth.service';
 
 export const authRedirectGuard: CanActivateFn = (route, state) => {
   const router = inject(Router);
-  const token = localStorage.getItem('access_token');
+  const authService = inject(AuthService);
+  const token = authService.getToken();
 
   if (!token) {
     return true;
@@ -24,7 +26,7 @@ export const authRedirectGuard: CanActivateFn = (route, state) => {
     }
   } catch {
     // Se c'è un errore nella decodifica, rimuovi il token e procedi
-    localStorage.removeItem('access_token');
+    authService.logout();
   }
 
   return true;

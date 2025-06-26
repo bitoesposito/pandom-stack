@@ -8,6 +8,7 @@ import { User } from './entities/user.entity';
 import { UserProfile } from '../users/entities/user-profile.entity';
 import { LoginResponse, UserRole } from './auth.interface';
 import { LoginDto, RegisterDto, ForgotPasswordDto, ResetPasswordDto, VerifyEmailDto } from './auth.dto';
+import { MailService } from '../common/services/mail.service';
 
 /**
  * Service handling authentication business logic
@@ -23,6 +24,7 @@ export class AuthService {
     @InjectRepository(UserProfile)
     private readonly userProfileRepository: Repository<UserProfile>,
     private readonly jwtService: JwtService,
+    private readonly mailService: MailService,
   ) { }
 
   /**
@@ -45,16 +47,17 @@ export class AuthService {
       const saltRounds = 12;
       const passwordHash = await bcrypt.hash(registerDto.password, saltRounds);
 
-      // Create user profile if display_name is provided
-      let profile: UserProfile | null = null;
-      if (registerDto.display_name) {
-        profile = this.userProfileRepository.create({
-          display_name: registerDto.display_name,
-          tags: [],
-          metadata: {}
-        });
-        await this.userProfileRepository.save(profile);
-      }
+      // Generate verification token
+      const verificationToken = this.generateSecureToken();
+      const verificationExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+      // Create user profile (always create one, even with empty display_name)
+      const profile = this.userProfileRepository.create({
+        display_name: registerDto.display_name || undefined,
+        tags: [],
+        metadata: {}
+      });
+      await this.userProfileRepository.save(profile);
 
       // Create user
       const user = this.userRepository.create({
@@ -64,10 +67,28 @@ export class AuthService {
         is_active: true,
         is_verified: false,
         is_configured: !!registerDto.display_name,
-        profile_uuid: profile?.uuid || null
+        profile_uuid: profile.uuid,
+        verification_token: verificationToken,
+        verification_expires: verificationExpiry
       });
 
       await this.userRepository.save(user);
+
+      // Send verification email
+      try {
+        await this.mailService.sendVerificationEmail(registerDto.email, verificationToken);
+        this.logger.log('Verification email sent successfully', { email: registerDto.email });
+      } catch (emailError) {
+        this.logger.error('Failed to send verification email', { email: registerDto.email, error: emailError });
+        // Don't fail registration if email fails, just log it
+      }
+
+      // Log verification token to console for development
+      this.logger.log('Verification OTP generated', { 
+        email: registerDto.email, 
+        otp: verificationToken,
+        expiresAt: verificationExpiry 
+      });
 
       this.logger.log('User registered successfully', { email: registerDto.email });
       
@@ -78,9 +99,10 @@ export class AuthService {
           role: user.role,
           is_active: user.is_active,
           is_verified: user.is_verified,
-          is_configured: user.is_configured
+          is_configured: user.is_configured,
+          profile_uuid: user.profile_uuid
         }
-      }, 'User registered successfully');
+      }, 'User registered successfully. Please check your email to verify your account.');
     } catch (error) {
       this.logger.error('Registration failed', error);
       throw error;
@@ -145,7 +167,7 @@ export class AuthService {
       }
     };
 
-      // Add profile data if exists
+      // Profile is always created now, so always include it
       if (user.profile) {
         response.profile = {
           uuid: user.profile.uuid,
@@ -159,26 +181,6 @@ export class AuthService {
       return ApiResponseDto.success(response, 'Login successful');
     } catch (error) {
       this.logger.error('Login failed', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Perform user logout
-   * @param userId - User ID to logout
-   * @returns Promise<ApiResponseDto<null>>
-   */
-  async logout(userId: string): Promise<ApiResponseDto<null>> {
-    try {
-      // In a real application, you might want to:
-      // 1. Add the token to a blacklist
-      // 2. Update user's last logout time
-      // 3. Clear any active sessions
-      
-      this.logger.log('User logged out', { userId });
-    return ApiResponseDto.success(null, 'Logout successful');
-    } catch (error) {
-      this.logger.error('Logout failed', error);
       throw error;
     }
   }
@@ -213,6 +215,7 @@ export class AuthService {
         }
       };
 
+      // Profile is always created now, so always include it
       if (user.profile) {
         response.profile = {
           uuid: user.profile.uuid,
@@ -244,12 +247,12 @@ export class AuthService {
       });
 
       if (!user) {
-        throw new BadRequestException('Invalid verification token');
+        throw new BadRequestException('Invalid verification OTP code');
       }
 
       // Check if token is expired
       if (user.verification_expires && user.verification_expires < new Date()) {
-        throw new BadRequestException('Verification token has expired');
+        throw new BadRequestException('Verification OTP code has expired');
       }
 
       // Update user verification status
@@ -293,11 +296,19 @@ export class AuthService {
       user.reset_token_expiry = resetTokenExpiry;
       await this.userRepository.save(user);
 
-      // TODO: Send email with reset link
-      // In a real application, you would send an email here
-      this.logger.log('Password reset token generated', { 
+      // Send reset email
+      try {
+        await this.mailService.sendPasswordResetEmail(user.email, resetToken);
+        this.logger.log('Password reset email sent successfully', { email: user.email });
+      } catch (emailError) {
+        this.logger.error('Failed to send password reset email', { email: user.email, error: emailError });
+        // Don't fail the request if email fails, just log it
+      }
+
+      // Log reset token to console for development
+      this.logger.log('Password reset OTP generated', { 
         email: user.email, 
-        resetToken,
+        otp: resetToken,
         expiresAt: resetTokenExpiry 
       });
 
@@ -321,12 +332,12 @@ export class AuthService {
       });
 
       if (!user) {
-        throw new BadRequestException('Invalid reset token');
+        throw new BadRequestException('Invalid reset OTP code');
       }
 
       // Check if token is expired
       if (user.reset_token_expiry && user.reset_token_expiry < new Date()) {
-        throw new BadRequestException('Reset token has expired');
+        throw new BadRequestException('Reset OTP code has expired');
       }
 
       // Hash new password
@@ -349,12 +360,65 @@ export class AuthService {
   }
 
   /**
-   * Generate a secure random token
-   * @returns string
+   * Resend verification email
+   * @param email - User email
+   * @returns Promise<ApiResponseDto<null>>
+   */
+  async resendVerificationEmail(email: string): Promise<ApiResponseDto<null>> {
+    try {
+      const user = await this.userRepository.findOne({
+        where: { email }
+      });
+
+      if (!user) {
+        // Don't reveal if user exists or not for security
+        this.logger.log('Verification resend requested for non-existent email', { email });
+        return ApiResponseDto.success(null, 'If the email exists, a verification link has been sent');
+      }
+
+      if (user.is_verified) {
+        throw new BadRequestException('Email is already verified');
+      }
+
+      // Generate new verification token
+      const verificationToken = this.generateSecureToken();
+      const verificationExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+      // Update user with new verification token
+      user.verification_token = verificationToken;
+      user.verification_expires = verificationExpiry;
+      await this.userRepository.save(user);
+
+      // Send verification email
+      try {
+        await this.mailService.sendVerificationEmail(user.email, verificationToken);
+        this.logger.log('Verification email resent successfully', { email: user.email });
+      } catch (emailError) {
+        this.logger.error('Failed to resend verification email', { email: user.email, error: emailError });
+        throw new BadRequestException('Failed to send verification email');
+      }
+
+      // Log verification token to console for development
+      this.logger.log('Verification OTP generated', { 
+        email: user.email, 
+        otp: verificationToken,
+        expiresAt: verificationExpiry 
+      });
+
+      return ApiResponseDto.success(null, 'Verification email sent successfully');
+    } catch (error) {
+      this.logger.error('Resend verification email failed', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Generate a 6-digit OTP (One-Time Password)
+   * @returns string - 6-digit numeric code
    */
   private generateSecureToken(): string {
-    return Math.random().toString(36).substring(2, 15) + 
-           Math.random().toString(36).substring(2, 15) +
-           Date.now().toString(36);
+    // Generate a random 6-digit number
+    const otp = Math.floor(100000 + Math.random() * 900000);
+    return otp.toString();
   }
 }

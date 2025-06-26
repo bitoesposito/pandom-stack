@@ -46,15 +46,15 @@ The database management system has been completely implemented with:
 
 Authentication, registration, login, and access management.
 
-| Method | Endpoint                  | Description                                     | Status |
-|--------|---------------------------|-------------------------------------------------|--------|
-| POST   | `/auth/register`          | Register a new user                             | ✅ Implemented |
-| POST   | `/auth/login`             | Login and return JWT                            | ✅ Implemented |
-| POST   | `/auth/logout`            | Perform logout                                  | ✅ Implemented |
-| GET    | `/auth/me`                | Returns logged user data                        | ✅ Implemented |
-| POST   | `/auth/verify`            | Verify email via token                          | ✅ Implemented |
-| POST   | `/auth/forgot-password`   | Send password reset link                        | ✅ Implemented |
-| POST   | `/auth/reset-password`    | Reset password via token                        | ✅ Implemented |
+| Method | Endpoint                | Description                                    | Status        |
+|--------|-------------------------|------------------------------------------------|---------------|
+| POST   | `/auth/register`        | Register a new user                            | ✅ Implemented |
+| POST   | `/auth/login`           | Authenticate user and get JWT                  | ✅ Implemented |
+| GET    | `/auth/me`              | Get current user data                          | ✅ Implemented |
+| POST   | `/auth/verify`          | Verify email via token                         | ✅ Implemented |
+| POST   | `/auth/resend-verification` | Resend verification email                | ✅ Implemented |
+| POST   | `/auth/forgot-password` | Send password reset link                       | ✅ Implemented |
+| POST   | `/auth/reset-password`  | Reset password via token                       | ✅ Implemented |
 
 ---
 

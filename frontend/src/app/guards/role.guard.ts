@@ -1,10 +1,12 @@
 import { CanActivateFn, Router } from '@angular/router';
 import { inject } from '@angular/core';
 import { jwtDecode } from 'jwt-decode';
+import { AuthService } from '../services/auth.service';
 
 export const roleGuard: CanActivateFn = (route, state) => {
   const router = inject(Router);
-  const token = localStorage.getItem('access_token');
+  const authService = inject(AuthService);
+  const token = authService.getToken();
 
   if (!token) {
     router.navigate(['/login']);
@@ -29,7 +31,7 @@ export const roleGuard: CanActivateFn = (route, state) => {
     router.navigate(['/private/edit', decoded.sub]);
     return false;
   } catch (error) {
-    localStorage.removeItem('access_token');
+    authService.logout();
     router.navigate(['/login']);
     return false;
   }

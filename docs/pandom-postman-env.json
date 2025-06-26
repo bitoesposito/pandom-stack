@@ -33,31 +33,37 @@
 			"enabled": true
 		},
 		{
-			"key": "first_name",
-			"value": "John",
+			"key": "display_name",
+			"value": "John Doe",
 			"type": "default",
 			"enabled": true
 		},
 		{
-			"key": "last_name",
-			"value": "Doe",
+			"key": "tags",
+			"value": "developer,admin",
 			"type": "default",
 			"enabled": true
 		},
 		{
-			"key": "phone",
-			"value": "+1234567890",
+			"key": "bio",
+			"value": "Software developer and system administrator",
 			"type": "default",
 			"enabled": true
 		},
 		{
-			"key": "verification_token",
+			"key": "location",
+			"value": "San Francisco, CA",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "verification_otp",
 			"value": "",
 			"type": "secret",
 			"enabled": true
 		},
 		{
-			"key": "reset_token",
+			"key": "reset_otp",
 			"value": "",
 			"type": "secret",
 			"enabled": true

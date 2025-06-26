@@ -19,6 +19,7 @@ import { finalize } from 'rxjs';
 import { ActivatedRoute } from '@angular/router';
 import { ThemeService } from '../../services/theme.service';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -71,7 +72,8 @@ export class DashboardComponent {
     private confirmationService: ConfirmationService,
     private route: ActivatedRoute,
     private themeService: ThemeService,
-    private translate: TranslateService
+    private translate: TranslateService,
+    private authService: AuthService
   ) {
     this.isDarkMode$ = this.themeService.isDarkMode$;
     this.getUsers();
@@ -176,7 +178,7 @@ export class DashboardComponent {
   }
 
   setCurrentUserEmail() {
-    const token = localStorage.getItem('access_token');
+    const token = this.authService.getToken();
     if (token) {
       const decoded: any = jwtDecode(token);
       this.currentUserEmail = decoded.email;
@@ -235,7 +237,7 @@ export class DashboardComponent {
   }
 
   disconnect() {
-    localStorage.removeItem('access_token');
+    this.authService.logout();
     this.router.navigate(['/login']);
   }
 
