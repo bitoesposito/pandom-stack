@@ -13,7 +13,7 @@
 		
 		<p class="text-2xl font-semibold">{{ 'auth.verify.title' | translate }}</p>
 
-		<form [formGroup]="form" (ngSubmit)="confirmPasswordDialog($event)" class="flex flex-column gap-2 mb-2">
+		<form [formGroup]="form" (ngSubmit)="verify()" class="flex flex-column gap-2 mb-2">
 			<div class="flex gap-1 flex-column">
 				<label for="password">{{ 'auth.verify.password' | translate }}</label>
 				<p-password formControlName="password" id="password" type="password" [placeholder]="'auth.verify.password-placeholder' | translate" styleClass="w-full" [toggleMask]="true" [inputStyle]="{ 'width': '100%' }" [feedback]="true" weakLabel="Weak" mediumLabel="Medium" strongLabel="Strong" promptLabel="Enter a password">
@@ -23,10 +23,10 @@
 					<ng-template #footer>
 						<p-divider />
 						<ul class="pl-2 ml-2 my-0 leading-normal">
-							<li [class.text-red-500]="password.value && !hasLowerCase(password.value)">
+							<li [class.text-red-500]="password.value && !hasLowercase(password.value)">
 								{{ 'auth.verify.password-requirements.lowercase' | translate }}
 							</li>
-							<li [class.text-red-500]="password.value && !hasUpperCase(password.value)">
+							<li [class.text-red-500]="password.value && !hasUppercase(password.value)">
 								{{ 'auth.verify.password-requirements.uppercase' | translate }}
 							</li>
 							<li [class.text-red-500]="password.value && !hasNumber(password.value)">

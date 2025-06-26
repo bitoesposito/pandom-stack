@@ -1,5 +1,5 @@
 # Frontend Dockerfile - Multi-stage build
-FROM node:23-slim AS base
+FROM node:20-slim AS base
 
 # Set working directory
 WORKDIR /frontend

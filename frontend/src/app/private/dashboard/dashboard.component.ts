@@ -41,8 +41,6 @@ import { AuthService } from '../../services/auth.service';
     TranslateModule
   ],
   providers: [
-    MessageService,
-    NotificationService,
     ConfirmationService
   ],
   templateUrl: './dashboard.component.html',
@@ -177,19 +175,6 @@ export class DashboardComponent {
     });
   }
 
-  setCurrentUserEmail() {
-    const token = this.authService.getToken();
-    if (token) {
-      const decoded: any = jwtDecode(token);
-      this.currentUserEmail = decoded.email;
-      // Trova l'UUID dell'utente corrente dalla lista degli utenti
-      const currentUser = this.users.find(user => user.email === decoded.email);
-      if (currentUser) {
-        this.currentUserUuid = currentUser.uuid;
-      }
-    }
-  }
-
   onEditProfileClick() {
     if (this.currentUserUuid) {
       this.router.navigateByUrl(`/private/edit/${this.currentUserUuid}`);
@@ -247,5 +232,18 @@ export class DashboardComponent {
 
   toggleDarkMode() {
     this.themeService.toggleDarkMode();
+  }
+
+  private setCurrentUserEmail() {
+    const token = localStorage.getItem('access_token');
+    if (token) {
+      try {
+        const decoded: any = jwtDecode(token);
+        this.currentUserEmail = decoded.email || '';
+        this.currentUserUuid = decoded.sub || '';
+      } catch (error) {
+        console.error('Error decoding token:', error);
+      }
+    }
   }
 }

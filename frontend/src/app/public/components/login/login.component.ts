@@ -32,10 +32,6 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
     ReactiveFormsModule,
     TranslateModule
   ],
-  providers: [
-    MessageService,
-    NotificationService
-  ],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss'
 })

@@ -1,34 +1,55 @@
 <p-toast class="absolute"/>
 
-<main class="sm:h-screen sm:mt-0 h-min mt-8 w-full flex align-items-center justify-content-center">
-  <content class="flex flex-column gap-3 max-w-26rem w-full px-3">
+<main class="w-screen h-screen flex flex-column justify-content-center align-items-center px-3">
+  <div class="w-full max-w-26rem flex flex-column gap-2 p-3 border-round-md">
 
-    <div class="flex gap-2 justify-content-between align-items-center">
-      <a href="/">
-        <img [src]="(isDarkMode$ | async) ? './logo-full.svg' : './logo-full-dark.svg'" alt="logo" height="50"/>
-      </a>
+    <a href="/">
+      <img src="logo-full.svg" alt="logo" height="50"/>
+      <!-- in case of low contrast and diferent logo for dark and light mode, use this: -->
+      <!-- <img [src]="(isDarkMode$ | async) ? './logo-full-white.svg' : './logo-full-black.svg'" alt="logo" height="50"/> -->
+    </a>
 
-      <p-button [icon]="(isDarkMode$ | async) ? 'pi pi-moon' : 'pi pi-sun'" severity="secondary" outlined="true" (click)="toggleDarkMode()" pTooltip="Toggle dark mode" tooltipPosition="bottom"/>
+    <div class="flex align-items-center justify-content-between gap-2">
+      <p class="text-2xl font-semibold">{{ 'auth.login.login' | translate }}</p>
+      <p-button [icon]="(isDarkMode$ | async) ? 'pi pi-moon' : 'pi pi-sun'" severity="secondary" (click)="toggleDarkMode()" pTooltip="Toggle dark mode" outlined="true" tooltipPosition="bottom"/>
     </div>
-
-    <p class="text-2xl font-semibold">{{ 'auth.login.login' | translate }}</p>
 
     <form [formGroup]="form" (ngSubmit)="login()" class="flex flex-column gap-2">
       <div class="flex gap-1 flex-column">
         <label for="email">{{ 'auth.login.email-address' | translate }}</label>
         <input formControlName="email" type="email" pInputText [placeholder]="'auth.login.email-address' | translate"/>
       </div>
-
+    
       <div class="flex gap-1 flex-column">
         <label for="password">{{ 'auth.login.password' | translate }}</label>
         <p-password formControlName="password" id="password" type="password" [placeholder]="'auth.login.password' | translate" styleClass="w-full" [toggleMask]="true" [inputStyle]="{ 'width': '100%' }" [feedback]="false"/>
       </div>
-
-      <div class="flex gap-2 flex-column mt-2">
+    
+      <div class="flex gap-3 flex-column mt-2">
+        <div class="flex justify-content-between">
+          <div class="flex align-items-center">
+            <p-checkbox value="true" inputId="remember" />
+            <label for="remember" class="ml-2 line-height-1">Remember me</label>
+          </div>
+          <a [routerLink]="['/recover']" class="text-primary hover:text-color no-underline">{{ 'auth.login.recover-password' | translate }}</a>
+        </div>
+        
         <p-button [label]="'auth.login.login' | translate" styleClass="w-full" type="submit" [disabled]="!form.valid || loading" [loading]="loading"/>
-        <p-button class="text-center" [label]="'auth.login.recover-password' | translate" severity="secondary" outlined="true" styleClass="w-full" [routerLink]="['/recover']" [disabled]="loading"/>
+
+        <p class="text-center">{{ 'auth.login.not-a-member' | translate }} <a [routerLink]="['/register']" class="text-primary hover:text-color no-underline">{{ 'auth.login.register' | translate }}</a></p>
+
+        <!-- per ora non c'è la logica per il login con google e apple ma li inserisco per futura implementazione -->
+
+        <div id="social-login" class="flex flex-column gap-3">
+          <p class="text-center uppercase text-color-secondary">{{ 'auth.login.or' | translate }}</p>
+
+          <div class="flex flex-column sm:flex-row gap-2 w-full">
+            <p-button icon="pi pi-google" [label]="('auth.login.login-with' | translate) + ' Google'" outlined="true" styleClass="w-full" type="submit" [disabled]="loading" [loading]="loading" fluid="true" class="w-full" size="small"/>
+            <p-button icon="pi pi-apple" [label]="('auth.login.login-with' | translate) + ' Apple'" outlined="true" styleClass="w-full" type="submit" [disabled]="loading" [loading]="loading" fluid="true" class="w-full" size="small"/>
+          </div>
+        </div>
       </div>
     </form>
 
-  </content>
+  </div>
 </main>

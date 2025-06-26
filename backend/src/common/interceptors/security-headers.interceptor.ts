@@ -12,7 +12,7 @@ export class SecurityHeadersInterceptor implements NestInterceptor {
     // response.setHeader('X-Content-Type-Options', 'nosniff');
     // response.setHeader('X-Frame-Options', 'SAMEORIGIN');
     // response.setHeader('X-XSS-Protection', '1; mode=block');
-    // response.setHeader('Content-Security-Policy', "default-src 'self' 'unsafe-inline' 'unsafe-eval' http://website.com https://website.com");
+    // response.setHeader('Content-Security-Policy', "default-src 'self' 'unsafe-inline' 'unsafe-eval' http://website.com http://localhost");
     // response.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
     
     return next.handle().pipe(

@@ -8,8 +8,6 @@ import { InputTextModule } from 'primeng/inputtext';
 import { ButtonModule } from 'primeng/button';
 import { ToastModule } from 'primeng/toast';
 import { PublicRoutingModule } from './public-routing.module';
-import { MessageService } from 'primeng/api';
-import { NotificationService } from '../services/notification.service';
 import { TranslateModule } from '@ngx-translate/core';
 
 @NgModule({
@@ -27,9 +25,6 @@ import { TranslateModule } from '@ngx-translate/core';
     ToastModule,
     TranslateModule
   ],
-  providers: [
-    MessageService,
-    NotificationService
-  ]
+  providers: []
 })
 export class PublicModule { } 

@@ -27,10 +27,6 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
     ReactiveFormsModule,
     TranslateModule
   ],
-  providers: [
-    MessageService,
-    NotificationService
-  ],
   templateUrl: './recover.component.html',
   styleUrl: './recover.component.scss'
 })
@@ -39,7 +35,10 @@ export class RecoverComponent {
   isDarkMode$;
 
   form: FormGroup = new FormGroup({
-    email: new FormControl(null, [Validators.required, Validators.pattern(/^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,4}$/)])
+    email: new FormControl(null, [
+      Validators.required,
+      Validators.pattern(/^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,4}$/)
+    ])
   });
 
   constructor(
@@ -58,7 +57,7 @@ export class RecoverComponent {
 
   recover() {
     if (this.form.invalid) {
-      this.notificationService.handleWarning('Please enter a valid email address');
+      this.notificationService.handleWarning(this.translate.instant('auth.recover.fill-required-fields'));
       return;
     }
 
@@ -70,12 +69,16 @@ export class RecoverComponent {
         finalize(() => this.loading = false)
       )
       .subscribe({
-        next: () => {
-          localStorage.setItem('show_password_recovery_notification', 'true');
-          this.router.navigate(['/login']);
+        next: (response) => {
+          this.notificationService.handleApiResponse(response, this.translate.instant('auth.recover.recovery-failed'));
+          
+          if (response.success) {
+            localStorage.setItem('show_password_recovery_notification', 'true');
+            this.router.navigate(['/login']);
+          }
         },
-        error: (error: any) => {
-          this.notificationService.handleError(error, 'An error occurred during password recovery');
+        error: (error) => {
+          this.notificationService.handleError(error, this.translate.instant('auth.recover.recovery-error'));
         }
       });
   }

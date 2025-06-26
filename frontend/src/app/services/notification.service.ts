@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { MessageService } from 'primeng/api';
 import { ApiResponse } from '../models/api.models';
 
@@ -7,11 +7,9 @@ import { ApiResponse } from '../models/api.models';
     providedIn: 'root'
 })
 export class NotificationService {
+    private messageService = inject(MessageService);
 
-    constructor(
-        private messageService: MessageService,
-        private http: HttpClient
-    ) {}
+    constructor(private http: HttpClient) {}
 
     /**
      * Handles error or success messages in a centralized way
