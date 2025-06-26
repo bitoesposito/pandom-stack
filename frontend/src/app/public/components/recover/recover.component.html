@@ -1,0 +1,31 @@
+<p-toast class="absolute" />
+
+<main class="sm:h-screen sm:mt-0 h-min mt-8 w-full flex align-items-center justify-content-center">
+  <content class="flex flex-column gap-3 max-w-26rem w-full px-3">
+    
+    <div class="flex gap-2 justify-content-between align-items-center">
+      <a href="/">
+        <img [src]="(isDarkMode$ | async) ? './logo-full.svg' : './logo-full-dark.svg'" alt="logo" height="50"/>
+      </a>
+
+      <p-button [icon]="(isDarkMode$ | async) ? 'pi pi-moon' : 'pi pi-sun'" severity="secondary" outlined="true" (click)="toggleDarkMode()" pTooltip="Toggle dark mode" tooltipPosition="bottom"/>
+    </div>
+
+    <p class="text-2xl font-semibold">{{ 'auth.recover.title' | translate }}</p>
+
+    <form [formGroup]="form" (ngSubmit)="recover()" class="flex flex-column gap-2">
+      <div class="flex gap-1 flex-column">
+        <label for="email">{{ 'auth.recover.email-address' | translate }}</label>
+        <input formControlName="email" type="email" pInputText [placeholder]="'auth.recover.email-placeholder' | translate" />
+      </div>
+
+      <small class="w-full text-color-secondary text-xs">{{ 'auth.recover.recovery-message' | translate }}</small>
+
+      <div class="flex gap-2 flex-column mt-2">
+        <p-button [label]="'auth.recover.send-request' | translate" styleClass="w-full" type="submit" [disabled]="!form.valid || loading" [loading]="loading" />
+        <p-button class="text-center" [label]="'auth.recover.back-to-login' | translate" severity="secondary" outlined="true" styleClass="w-full" [routerLink]="['/login']" [disabled]="loading" />
+      </div>
+    </form>
+
+  </content>
+</main>

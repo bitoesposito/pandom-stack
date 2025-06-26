@@ -1,0 +1,9 @@
+#main {
+    height: 100dvh !important;
+}
+
+@media screen and (max-width: 425px) {
+    #main {
+        height: min-content;
+    }
+}

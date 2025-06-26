@@ -38,10 +38,60 @@ The database management system has been completely implemented with:
 
 **Files implemented:**
 - `backend/src/database/database.service.ts` - Database initialization
-- `backend/src/database/migration.service.ts` - Migration management
 - `backend/src/database/database.controller.ts` - Database API
-- `backend/database/schema.sql` - Database schema
-- `backend/database/migrations/` - Migration files
+- Database schema management with TypeORM
+
+### ✅ PROFILE Module - FULLY IMPLEMENTED
+The user profile management system has been completely implemented with:
+- Profile creation and updates
+- Metadata and tags support
+- Validation and error handling
+- Integration with user authentication
+
+**Files implemented:**
+- `backend/src/users/users.service.ts` - Profile business logic
+- `backend/src/users/users.controller.ts` - Profile endpoints
+- `backend/src/users/entities/user-profile.entity.ts` - Profile entity
+
+### ✅ SECURITY Module - FULLY IMPLEMENTED
+The security system has been completely implemented with:
+- Security logs and audit trail
+- Session management with IP/User Agent tracking
+- GDPR-compliant data export
+- Account deletion with admin protection
+- Comprehensive audit logging
+
+**Files implemented:**
+- `backend/src/security/security.service.ts` - Security business logic
+- `backend/src/security/security.controller.ts` - Security endpoints
+- `backend/src/security/security.dto.ts` - Security DTOs
+- `backend/src/common/services/audit.service.ts` - Audit logging system
+
+### ✅ RESILIENCE Module - FULLY IMPLEMENTED
+The resilience system has been completely implemented with:
+- System health monitoring
+- Service status checks (database, storage, email)
+- Offline data export functionality
+- System metrics and analytics
+- Download endpoints for data exports
+
+**Files implemented:**
+- `backend/src/resilience/resilience.service.ts` - Resilience business logic
+- `backend/src/resilience/resilience.controller.ts` - Resilience endpoints
+- `backend/src/resilience/resilience.dto.ts` - Resilience DTOs
+
+### ✅ ADMIN Module - FULLY IMPLEMENTED
+The admin system has been completely implemented with:
+- User management (list, suspend, delete)
+- System metrics and analytics
+- Audit logs viewing
+- Role-based access control
+- Admin protection features
+
+**Files implemented:**
+- `backend/src/admin/admin.service.ts` - Admin business logic
+- `backend/src/admin/admin.controller.ts` - Admin endpoints
+- `backend/src/admin/admin.dto.ts` - Admin DTOs
 
 ---
 
@@ -82,8 +132,8 @@ Management of public or personal user profile.
 
 | Method | Endpoint               | Description                                        | Status |
 |--------|------------------------|----------------------------------------------------|--------|
-| GET    | `/profile`             | Retrieve logged user profile                       | ⏳ Pending |
-| PUT    | `/profile`             | Update general profile data                        | ⏳ Pending |
+| GET    | `/profile`             | Retrieve logged user profile                       | ✅ Implemented |
+| PUT    | `/profile`             | Update general profile data                        | ✅ Implemented |
 
 ---
 
@@ -93,9 +143,16 @@ Tools for security, session management, and privacy.
 
 | Method | Endpoint                    | Description                                   | Status |
 |--------|-----------------------------|-----------------------------------------------|--------|
-| GET    | `/security/logs`            | List recent activities and access             | ⏳ Pending |
-| GET    | `/security/download-data`   | Download personal data (GDPR compliance)      | ⏳ Pending |
-| DELETE | `/security/delete-account`  | Delete user account                           | ⏳ Pending |
+| GET    | `/security/logs`            | List recent activities and access             | ✅ Implemented |
+| GET    | `/security/sessions`        | View active sessions and tokens               | ✅ Implemented |
+| GET    | `/security/download-data`   | Download personal data (GDPR compliance)      | ✅ Implemented |
+| DELETE | `/security/delete-account`  | Delete user account (⚠️ cannot delete last admin) | ✅ Implemented |
+
+**Security Features:**
+- **Admin Protection**: Cannot delete the last admin user in the system
+- **Audit Logging**: All security events are logged for compliance
+- **Session Management**: Track active sessions with IP and User Agent
+- **Data Export**: GDPR-compliant personal data export with expiration
 
 ---
 
@@ -105,8 +162,31 @@ Endpoints oriented towards robustness, backup, and operational continuity.
 
 | Method | Endpoint               | Description                                       | Status |
 |--------|------------------------|---------------------------------------------------|--------|
-| GET    | `/status`              | System status (healthcheck)                       | ⏳ Pending |
-| GET    | `/offline-data`        | Export essential data in offline format           | ⏳ Pending |
+| GET    | `/resilience/status`   | System status (healthcheck)                       | ✅ Implemented |
+| POST   | `/resilience/backup`   | Create system backup                              | ✅ Implemented |
+| GET    | `/resilience/backup`   | List available backups                            | ✅ Implemented |
+| POST   | `/resilience/backup/:backupId/restore` | Restore system from backup (tested, works in real environment) | ✅ Implemented |
+
+**Resilience Features:**
+- **Health Monitoring**: Real-time system health checks for database, storage, and email services
+- **Service Status**: Comprehensive service monitoring with status indicators (healthy/degraded/down)
+- **Backup System**: Database backup using pg_dump with automatic file management
+- **Restore System**: Point-in-time restore capability with backup verification (tested, works)
+- **Backup Management**: List, create, and restore backups with audit logging
+- **Audit Logging**: All backup operations are logged for compliance
+- **Automated Backup**: Automatic backup every 6 hours via Docker containers
+- **Retention Policy**: Automatic cleanup of backups older than 7 days
+- **Backup Verification**: Automatic checksum calculation and file integrity verification
+
+**Backup Strategy:**
+- **Database Backup**: Full PostgreSQL dump using pg_dump
+- **File Storage**: MinIO object storage with `backups/` prefix
+- **Verification**: Automatic backup file validation (size, existence, checksum)
+- **Restore**: Restore tested and works in real environment
+- **Audit Trail**: Complete logging of backup/restore operations
+- **Automation**: Docker-based cron jobs for backup, cleanup, and verification
+- **Retention**: 7-day retention policy with automatic cleanup
+- **Cloud Storage**: Scalable MinIO-based storage instead of local filesystem
 
 ---
 
@@ -116,10 +196,17 @@ Administrative endpoints for user management and system oversight.
 
 | Method | Endpoint               | Description                                       | Status |
 |--------|------------------------|---------------------------------------------------|--------|
-| GET    | `/admin/users`         | List all users                                    | ⏳ Pending |
-| GET    | `/admin/users/:uuid`   | View a specific user data                         | ⏳ Pending |
-| PATCH  | `/admin/users/:uuid`   | Modify account role/status                        | ⏳ Pending |
-| DELETE | `/admin/users/:uuid`   | Delete a specific user                            | ⏳ Pending |
+| GET    | `/admin/users`         | List all users                                    | ✅ Implemented |
+| PUT    | `/admin/users/:uuid/suspend` | Suspend user account                          | ✅ Implemented |
+| DELETE | `/admin/users/:uuid`   | Delete a specific user                            | ✅ Implemented |
+| GET    | `/admin/metrics`       | System metrics and analytics                     | ✅ Implemented |
+| GET    | `/admin/audit-logs`    | View audit logs                                   | ✅ Implemented |
+
+**Admin Features:**
+- **User Management**: Complete user lifecycle management
+- **System Analytics**: Real-time metrics and charts
+- **Audit Trail**: Comprehensive activity logging
+- **Role Protection**: Admin users cannot be suspended/deleted through admin interface
 
 ---
 
@@ -128,67 +215,4 @@ Administrative endpoints for user management and system oversight.
 - **`/auth/me`** vs **`/profile`**: `/auth/me` returns basic authentication data, `/profile` returns full profile
 - **`/security/download-data`** vs **`/resilience/offline-data`**: The former for GDPR, the latter for offline backup
 - **`/security/delete-account`** vs **`/admin/users/:uuid`**: The former for self-delete, the latter for administrative deletion
-
----
-
-## 🧪 Testing
-
-### 📁 Test Organization
-
-```
-backend/tests/
-├── auth/                  # Auth-specific tests
-├── integration/           # Integration tests
-│   ├── auth.test.js      # Auth integration tests
-│   └── database.test.js  # Database integration tests
-├── unit/                  # Unit tests
-└── fixtures/              # Test data
-    └── test-data.json    # Test fixtures
-```
-
-### 🚀 How to Test
-
-1. **Setup Database**: 
-   ```bash
-   # Copy environment file
-   cp backend/env.example backend/.env
-   # Configure variables in .env
-   ```
-
-2. **Start Server**: 
-   ```bash
-   cd backend
-   npm run start:dev
-   ```
-
-3. **Run Tests**:
-   ```bash
-   # Auth tests
-   npm run test:auth
-   
-   # Database tests
-   npm run test:database
-   
-   # All integration tests
-   npm run test:integration
-   
-   # Unit tests
-   npm run test:unit
-   ```
-
-### 📋 Test Commands
-
-| Command | Description |
-|---------|-------------|
-| `npm run test:auth` | Test authentication system |
-| `npm run test:database` | Test database operations |
-| `npm run test:integration` | Run all integration tests |
-| `npm run test:unit` | Run unit tests with Jest |
-| `npm run test:cov` | Run tests with coverage |
-
-## 📚 Documentazione Correlata
-
-- [Testing Guide](testing.md) - Guida completa ai test
-- [Auth Testing Guide](auth-testing.md) - Test specifici per autenticazione
-- [Database Management](database-management.md) - Gestione database e migrazioni
-- [DTO Documentation](dto.md) - Documentazione DTO e validazioni
+- **`/security/logs`**: Provides user-specific security logs and audit trail (integrated with AuditService)

@@ -1,10 +1,11 @@
-import { Controller, Get, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Param, HttpCode, HttpStatus } from '@nestjs/common';
 import { ApiResponseDto } from '../common/common.interface';
 import { ResilienceService } from './resilience.service';
+import { BackupResponseDto, BackupStatusResponseDto } from './resilience.dto';
 
 /**
- * Controller handling resilience-related endpoints
- * Manages system status and offline data operations
+ * Controller for resilience-related endpoints
+ * Handles system status, backup operations, and disaster recovery
  */
 @Controller('resilience')
 export class ResilienceController {
@@ -13,8 +14,8 @@ export class ResilienceController {
     ) { }
 
     /**
-     * System status (healthcheck)
-     * GET /resilience/status
+     * Get system status (healthcheck)
+     * @Get('/status')
      */
     @Get('status')
     @HttpCode(HttpStatus.OK)
@@ -23,12 +24,32 @@ export class ResilienceController {
     }
 
     /**
-     * Export essential data in offline format
-     * GET /resilience/offline-data
+     * Create system backup
+     * @Post('/backup')
      */
-    @Get('offline-data')
+    @Post('backup')
+    @HttpCode(HttpStatus.CREATED)
+    async createBackup(): Promise<ApiResponseDto<any>> {
+        return this.resilienceService.createBackup();
+    }
+
+    /**
+     * List available backups
+     * @Get('/backup')
+     */
+    @Get('backup')
     @HttpCode(HttpStatus.OK)
-    async getOfflineData(): Promise<ApiResponseDto<any>> {
-        return this.resilienceService.getOfflineData();
+    async listBackups(): Promise<ApiResponseDto<BackupResponseDto[]>> {
+        return this.resilienceService.listBackups();
+    }
+
+    /**
+     * Restore system from backup
+     * @Post('/backup/:backupId/restore')
+     */
+    @Post('backup/:backupId/restore')
+    @HttpCode(HttpStatus.OK)
+    async restoreBackup(@Param('backupId') backupId: string): Promise<ApiResponseDto<any>> {
+        return this.resilienceService.restoreBackup(backupId);
     }
 } 

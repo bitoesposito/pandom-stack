@@ -1,6 +1,6 @@
 import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { S3Client, PutObjectCommand, GetObjectCommand, CreateBucketCommand, HeadBucketCommand, PutBucketPolicyCommand } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand, GetObjectCommand, CreateBucketCommand, HeadBucketCommand, PutBucketPolicyCommand, ListObjectsV2Command } from '@aws-sdk/client-s3';
 import * as https from 'https';
 
 @Injectable()
@@ -61,6 +61,7 @@ export class MinioService implements OnModuleInit {
 
     await this.createBucketIfNotExists();
     await this.setBucketPolicy();
+    await this.createBackupsDirectory();
 
     // Verify bucket access
     try {
@@ -115,6 +116,24 @@ export class MinioService implements OnModuleInit {
     } catch (error) {
       this.logger.error('Failed to set bucket policy:', error);
       throw error;
+    }
+  }
+
+  private async createBackupsDirectory() {
+    try {
+      // Create a placeholder file to establish the backups directory
+      const command = new PutObjectCommand({
+        Bucket: this.bucket,
+        Key: 'backups/.keep',
+        Body: Buffer.from('Backups directory placeholder'),
+        ContentType: 'text/plain',
+      });
+
+      await this.s3Client.send(command);
+      this.logger.debug('Created backups directory in MinIO bucket');
+    } catch (error) {
+      this.logger.error('Failed to create backups directory:', error);
+      // Don't throw error as this is not critical
     }
   }
 
@@ -179,6 +198,98 @@ export class MinioService implements OnModuleInit {
         endpoint: this.publicEndpoint
       });
       throw new Error(`Failed to generate file URL: ${error.message}`);
+    }
+  }
+
+  async downloadFile(key: string): Promise<Buffer> {
+    this.logger.debug('Starting file download from MinIO', {
+      bucket: this.bucket,
+      key
+    });
+
+    try {
+      const command = new GetObjectCommand({
+        Bucket: this.bucket,
+        Key: key,
+      });
+
+      this.logger.debug('Sending GetObjectCommand to MinIO', {
+        endpoint: this.internalEndpoint,
+        bucket: this.bucket,
+        key
+      });
+
+      const response = await this.s3Client.send(command);
+      
+      if (!response.Body) {
+        throw new Error('No file content received from MinIO');
+      }
+
+      // Convert stream to buffer
+      const chunks: Uint8Array[] = [];
+      for await (const chunk of response.Body as any) {
+        chunks.push(chunk);
+      }
+      const buffer = Buffer.concat(chunks);
+
+      this.logger.debug('File downloaded successfully from MinIO', {
+        key,
+        size: buffer.length
+      });
+
+      return buffer;
+    } catch (error) {
+      this.logger.error('Failed to download file from MinIO:', {
+        error: error.message,
+        stack: error.stack,
+        bucket: this.bucket,
+        key
+      });
+      throw error;
+    }
+  }
+
+  async listFiles(prefix: string): Promise<string[]> {
+    this.logger.debug('Starting file listing from MinIO', {
+      bucket: this.bucket,
+      prefix
+    });
+
+    try {
+      const command = new ListObjectsV2Command({
+        Bucket: this.bucket,
+        Prefix: prefix,
+      });
+
+      this.logger.debug('Sending ListObjectsV2Command to MinIO', {
+        endpoint: this.internalEndpoint,
+        bucket: this.bucket,
+        prefix
+      });
+
+      const response = await this.s3Client.send(command);
+      
+      if (!response.Contents) {
+        this.logger.debug('No files found in MinIO', { prefix });
+        return [];
+      }
+
+      const files = response.Contents.map(obj => obj.Key).filter(key => key !== undefined) as string[];
+      
+      this.logger.debug('Files listed successfully from MinIO', {
+        prefix,
+        count: files.length
+      });
+
+      return files;
+    } catch (error) {
+      this.logger.error('Failed to list files from MinIO:', {
+        error: error.message,
+        stack: error.stack,
+        bucket: this.bucket,
+        prefix
+      });
+      throw error;
     }
   }
 }

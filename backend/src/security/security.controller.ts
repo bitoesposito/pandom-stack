@@ -1,7 +1,17 @@
-import { Controller, Get, Delete, Param, HttpCode, HttpStatus, UseGuards, Req } from '@nestjs/common';
+import { Controller, Get, Delete, Param, HttpCode, HttpStatus, UseGuards, Req, Res } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ApiResponseDto } from '../common/common.interface';
 import { SecurityService } from './security.service';
+import { Request, Response } from 'express';
+
+// Interface for authenticated request
+interface AuthenticatedRequest extends Request {
+  user: {
+    uuid: string;
+    email: string;
+    role: string;
+  };
+}
 
 /**
  * Controller handling security-related endpoints
@@ -19,8 +29,8 @@ export class SecurityController {
      */
     @Get('logs')
     @UseGuards(JwtAuthGuard)
-    async getSecurityLogs(@Req() req: any): Promise<ApiResponseDto<any>> {
-        return this.securityService.getSecurityLogs(req.user.uuid);
+    async getSecurityLogs(@Req() req: AuthenticatedRequest): Promise<ApiResponseDto<any>> {
+        return this.securityService.getSecurityLogs(req.user.uuid, req);
     }
 
     /**
@@ -29,8 +39,8 @@ export class SecurityController {
      */
     @Get('sessions')
     @UseGuards(JwtAuthGuard)
-    async getSessions(@Req() req: any): Promise<ApiResponseDto<any>> {
-        return this.securityService.getSessions(req.user.uuid);
+    async getSessions(@Req() req: AuthenticatedRequest): Promise<ApiResponseDto<any>> {
+        return this.securityService.getSessions(req.user.uuid, req);
     }
 
     /**
@@ -39,8 +49,21 @@ export class SecurityController {
      */
     @Get('download-data')
     @UseGuards(JwtAuthGuard)
-    async downloadData(@Req() req: any): Promise<ApiResponseDto<any>> {
+    async downloadData(@Req() req: AuthenticatedRequest): Promise<ApiResponseDto<any>> {
         return this.securityService.downloadData(req.user.uuid);
+    }
+
+    /**
+     * Download user data file
+     * GET /downloads/user-data-:userId-:timestamp.json
+     */
+    @Get('downloads/user-data-:userId-:timestamp.json')
+    async downloadUserDataFile(
+        @Param('userId') userId: string,
+        @Param('timestamp') timestamp: string,
+        @Res() res: Response
+    ) {
+        return this.securityService.downloadUserDataFile(userId, timestamp, res);
     }
 
     /**
@@ -50,7 +73,7 @@ export class SecurityController {
     @Delete('delete-account')
     @HttpCode(HttpStatus.OK)
     @UseGuards(JwtAuthGuard)
-    async deleteAccount(@Req() req: any): Promise<ApiResponseDto<null>> {
+    async deleteAccount(@Req() req: AuthenticatedRequest): Promise<ApiResponseDto<null>> {
         return this.securityService.deleteAccount(req.user.uuid);
     }
 } 

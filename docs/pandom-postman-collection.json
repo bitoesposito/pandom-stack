@@ -25,11 +25,12 @@
 							"raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\",\n  \"display_name\": \"{{display_name}}\"\n}"
 						},
 						"url": {
-							"raw": "{{base_url}}/auth/register",
+							"raw": "{{base_url}}/api/auth/register",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
+								"api",
 								"auth",
 								"register"
 							]
@@ -53,11 +54,12 @@
 							"raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}"
 						},
 						"url": {
-							"raw": "{{base_url}}/auth/login",
+							"raw": "{{base_url}}/api/auth/login",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
+								"api",
 								"auth",
 								"login"
 							]
@@ -81,11 +83,12 @@
 							"raw": "{\n  \"refresh_token\": \"{{refresh_token}}\"\n}"
 						},
 						"url": {
-							"raw": "{{base_url}}/auth/refresh",
+							"raw": "{{base_url}}/api/auth/refresh",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
+								"api",
 								"auth",
 								"refresh"
 							]
@@ -101,15 +104,16 @@
 						"header": [
 							{
 								"key": "Authorization",
-								"value": "Bearer {{auth_token}}"
+								"value": "Bearer {{access_token}}"
 							}
 						],
 						"url": {
-							"raw": "{{base_url}}/auth/me",
+							"raw": "{{base_url}}/api/auth/me",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
+								"api",
 								"auth",
 								"me"
 							]
@@ -133,11 +137,12 @@
 							"raw": "{\n  \"token\": \"{{verification_otp}}\"\n}"
 						},
 						"url": {
-							"raw": "{{base_url}}/auth/verify",
+							"raw": "{{base_url}}/api/auth/verify",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
+								"api",
 								"auth",
 								"verify"
 							]
@@ -161,11 +166,12 @@
 							"raw": "{\n  \"email\": \"{{email}}\"\n}"
 						},
 						"url": {
-							"raw": "{{base_url}}/auth/resend-verification",
+							"raw": "{{base_url}}/api/auth/resend-verification",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
+								"api",
 								"auth",
 								"resend-verification"
 							]
@@ -189,11 +195,12 @@
 							"raw": "{\n  \"email\": \"{{email}}\"\n}"
 						},
 						"url": {
-							"raw": "{{base_url}}/auth/forgot-password",
+							"raw": "{{base_url}}/api/auth/forgot-password",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
+								"api",
 								"auth",
 								"forgot-password"
 							]
@@ -217,11 +224,12 @@
 							"raw": "{\n  \"token\": \"{{reset_otp}}\",\n  \"password\": \"{{new_password}}\"\n}"
 						},
 						"url": {
-							"raw": "{{base_url}}/auth/reset-password",
+							"raw": "{{base_url}}/api/auth/reset-password",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
+								"api",
 								"auth",
 								"reset-password"
 							]
@@ -243,15 +251,16 @@
 						"header": [
 							{
 								"key": "Authorization",
-								"value": "Bearer {{auth_token}}"
+								"value": "Bearer {{access_token}}"
 							}
 						],
 						"url": {
-							"raw": "{{base_url}}/profile",
+							"raw": "{{base_url}}/api/profile",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
+								"api",
 								"profile"
 							]
 						},
@@ -266,7 +275,7 @@
 						"header": [
 							{
 								"key": "Authorization",
-								"value": "Bearer {{auth_token}}"
+								"value": "Bearer {{access_token}}"
 							},
 							{
 								"key": "Content-Type",
@@ -278,11 +287,12 @@
 							"raw": "{\n  \"display_name\": \"{{display_name}}\",\n  \"tags\": [\"{{tags}}\"],\n  \"metadata\": {\n    \"bio\": \"{{bio}}\",\n    \"location\": \"{{location}}\"\n  }\n}"
 						},
 						"url": {
-							"raw": "{{base_url}}/profile",
+							"raw": "{{base_url}}/api/profile",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
+								"api",
 								"profile"
 							]
 						},
@@ -303,15 +313,16 @@
 						"header": [
 							{
 								"key": "Authorization",
-								"value": "Bearer {{auth_token}}"
+								"value": "Bearer {{access_token}}"
 							}
 						],
 						"url": {
-							"raw": "{{base_url}}/security/logs",
+							"raw": "{{base_url}}/api/security/logs",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
+								"api",
 								"security",
 								"logs"
 							]
@@ -327,15 +338,16 @@
 						"header": [
 							{
 								"key": "Authorization",
-								"value": "Bearer {{auth_token}}"
+								"value": "Bearer {{access_token}}"
 							}
 						],
 						"url": {
-							"raw": "{{base_url}}/security/sessions",
+							"raw": "{{base_url}}/api/security/sessions",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
+								"api",
 								"security",
 								"sessions"
 							]
@@ -351,15 +363,16 @@
 						"header": [
 							{
 								"key": "Authorization",
-								"value": "Bearer {{auth_token}}"
+								"value": "Bearer {{access_token}}"
 							}
 						],
 						"url": {
-							"raw": "{{base_url}}/security/download-data",
+							"raw": "{{base_url}}/api/security/download-data",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
+								"api",
 								"security",
 								"download-data"
 							]
@@ -375,20 +388,21 @@
 						"header": [
 							{
 								"key": "Authorization",
-								"value": "Bearer {{auth_token}}"
+								"value": "Bearer {{access_token}}"
 							}
 						],
 						"url": {
-							"raw": "{{base_url}}/security/delete-account",
+							"raw": "{{base_url}}/api/security/delete-account",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
+								"api",
 								"security",
 								"delete-account"
 							]
 						},
-						"description": "Permanently delete user account and all associated data"
+						"description": "Permanently delete user account and all associated data (⚠️ Cannot delete last admin)"
 					},
 					"response": []
 				}
@@ -399,45 +413,109 @@
 			"name": "Resilience",
 			"item": [
 				{
-					"name": "System Status",
+					"name": "Get Resilience Status",
 					"request": {
 						"method": "GET",
-						"header": [],
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
 						"url": {
-							"raw": "{{base_url}}/resilience/status",
+							"raw": "{{base_url}}/api/resilience/status",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
+								"api",
 								"resilience",
 								"status"
 							]
 						},
-						"description": "Check system health status and service availability"
+						"description": "Check system resilience status including database connectivity and backup health"
 					},
 					"response": []
 				},
 				{
-					"name": "Offline Data Export",
+					"name": "Create Backup",
 					"request": {
-						"method": "GET",
-						"header": [],
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
 						"url": {
-							"raw": "{{base_url}}/resilience/offline-data",
+							"raw": "{{base_url}}/api/resilience/backup",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
+								"api",
 								"resilience",
-								"offline-data"
+								"backup"
 							]
 						},
-						"description": "Export essential system data in offline-compatible format"
+						"description": "Create a new database backup and store it in MinIO storage"
+					},
+					"response": []
+				},
+				{
+					"name": "List Backups",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/resilience/backup",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"resilience",
+								"backup"
+							]
+						},
+						"description": "List all available database backups with metadata"
+					},
+					"response": []
+				},
+				{
+					"name": "Restore Backup",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/resilience/backup/{{backup_id}}/restore",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"resilience",
+								"backup",
+								"{{backup_id}}",
+								"restore"
+							]
+						},
+						"description": "Restore database from a specific backup (⚠️ This will overwrite current data)"
 					},
 					"response": []
 				}
 			],
-			"description": "System resilience and backup endpoints for monitoring and data export"
+			"description": "System resilience and backup management endpoints for data protection and recovery"
 		},
 		{
 			"name": "Administration",
@@ -453,16 +531,27 @@
 							}
 						],
 						"url": {
-							"raw": "{{base_url}}/admin/users",
+							"raw": "{{base_url}}/api/admin/users?page={{page}}&limit={{limit}}",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
+								"api",
 								"admin",
 								"users"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "{{page}}"
+								},
+								{
+									"key": "limit",
+									"value": "{{limit}}"
+								}
 							]
 						},
-						"description": "Retrieve list of all registered users with pagination support (Administrator access required)"
+						"description": "Retrieve paginated list of all users (Admin only)"
 					},
 					"response": []
 				},
@@ -477,18 +566,19 @@
 							}
 						],
 						"url": {
-							"raw": "{{base_url}}/admin/users/{{user_uuid}}/suspend",
+							"raw": "{{base_url}}/api/admin/users/{{user_uuid}}/suspend",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
+								"api",
 								"admin",
 								"users",
 								"{{user_uuid}}",
 								"suspend"
 							]
 						},
-						"description": "Temporarily suspend user account access (Administrator access required)"
+						"description": "Suspend a user account (Admin only)"
 					},
 					"response": []
 				},
@@ -503,17 +593,18 @@
 							}
 						],
 						"url": {
-							"raw": "{{base_url}}/admin/users/{{user_uuid}}",
+							"raw": "{{base_url}}/api/admin/users/{{user_uuid}}",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
+								"api",
 								"admin",
 								"users",
 								"{{user_uuid}}"
 							]
 						},
-						"description": "Permanently delete a specific user account and all associated data (Administrator access required)"
+						"description": "Permanently delete a user account (Admin only)"
 					},
 					"response": []
 				},
@@ -528,16 +619,17 @@
 							}
 						],
 						"url": {
-							"raw": "{{base_url}}/admin/metrics",
+							"raw": "{{base_url}}/api/admin/metrics",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
+								"api",
 								"admin",
 								"metrics"
 							]
 						},
-						"description": "Retrieve system performance metrics and analytics data (Administrator access required)"
+						"description": "Retrieve system performance metrics and statistics (Admin only)"
 					},
 					"response": []
 				},
@@ -552,21 +644,32 @@
 							}
 						],
 						"url": {
-							"raw": "{{base_url}}/admin/audit-logs",
+							"raw": "{{base_url}}/api/admin/audit-logs?page={{page}}&limit={{limit}}",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
+								"api",
 								"admin",
 								"audit-logs"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "{{page}}"
+								},
+								{
+									"key": "limit",
+									"value": "{{limit}}"
+								}
 							]
 						},
-						"description": "View comprehensive audit logs of system activities (Administrator access required)"
+						"description": "Retrieve system audit logs for security monitoring (Admin only)"
 					},
 					"response": []
 				}
 			],
-			"description": "Administrative endpoints for user management, system monitoring, and oversight operations"
+			"description": "Administrative endpoints for user management, system monitoring, and audit logging"
 		},
 		{
 			"name": "Database Management",
@@ -575,18 +678,24 @@
 					"name": "Get Database Status",
 					"request": {
 						"method": "GET",
-						"header": [],
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
 						"url": {
-							"raw": "{{base_url}}/database/status",
+							"raw": "{{base_url}}/api/database/status",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
+								"api",
 								"database",
 								"status"
 							]
 						},
-						"description": "Check database connection status and table information"
+						"description": "Check database connection status and health"
 					},
 					"response": []
 				},
@@ -594,23 +703,29 @@
 					"name": "Sync Database",
 					"request": {
 						"method": "POST",
-						"header": [],
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
 						"url": {
-							"raw": "{{base_url}}/database/sync",
+							"raw": "{{base_url}}/api/database/sync",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
+								"api",
 								"database",
 								"sync"
 							]
 						},
-						"description": "Force database synchronization to create/update tables"
+						"description": "Synchronize database schema with entity definitions"
 					},
 					"response": []
 				}
 			],
-			"description": "Database management and administration endpoints for schema operations and maintenance"
+			"description": "Database management and monitoring endpoints"
 		},
 		{
 			"name": "Email Management",
@@ -622,31 +737,32 @@
 						"header": [
 							{
 								"key": "Authorization",
-								"value": "Bearer {{auth_token}}"
+								"value": "Bearer {{admin_token}}"
 							}
 						],
 						"url": {
-							"raw": "{{base_url}}/email/templates",
+							"raw": "{{base_url}}/api/email/templates",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
+								"api",
 								"email",
 								"templates"
 							]
 						},
-						"description": "Get available email templates for testing and management"
+						"description": "Retrieve available email templates"
 					},
 					"response": []
 				},
 				{
-					"name": "Test Email Template",
+					"name": "Test Email",
 					"request": {
 						"method": "POST",
 						"header": [
 							{
 								"key": "Authorization",
-								"value": "Bearer {{auth_token}}"
+								"value": "Bearer {{admin_token}}"
 							},
 							{
 								"key": "Content-Type",
@@ -655,43 +771,45 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"to\": \"{{email}}\",\n  \"templateType\": \"verification\",\n  \"data\": {\n    \"otp\": \"123456\",\n    \"userName\": \"{{display_name}}\"\n  }\n}"
+							"raw": "{\n  \"to\": \"{{test_email}}\",\n  \"template\": \"verification\",\n  \"data\": {\n    \"otp\": \"123456\",\n    \"user_name\": \"{{test_display_name}}\"\n  }\n}"
 						},
 						"url": {
-							"raw": "{{base_url}}/email/test",
+							"raw": "{{base_url}}/api/email/test",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
+								"api",
 								"email",
 								"test"
 							]
 						},
-						"description": "Test email template by sending a test email"
+						"description": "Send a test email using specified template"
 					},
 					"response": []
 				},
 				{
-					"name": "Clear Template Cache",
+					"name": "Clear Email Cache",
 					"request": {
 						"method": "POST",
 						"header": [
 							{
 								"key": "Authorization",
-								"value": "Bearer {{auth_token}}"
+								"value": "Bearer {{admin_token}}"
 							}
 						],
 						"url": {
-							"raw": "{{base_url}}/email/clear-cache",
+							"raw": "{{base_url}}/api/email/clear-cache",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
+								"api",
 								"email",
 								"clear-cache"
 							]
 						},
-						"description": "Clear email template cache to reload templates"
+						"description": "Clear email template cache"
 					},
 					"response": []
 				}
@@ -701,28 +819,62 @@
 	],
 	"event": [
 		{
-			"listen": "prerequest",
-			"script": {
-				"type": "text/javascript",
-				"exec": [
-					""
-				]
-			}
-		},
-		{
 			"listen": "test",
 			"script": {
-				"type": "text/javascript",
 				"exec": [
-					""
-				]
+					"// Auto-extract tokens from login responses",
+					"if (pm.response.code === 200 || pm.response.code === 201) {",
+					"    const response = pm.response.json();",
+					"    ",
+					"    // Extract access token",
+					"    if (response.access_token) {",
+					"        pm.environment.set('access_token', response.access_token);",
+					"        console.log('Access token saved');",
+					"    }",
+					"    ",
+					"    // Extract refresh token",
+					"    if (response.refresh_token) {",
+					"        pm.environment.set('refresh_token', response.refresh_token);",
+					"        console.log('Refresh token saved');",
+					"    }",
+					"    ",
+					"    // Extract user UUID",
+					"    if (response.user && response.user.uuid) {",
+					"        pm.environment.set('user_uuid', response.user.uuid);",
+					"        console.log('User UUID saved');",
+					"    }",
+					"    ",
+					"    // Extract backup ID",
+					"    if (response.backup_id) {",
+					"        pm.environment.set('backup_id', response.backup_id);",
+					"        console.log('Backup ID saved');",
+					"    }",
+					"    ",
+					"    // Extract download token",
+					"    if (response.download_token) {",
+					"        pm.environment.set('download_token', response.download_token);",
+					"        console.log('Download token saved');",
+					"    }",
+					"}",
+					"",
+					"// Handle verification OTP from registration",
+					"if (pm.request.url.path.includes('register') && pm.response.code === 201) {",
+					"    const response = pm.response.json();",
+					"    if (response.message && response.message.includes('OTP')) {",
+					"        // Note: In real scenario, OTP would be sent via email",
+					"        // For testing, you might need to check the email or logs",
+					"        console.log('Registration successful. Check email for OTP.');",
+					"    }",
+					"}"
+				],
+				"type": "text/javascript"
 			}
 		}
 	],
 	"variable": [
 		{
 			"key": "base_url",
-			"value": "http://localhost:3000",
+			"value": "http://localhost",
 			"type": "string"
 		}
 	]

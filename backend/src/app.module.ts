@@ -10,7 +10,7 @@ import { AdminModule } from './admin/admin.module';
 import { User } from './auth/entities/user.entity';
 import { UserProfile } from './users/entities/user-profile.entity';
 import { CommonModule } from './common/modules/common.module';
-// import { MinioModule } from './common/modules/minio.module';
+import { MinioModule } from './common/modules/minio.module';
 
 @Module({
   imports: [
@@ -21,7 +21,11 @@ import { CommonModule } from './common/modules/common.module';
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
         type: 'postgres',
-        url: configService.get('DATABASE_URL'),
+        host: configService.get('POSTGRES_HOST') || configService.get('DB_HOST') || 'postgres',
+        port: parseInt(configService.get('POSTGRES_PORT') || '5432'),
+        username: configService.get('POSTGRES_USER') || 'user',
+        password: configService.get('POSTGRES_PASSWORD') || 'password',
+        database: configService.get('POSTGRES_DB') || 'postgres',
         entities: [User, UserProfile],
         synchronize: true, // Solo per sviluppo! In produzione usa migration
         logging: true, // Abilita logging per debug
@@ -36,7 +40,7 @@ import { CommonModule } from './common/modules/common.module';
     SecurityModule,
     ResilienceModule,
     AdminModule,
-    // MinioModule
+    MinioModule
   ],
   controllers: [],
   providers: [],

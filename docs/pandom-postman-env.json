@@ -4,12 +4,12 @@
 	"values": [
 		{
 			"key": "base_url",
-			"value": "http://localhost:3000",
+			"value": "http://localhost",
 			"type": "default",
 			"enabled": true
 		},
 		{
-			"key": "auth_token",
+			"key": "access_token",
 			"value": "",
 			"type": "secret",
 			"enabled": true
@@ -107,6 +107,60 @@
 		{
 			"key": "migration_name",
 			"value": "test_migration",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "test_email",
+			"value": "test@example.com",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "test_display_name",
+			"value": "Test User",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "test_tags",
+			"value": "test,user",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "test_bio",
+			"value": "This is a test user for API testing",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "test_location",
+			"value": "Test City, TC",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "download_token",
+			"value": "",
+			"type": "secret",
+			"enabled": true
+		},
+		{
+			"key": "page",
+			"value": "1",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "limit",
+			"value": "10",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "backup_id",
+			"value": "",
 			"type": "default",
 			"enabled": true
 		}

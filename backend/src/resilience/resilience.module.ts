@@ -3,6 +3,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ResilienceController } from './resilience.controller';
 import { ResilienceService } from './resilience.service';
 import { User } from '../auth/entities/user.entity';
+import { CommonModule } from '../common/modules/common.module';
+import { MinioModule } from '../common/modules/minio.module';
 
 /**
  * Resilience module configuration
@@ -11,6 +13,8 @@ import { User } from '../auth/entities/user.entity';
 @Module({
   imports: [
     TypeOrmModule.forFeature([User]),
+    CommonModule,
+    MinioModule,
   ],
   controllers: [ResilienceController],
   providers: [ResilienceService],

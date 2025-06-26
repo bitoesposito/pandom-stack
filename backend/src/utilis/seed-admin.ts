@@ -19,7 +19,11 @@ import * as bcrypt from 'bcryptjs';
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
         type: 'postgres',
-        url: configService.get('DATABASE_URL'),
+        host: configService.get('POSTGRES_HOST') || configService.get('DB_HOST') || 'postgres',
+        port: parseInt(configService.get('POSTGRES_PORT') || '5432'),
+        username: configService.get('POSTGRES_USER') || 'user',
+        password: configService.get('POSTGRES_PASSWORD') || 'password',
+        database: configService.get('POSTGRES_DB') || 'postgres',
         entities: [User, UserProfile],
         synchronize: true, // Enable sync to create tables
         logging: true,

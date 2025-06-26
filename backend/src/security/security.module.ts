@@ -3,6 +3,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { SecurityController } from './security.controller';
 import { SecurityService } from './security.service';
 import { User } from '../auth/entities/user.entity';
+import { UserProfile } from '../users/entities/user-profile.entity';
+import { CommonModule } from '../common/modules/common.module';
 
 /**
  * Security module configuration
@@ -10,7 +12,8 @@ import { User } from '../auth/entities/user.entity';
  */
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User]),
+    TypeOrmModule.forFeature([User, UserProfile]),
+    CommonModule, // For AuditService
   ],
   controllers: [SecurityController],
   providers: [SecurityService],

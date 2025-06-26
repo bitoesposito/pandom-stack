@@ -1,6 +1,8 @@
 // Response DTOs for RESILIENCE module
 // These are interfaces since they represent response data structures
 
+import { IsString, IsOptional, IsNumber, IsDateString } from 'class-validator';
+
 /**
  * Response interface for system status
  */
@@ -14,24 +16,35 @@ export interface SystemStatusResponseDto {
     storage: 'healthy' | 'degraded' | 'down';
     email: 'healthy' | 'degraded' | 'down';
   };
-  metrics: {
-    active_users: number;
-    total_requests: number;
-    error_rate: number;
-  };
 }
 
 /**
- * Response interface for offline data export
+ * Response interface for backup operations
  */
-export interface OfflineDataResponseDto {
-  download_url: string;
-  expires_at: string;
-  data_summary: {
-    profile_data: boolean;
-    security_logs: boolean;
-    user_preferences: boolean;
+export interface BackupResponseDto {
+  backup_id: string;
+  backup_file: string;
+  backup_size: number;
+  created_at: string;
+  status: 'completed' | 'restored' | 'available';
+}
+
+export class BackupStatusResponseDto {
+  last_backup: {
+    timestamp: string;
+    file: string;
+    size: number;
+    checksum_valid: boolean;
+  } | null;
+  total_backups: number;
+  total_size: number;
+  retention_policy: {
+    days: number;
+    next_cleanup: string;
   };
-  file_size: number;
-  format: 'json' | 'zip';
+  automation_status: {
+    backup_cron: 'running' | 'stopped';
+    cleanup_cron: 'running' | 'stopped';
+    verify_cron: 'running' | 'stopped';
+  };
 } 
