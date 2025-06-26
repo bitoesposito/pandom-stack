@@ -47,6 +47,16 @@ export class RegisterDto {
 }
 
 /**
+ * Data Transfer Object for refresh token requests
+ * Contains validation rules for refresh token
+ */
+export class RefreshTokenDto {
+    @IsString()
+    @IsNotEmpty({ message: 'Refresh token is required' })
+    refresh_token: string;
+}
+
+/**
  * Data Transfer Object for forgot password requests
  * Contains validation rules for email
  */

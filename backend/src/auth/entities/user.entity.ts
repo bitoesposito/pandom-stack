@@ -45,6 +45,12 @@ export class User {
     @Column({ name: 'reset_token_expiry', nullable: true, type: 'timestamp' })
     reset_token_expiry: Date | null;
 
+    @Column({ name: 'refresh_token', nullable: true, type: 'text' })
+    refresh_token: string | null;
+
+    @Column({ name: 'refresh_token_expires', nullable: true, type: 'timestamp' })
+    refresh_token_expires: Date | null;
+
     @Column({ name: 'last_login_at', nullable: true, type: 'timestamp' })
     last_login_at: Date | null;
 

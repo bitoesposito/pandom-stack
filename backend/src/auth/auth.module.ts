@@ -10,6 +10,7 @@ import { RolesGuard } from './guards/roles.guard';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { PassportModule } from '@nestjs/passport';
 import { MailModule } from '../common/modules/mail.module';
+import { CommonModule } from '../common/modules/common.module';
 
 /**
  * Authentication module configuration
@@ -32,6 +33,7 @@ import { MailModule } from '../common/modules/mail.module';
         }),
         PassportModule,
         MailModule,
+        CommonModule,
     ],
     controllers: [AuthController],
     providers: [

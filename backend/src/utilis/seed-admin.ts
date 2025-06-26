@@ -2,9 +2,11 @@ import { NestFactory } from '@nestjs/core';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { DataSource } from 'typeorm';
 import { Logger } from '@nestjs/common';
 import { User } from '../auth/entities/user.entity';
 import { UserProfile } from '../users/entities/user-profile.entity';
+import { UserRole } from '../auth/auth.interface';
 import * as bcrypt from 'bcryptjs';
 
 // Simplified module for seeding
@@ -18,9 +20,10 @@ import * as bcrypt from 'bcryptjs';
       useFactory: (configService: ConfigService) => ({
         type: 'postgres',
         url: configService.get('DATABASE_URL'),
-        autoLoadEntities: true,
-        synchronize: false, // Don't sync, tables should already exist
-        logging: false,
+        entities: [User, UserProfile],
+        synchronize: true, // Enable sync to create tables
+        logging: true,
+        ssl: false,
       }),
       inject: [ConfigService],
     }),
@@ -30,14 +33,42 @@ import * as bcrypt from 'bcryptjs';
 })
 class SeedModule {}
 
+async function createUserRoleEnum(dataSource: any) {
+  const logger = new Logger('EnumCreation');
+  try {
+    // Verifica se l'enum esiste già
+    const enumExists = await dataSource.query(`
+      SELECT EXISTS (
+        SELECT 1 FROM pg_type 
+        WHERE typname = 'userrole'
+      )
+    `);
+    
+    if (!enumExists[0].exists) {
+      logger.log('Creating UserRole enum...');
+      await dataSource.query(`
+        CREATE TYPE "userrole" AS ENUM ('admin', 'user')
+      `);
+      logger.log('UserRole enum created successfully');
+    } else {
+      logger.log('UserRole enum already exists');
+    }
+  } catch (error) {
+    logger.error('Failed to create UserRole enum:', error);
+  }
+}
+
 async function waitForTables(app: any, maxRetries = 30, delay = 2000) {
   const logger = new Logger('TableWait');
-  const userRepository = app.get('UserRepository');
+  const dataSource = app.get(DataSource);
   
   for (let i = 0; i < maxRetries; i++) {
     try {
+      // Create enum first
+      await createUserRoleEnum(dataSource);
+      
       // Try to query the table to see if it exists
-      await userRepository.query('SELECT 1 FROM auth_users LIMIT 1');
+      await dataSource.query('SELECT 1 FROM auth_users LIMIT 1');
       logger.log('Tables are ready');
       return true;
     } catch (error) {
@@ -62,9 +93,10 @@ async function seedAdmin() {
     // Wait for tables to be created
     await waitForTables(app);
     
-    // Get the repositories
-    const userRepository = app.get('UserRepository');
-    const userProfileRepository = app.get('UserProfileRepository');
+    // Get the repositories using DataSource
+    const dataSource = app.get(DataSource);
+    const userRepository = dataSource.getRepository(User);
+    const userProfileRepository = dataSource.getRepository(UserProfile);
     const configService = app.get(ConfigService);
     
     // Get admin credentials from environment
@@ -104,7 +136,7 @@ async function seedAdmin() {
     const adminUser = new User();
     adminUser.email = adminEmail;
     adminUser.password_hash = hashedPassword;
-    adminUser.role = adminRole as any; // Type assertion for enum
+    adminUser.role = UserRole.admin; // Use enum instead of string
     adminUser.is_active = true;
     adminUser.is_verified = true;
     adminUser.is_configured = true;

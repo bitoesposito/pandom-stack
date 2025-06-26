@@ -7,6 +7,9 @@ import { UsersModule } from './users/users.module';
 import { SecurityModule } from './security/security.module';
 import { ResilienceModule } from './resilience/resilience.module';
 import { AdminModule } from './admin/admin.module';
+import { User } from './auth/entities/user.entity';
+import { UserProfile } from './users/entities/user-profile.entity';
+import { CommonModule } from './common/modules/common.module';
 // import { MinioModule } from './common/modules/minio.module';
 
 @Module({
@@ -19,12 +22,14 @@ import { AdminModule } from './admin/admin.module';
       useFactory: (configService: ConfigService) => ({
         type: 'postgres',
         url: configService.get('DATABASE_URL'),
-        autoLoadEntities: true,
+        entities: [User, UserProfile],
         synchronize: true, // Solo per sviluppo! In produzione usa migration
-        logging: false,
+        logging: true, // Abilita logging per debug
+        ssl: false,
       }),
       inject: [ConfigService],
     }),
+    CommonModule,
     DatabaseModule,
     AuthModule,
     UsersModule,

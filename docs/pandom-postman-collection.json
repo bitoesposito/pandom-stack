@@ -67,6 +67,34 @@
 					"response": []
 				},
 				{
+					"name": "Refresh Token",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"refresh_token\": \"{{refresh_token}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/refresh",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"refresh"
+							]
+						},
+						"description": "Refresh JWT access token using a valid refresh token"
+					},
+					"response": []
+				},
+				{
 					"name": "Get Current User",
 					"request": {
 						"method": "GET",
@@ -219,12 +247,11 @@
 							}
 						],
 						"url": {
-							"raw": "{{base_url}}/users/profile",
+							"raw": "{{base_url}}/profile",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
-								"users",
 								"profile"
 							]
 						},
@@ -251,12 +278,11 @@
 							"raw": "{\n  \"display_name\": \"{{display_name}}\",\n  \"tags\": [\"{{tags}}\"],\n  \"metadata\": {\n    \"bio\": \"{{bio}}\",\n    \"location\": \"{{location}}\"\n  }\n}"
 						},
 						"url": {
-							"raw": "{{base_url}}/users/profile",
+							"raw": "{{base_url}}/profile",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
-								"users",
 								"profile"
 							]
 						},
@@ -546,151 +572,131 @@
 			"name": "Database Management",
 			"item": [
 				{
-					"name": "Initialize Database",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{admin_token}}"
-							}
-						],
-						"url": {
-							"raw": "{{base_url}}/database/init",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"database",
-								"init"
-							]
-						},
-						"description": "Initialize database tables and create default administrator user (Administrator access required)"
-					},
-					"response": []
-				},
-				{
-					"name": "Run Migrations",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{admin_token}}"
-							}
-						],
-						"url": {
-							"raw": "{{base_url}}/database/migrate",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"database",
-								"migrate"
-							]
-						},
-						"description": "Execute pending database migrations to update schema (Administrator access required)"
-					},
-					"response": []
-				},
-				{
-					"name": "Get Migration Status",
+					"name": "Get Database Status",
 					"request": {
 						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{admin_token}}"
-							}
-						],
+						"header": [],
 						"url": {
-							"raw": "{{base_url}}/database/migrations",
+							"raw": "{{base_url}}/database/status",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
 								"database",
-								"migrations"
+								"status"
 							]
 						},
-						"description": "Retrieve migration status, history, and pending migrations (Administrator access required)"
+						"description": "Check database connection status and table information"
 					},
 					"response": []
 				},
 				{
-					"name": "Database Health Check",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{admin_token}}"
-							}
-						],
-						"url": {
-							"raw": "{{base_url}}/database/health",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"database",
-								"health"
-							]
-						},
-						"description": "Perform comprehensive database connection and health status check (Administrator access required)"
-					},
-					"response": []
-				},
-				{
-					"name": "Get Database Statistics",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{admin_token}}"
-							}
-						],
-						"url": {
-							"raw": "{{base_url}}/database/stats",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"database",
-								"stats"
-							]
-						},
-						"description": "Retrieve detailed database statistics, table information, and performance metrics (Administrator access required)"
-					},
-					"response": []
-				},
-				{
-					"name": "Reset Database",
+					"name": "Sync Database",
 					"request": {
 						"method": "POST",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{admin_token}}"
-							}
-						],
+						"header": [],
 						"url": {
-							"raw": "{{base_url}}/database/reset",
+							"raw": "{{base_url}}/database/sync",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
 								"database",
-								"reset"
+								"sync"
 							]
 						},
-						"description": "Reset database by dropping all tables and reinitializing schema - USE WITH EXTREME CAUTION (Administrator access required)"
+						"description": "Force database synchronization to create/update tables"
 					},
 					"response": []
 				}
 			],
 			"description": "Database management and administration endpoints for schema operations and maintenance"
+		},
+		{
+			"name": "Email Management",
+			"item": [
+				{
+					"name": "Get Email Templates",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/email/templates",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"email",
+								"templates"
+							]
+						},
+						"description": "Get available email templates for testing and management"
+					},
+					"response": []
+				},
+				{
+					"name": "Test Email Template",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"to\": \"{{email}}\",\n  \"templateType\": \"verification\",\n  \"data\": {\n    \"otp\": \"123456\",\n    \"userName\": \"{{display_name}}\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/email/test",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"email",
+								"test"
+							]
+						},
+						"description": "Test email template by sending a test email"
+					},
+					"response": []
+				},
+				{
+					"name": "Clear Template Cache",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/email/clear-cache",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"email",
+								"clear-cache"
+							]
+						},
+						"description": "Clear email template cache to reload templates"
+					},
+					"response": []
+				}
+			],
+			"description": "Email template management and testing endpoints"
 		}
 	],
 	"event": [

@@ -9,6 +9,7 @@ import { UserProfile } from '../users/entities/user-profile.entity';
 import { LoginResponse, UserRole } from './auth.interface';
 import { LoginDto, RegisterDto, ForgotPasswordDto, ResetPasswordDto, VerifyEmailDto } from './auth.dto';
 import { MailService } from '../common/services/mail.service';
+import { AuditService } from '../common/services/audit.service';
 
 /**
  * Service handling authentication business logic
@@ -25,6 +26,7 @@ export class AuthService {
     private readonly userProfileRepository: Repository<UserProfile>,
     private readonly jwtService: JwtService,
     private readonly mailService: MailService,
+    private readonly auditService: AuditService,
   ) { }
 
   /**
@@ -123,17 +125,23 @@ export class AuthService {
       });
 
       if (!user) {
+        // Log failed login attempt
+        await this.auditService.logLoginFailed(loginDto.email, undefined, undefined, 'User not found');
         throw new UnauthorizedException('Invalid credentials');
       }
 
       // Check if user is active
       if (!user.is_active) {
+        // Log failed login attempt
+        await this.auditService.logLoginFailed(loginDto.email, undefined, undefined, 'Account deactivated');
         throw new UnauthorizedException('Account is deactivated');
       }
 
       // Verify password
       const isPasswordValid = await bcrypt.compare(loginDto.password, user.password_hash);
       if (!isPasswordValid) {
+        // Log failed login attempt
+        await this.auditService.logLoginFailed(loginDto.email, undefined, undefined, 'Invalid password');
         throw new UnauthorizedException('Invalid credentials');
       }
 
@@ -150,6 +158,14 @@ export class AuthService {
 
       const accessToken = this.jwtService.sign(payload);
       const refreshToken = this.jwtService.sign(payload, { expiresIn: '7d' });
+
+      // Store refresh token in database for security
+      user.refresh_token = refreshToken;
+      user.refresh_token_expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+      await this.userRepository.save(user);
+
+      // Log successful login
+      await this.auditService.logLoginSuccess(user.uuid, user.email);
 
       // Prepare response
       const response: LoginResponse = {
@@ -181,6 +197,95 @@ export class AuthService {
       return ApiResponseDto.success(response, 'Login successful');
     } catch (error) {
       this.logger.error('Login failed', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Refresh JWT access token using refresh token
+   * @param refreshToken - The refresh token
+   * @returns Promise<ApiResponseDto<any>>
+   */
+  async refreshToken(refreshToken: string): Promise<ApiResponseDto<any>> {
+    try {
+      // Verify the refresh token
+      const payload = this.jwtService.verify(refreshToken);
+      
+      // Find user by UUID from token
+      const user = await this.userRepository.findOne({
+        where: { uuid: payload.sub },
+        relations: ['profile']
+      });
+
+      if (!user) {
+        throw new UnauthorizedException('Invalid refresh token');
+      }
+
+      // Check if user is active
+      if (!user.is_active) {
+        throw new UnauthorizedException('Account is deactivated');
+      }
+
+      // Verify that the stored refresh token matches
+      if (user.refresh_token !== refreshToken) {
+        throw new UnauthorizedException('Invalid refresh token');
+      }
+
+      // Check if refresh token is expired in database
+      if (user.refresh_token_expires && user.refresh_token_expires < new Date()) {
+        // Clear expired refresh token
+        user.refresh_token = null;
+        user.refresh_token_expires = null;
+        await this.userRepository.save(user);
+        throw new UnauthorizedException('Refresh token expired');
+      }
+
+      // Generate new access token
+      const newPayload = {
+        sub: user.uuid,
+        email: user.email,
+        role: user.role
+      };
+
+      const newAccessToken = this.jwtService.sign(newPayload);
+
+      // Generate new refresh token for rotation
+      const newRefreshToken = this.jwtService.sign(newPayload, { expiresIn: '7d' });
+
+      // Update stored refresh token
+      user.refresh_token = newRefreshToken;
+      user.refresh_token_expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+      await this.userRepository.save(user);
+
+      const response: any = {
+        access_token: newAccessToken,
+        refresh_token: newRefreshToken,
+        expires_in: 3600, // 1 hour
+        user: {
+          uuid: user.uuid,
+          email: user.email,
+          role: user.role,
+          is_active: user.is_active,
+          is_verified: user.is_verified,
+          is_configured: user.is_configured,
+          last_login_at: user.last_login_at?.toISOString()
+        }
+      };
+
+      // Include profile if exists
+      if (user.profile) {
+        response.profile = {
+          uuid: user.profile.uuid,
+          display_name: user.profile.display_name,
+          tags: user.profile.tags
+        };
+      }
+
+      this.logger.log('Token refreshed successfully', { email: user.email });
+      
+      return ApiResponseDto.success(response, 'Token refreshed successfully');
+    } catch (error) {
+      this.logger.error('Token refresh failed', error);
       throw error;
     }
   }
@@ -260,6 +365,18 @@ export class AuthService {
       user.verification_token = null;
       user.verification_expires = null;
       await this.userRepository.save(user);
+
+      // Log email verification
+      await this.auditService.log({
+        event_type: 'USER_VERIFY_EMAIL' as any,
+        user_id: user.uuid,
+        user_email: user.email,
+        status: 'SUCCESS',
+        details: {
+          verification_method: 'email_token',
+          timestamp: new Date().toISOString(),
+        },
+      });
 
       this.logger.log('Email verified successfully', { email: user.email });
       
@@ -349,6 +466,9 @@ export class AuthService {
       user.reset_token = null;
       user.reset_token_expiry = null;
       await this.userRepository.save(user);
+
+      // Log password reset
+      await this.auditService.logPasswordReset(user.uuid, user.email);
 
       this.logger.log('Password reset successfully', { email: user.email });
       

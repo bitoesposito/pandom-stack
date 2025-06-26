@@ -1,7 +1,7 @@
 import { Controller, Get, Put, Delete, Param, HttpCode, HttpStatus, UseGuards, Req } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
-import { Roles } from '../auth/decorators/roles.decorator';
+import { Roles, UserRole } from '../auth/auth.interface';
 import { ApiResponseDto } from '../common/common.interface';
 import { AdminService } from './admin.service';
 
@@ -11,7 +11,7 @@ import { AdminService } from './admin.service';
  */
 @Controller('admin')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('admin')
+@Roles(UserRole.admin)
 export class AdminController {
     constructor(
         private readonly adminService: AdminService

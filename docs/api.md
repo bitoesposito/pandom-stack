@@ -9,13 +9,15 @@ This documentation lists all REST endpoints organized by module, useful for a sc
 ### ✅ AUTH Module - FULLY IMPLEMENTED
 The authentication system has been completely implemented with the following features:
 - User registration with profile creation
-- Secure login with JWT tokens
+- Secure login with JWT tokens (access + refresh tokens)
+- JWT token refresh mechanism with rotation
 - Password hashing with bcrypt (12 salt rounds)
 - Input validation with class-validator
 - JWT strategy and guards
 - Password reset functionality
 - Email verification system
 - Secure error handling
+- Refresh token storage in database for enhanced security
 
 **Files implemented:**
 - `backend/src/auth/auth.service.ts` - Complete business logic
@@ -24,6 +26,7 @@ The authentication system has been completely implemented with the following fea
 - `backend/src/auth/entities/user.entity.ts` - Database entity
 - `backend/src/auth/strategies/jwt.strategy.ts` - JWT authentication
 - `backend/src/auth/guards/jwt-auth.guard.ts` - Route protection
+- `backend/src/auth/guards/roles.guard.ts` - Role-based access control
 
 ### ✅ DATABASE Module - FULLY IMPLEMENTED
 The database management system has been completely implemented with:
@@ -50,6 +53,7 @@ Authentication, registration, login, and access management.
 |--------|-------------------------|------------------------------------------------|---------------|
 | POST   | `/auth/register`        | Register a new user                            | ✅ Implemented |
 | POST   | `/auth/login`           | Authenticate user and get JWT                  | ✅ Implemented |
+| POST   | `/auth/refresh`         | Refresh JWT access token                       | ✅ Implemented |
 | GET    | `/auth/me`              | Get current user data                          | ✅ Implemented |
 | POST   | `/auth/verify`          | Verify email via token                         | ✅ Implemented |
 | POST   | `/auth/resend-verification` | Resend verification email                | ✅ Implemented |
@@ -188,4 +192,3 @@ backend/tests/
 - [Auth Testing Guide](auth-testing.md) - Test specifici per autenticazione
 - [Database Management](database-management.md) - Gestione database e migrazioni
 - [DTO Documentation](dto.md) - Documentazione DTO e validazioni
-

@@ -1,6 +1,6 @@
 import { Body, Controller, Post, Get, HttpCode, HttpStatus, UseGuards, Req } from '@nestjs/common';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
-import { LoginDto, RegisterDto, ForgotPasswordDto, ResetPasswordDto, VerifyEmailDto, ResendVerificationDto } from './auth.dto';
+import { LoginDto, RegisterDto, ForgotPasswordDto, ResetPasswordDto, VerifyEmailDto, ResendVerificationDto, RefreshTokenDto } from './auth.dto';
 import { ApiResponseDto } from '../common/common.interface';
 import { AuthService } from './auth.service';
 
@@ -32,6 +32,16 @@ export class AuthController {
     @HttpCode(HttpStatus.OK)
     async login(@Body() loginDto: LoginDto): Promise<ApiResponseDto<any>> {
         return this.authService.login(loginDto);
+    }
+
+    /**
+     * Refresh JWT token
+     * POST /auth/refresh
+     */
+    @Post('refresh')
+    @HttpCode(HttpStatus.OK)
+    async refreshToken(@Body() refreshTokenDto: RefreshTokenDto): Promise<ApiResponseDto<any>> {
+        return this.authService.refreshToken(refreshTokenDto.refresh_token);
     }
 
     /**
