@@ -7,16 +7,27 @@ import { ApiResponse } from '../models/api.models';
     providedIn: 'root'
 })
 export class NotificationService {
-    private messageService = inject(MessageService);
+    private messageService: MessageService | null = null;
 
-    constructor(private http: HttpClient) {}
+    constructor(private http: HttpClient) {
+        // Try to get MessageService
+        try {
+            this.messageService = inject(MessageService);
+        } catch (error) {
+            console.warn('MessageService not available via inject, will use setter');
+        }
+    }
+
+    setMessageService(messageService: MessageService) {
+        this.messageService = messageService;
+    }
 
     /**
      * Handles error or success messages in a centralized way
      * @param severity Message type (success/error)
      * @param message Message to display
      */
-    showMessage(severity: 'success' | 'error', message: string): void {
+    showMessage(severity: 'success' | 'error' | 'info', message: string): void {
         let summary = '';
     
         switch (severity) {
@@ -26,9 +37,12 @@ export class NotificationService {
             case 'error':
                 summary = 'Error';
                 break;
+            case 'info':
+                summary = 'Info';
+                break;
         }
     
-        this.messageService.add({
+        this.messageService?.add({
             severity,
             summary,
             detail: message
@@ -88,5 +102,13 @@ export class NotificationService {
      */
     handleWarning(message: string): void {
         this.showMessage('error', message);
+    }
+
+    /**
+     * Handles API call info responses
+     * @param message Info message to display to the user
+     */
+    handleInfo(message: string): void {
+        this.showMessage('info', message);
     }
 }

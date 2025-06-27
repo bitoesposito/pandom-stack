@@ -1,4 +1,4 @@
-import { IsEmail, IsString, MinLength, MaxLength, Matches, IsNotEmpty, IsOptional, Length } from 'class-validator';
+import { IsEmail, IsString, MinLength, MaxLength, Matches, IsNotEmpty, IsOptional, Length, IsBoolean } from 'class-validator';
 import { VALIDATION_PATTERNS } from '../common/common.interface';
 
 /**
@@ -19,6 +19,10 @@ export class LoginDto {
         message: 'Password must include at least one uppercase letter, one lowercase letter, one number, and one special character'
     })
     password: string;
+
+    @IsBoolean()
+    @IsOptional()
+    rememberMe?: boolean;
 }
 
 /**

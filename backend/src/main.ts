@@ -68,13 +68,13 @@ async function bootstrap() {
     });
     
     // Enable CORS
-    // app.enableCors({
-    //   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    //   credentials: true,
-    //   allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With'],
-    //   exposedHeaders: ['Content-Range', 'X-Content-Range'],
-    //   maxAge: 3600
-    // });
+    app.enableCors({
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+      credentials: true,
+      allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With'],
+      exposedHeaders: ['Content-Range', 'X-Content-Range'],
+      maxAge: 3600
+    });
     
     // Set global prefix in case of SSL configuration with nginx
     // app.setGlobalPrefix('backend');

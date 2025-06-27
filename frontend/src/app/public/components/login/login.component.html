@@ -1,6 +1,6 @@
-<p-toast class="absolute"/>
+<p-toast position="top-right"/>
 
-<main class="w-screen h-screen flex flex-column justify-content-center align-items-center px-3">
+<main class="w-screen h-screen flex flex-column justify-content-center align-items-center p-3 ">
   <div class="w-full max-w-26rem flex flex-column gap-2 p-3 border-round-md">
 
     <a href="/">
@@ -28,8 +28,8 @@
       <div class="flex gap-3 flex-column mt-2">
         <div class="flex justify-content-between">
           <div class="flex align-items-center">
-            <p-checkbox value="true" inputId="remember" />
-            <label for="remember" class="ml-2 line-height-1">Remember me</label>
+            <p-checkbox formControlName="rememberMe" inputId="remember" [binary]="true" (onChange)="toggleRememberMe()" />
+            <label for="remember" class="ml-2 line-height-1 cursor-pointer" (click)="toggleRememberMe()">{{ 'auth.login.remember-me' | translate }}</label>
           </div>
           <a [routerLink]="['/recover']" class="text-primary hover:text-color no-underline">{{ 'auth.login.recover-password' | translate }}</a>
         </div>
@@ -44,8 +44,8 @@
           <p class="text-center uppercase text-color-secondary">{{ 'auth.login.or' | translate }}</p>
 
           <div class="flex flex-column sm:flex-row gap-2 w-full">
-            <p-button icon="pi pi-google" [label]="('auth.login.login-with' | translate) + ' Google'" outlined="true" styleClass="w-full" type="submit" [disabled]="loading" [loading]="loading" fluid="true" class="w-full" size="small"/>
-            <p-button icon="pi pi-apple" [label]="('auth.login.login-with' | translate) + ' Apple'" outlined="true" styleClass="w-full" type="submit" [disabled]="loading" [loading]="loading" fluid="true" class="w-full" size="small"/>
+            <p-button icon="pi pi-google" [label]="('auth.login.login-with' | translate) + ' Google'" outlined="true" styleClass="w-full" type="button" [disabled]="socialLoading" [loading]="socialLoading" fluid="true" class="w-full" (click)="loginWithGoogle($event)"/>
+            <p-button icon="pi pi-apple" [label]="('auth.login.login-with' | translate) + ' Apple'" outlined="true" styleClass="w-full" type="button" [disabled]="socialLoading" [loading]="socialLoading" fluid="true" class="w-full" (click)="loginWithApple($event)"/>
           </div>
         </div>
       </div>

@@ -13,7 +13,10 @@
       "password-recovery-sent": "If the email is registered, you will receive a link to reset your password.",
       "fill-required-fields": "Please fill in all required fields correctly",
       "login-failed": "Login failed",
-      "login-error": "An error occurred during login"
+      "login-error": "An error occurred during login",
+      "google-login-coming-soon": "Google login will be available soon!",
+      "apple-login-coming-soon": "Apple login will be available soon!",
+      "remember-me": "Remember me"
     },
     "recover": {
       "title": "Recover Password",

@@ -156,12 +156,16 @@ export class AuthService {
         role: user.role
       };
 
-      const accessToken = this.jwtService.sign(payload);
-      const refreshToken = this.jwtService.sign(payload, { expiresIn: '7d' });
+      // Set token expiration based on rememberMe
+      const accessTokenExpiry = loginDto.rememberMe ? '30d' : '1h'; // 30 days if remember me, 1 hour otherwise
+      const refreshTokenExpiry = loginDto.rememberMe ? '90d' : '7d'; // 90 days if remember me, 7 days otherwise
+
+      const accessToken = this.jwtService.sign(payload, { expiresIn: accessTokenExpiry });
+      const refreshToken = this.jwtService.sign(payload, { expiresIn: refreshTokenExpiry });
 
       // Store refresh token in database for security
       user.refresh_token = refreshToken;
-      user.refresh_token_expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+      user.refresh_token_expires = new Date(Date.now() + (loginDto.rememberMe ? 90 : 7) * 24 * 60 * 60 * 1000);
       await this.userRepository.save(user);
 
       // Log successful login
@@ -171,8 +175,8 @@ export class AuthService {
       const response: LoginResponse = {
         access_token: accessToken,
         refresh_token: refreshToken,
-        expires_in: 3600, // 1 hour
-      user: {
+        expires_in: loginDto.rememberMe ? 30 * 24 * 3600 : 3600, // 30 days or 1 hour in seconds
+        user: {
           uuid: user.uuid,
           email: user.email,
           role: user.role,
@@ -180,8 +184,8 @@ export class AuthService {
           is_verified: user.is_verified,
           is_configured: user.is_configured,
           last_login_at: user.last_login_at.toISOString()
-      }
-    };
+        }
+      };
 
       // Profile is always created now, so always include it
       if (user.profile) {

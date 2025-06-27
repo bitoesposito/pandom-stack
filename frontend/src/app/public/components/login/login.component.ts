@@ -9,6 +9,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { PasswordModule } from 'primeng/password';
 import { RippleModule } from 'primeng/ripple';
 import { ToastModule } from 'primeng/toast';
+import { TooltipModule } from 'primeng/tooltip';
 import { NotificationService } from '../../../services/notification.service';
 import { AuthService } from '../../../services/auth.service';
 import { finalize } from 'rxjs';
@@ -30,13 +31,19 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
     CommonModule,
     ToastModule,
     ReactiveFormsModule,
-    TranslateModule
+    TranslateModule,
+    TooltipModule
+  ],
+  providers: [
+    MessageService,
+    NotificationService
   ],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss'
 })
 export class LoginComponent implements OnInit {
   loading = false;
+  socialLoading = false;
   isDarkMode$;
 
   form: FormGroup = new FormGroup({
@@ -44,15 +51,16 @@ export class LoginComponent implements OnInit {
     password: new FormControl(null, [
       Validators.required,
       Validators.pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])[A-Za-z\d!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]{8,}$/)
-    ])
-  })
+    ]),
+    rememberMe: new FormControl(false, [])
+  });
 
   constructor(
     private notificationService: NotificationService,
     private router: Router,
     private authService: AuthService,
     private themeService: ThemeService,
-    private translate: TranslateService
+    private translate: TranslateService,
   ) {
     this.isDarkMode$ = this.themeService.isDarkMode$;
   }
@@ -101,11 +109,15 @@ export class LoginComponent implements OnInit {
   }
 
   get email(): FormControl {
-    return this.form.get('email') as FormControl
+    return this.form.get('email') as FormControl;
   }
 
   get password(): FormControl {
-    return this.form.get('password') as FormControl
+    return this.form.get('password') as FormControl;
+  }
+
+  get rememberMe(): FormControl {
+    return this.form.get('rememberMe') as FormControl;
   }
 
   login() {
@@ -117,7 +129,8 @@ export class LoginComponent implements OnInit {
     this.loading = true;
     const credentials = {
       email: this.email.value,
-      password: this.password.value
+      password: this.password.value,
+      rememberMe: this.rememberMe.value
     };
 
     this.authService.login(credentials)
@@ -129,7 +142,21 @@ export class LoginComponent implements OnInit {
           this.notificationService.handleApiResponse(response, this.translate.instant('auth.login.login-failed'));
           
           if (response.success && response.data) {
+            // Store token based on remember me setting
             this.authService.setToken(response.data.access_token);
+            
+            // Store refresh token
+            if (response.data.refresh_token) {
+              this.authService.setRefreshToken(response.data.refresh_token);
+            }
+            
+            // Store remember me preference
+            if (this.rememberMe.value) {
+              localStorage.setItem('remember_me', 'true');
+            } else {
+              localStorage.removeItem('remember_me');
+            }
+            
             // Redirect based on user role
             if (response.data.user.role === 'admin') {
               this.router.navigate(['/private/dashboard']);
@@ -146,5 +173,20 @@ export class LoginComponent implements OnInit {
 
   toggleDarkMode() {
     this.themeService.toggleDarkMode();
+  }
+
+  toggleRememberMe() {
+    const currentValue = this.rememberMe.value;
+    this.rememberMe.setValue(!currentValue);
+  }
+
+  loginWithGoogle(event?: Event) {
+    this.socialLoading = false;
+    this.notificationService.handleInfo(this.translate.instant('auth.login.google-login-coming-soon'));
+  }
+  
+  loginWithApple(event?: Event) {
+    this.socialLoading = false;
+    this.notificationService.handleInfo(this.translate.instant('auth.login.apple-login-coming-soon'));
   }
 }
