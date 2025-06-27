@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable, inject } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { MessageService } from 'primeng/api';
 import { ApiResponse } from '../models/api.models';
 
@@ -7,20 +7,11 @@ import { ApiResponse } from '../models/api.models';
     providedIn: 'root'
 })
 export class NotificationService {
-    private messageService: MessageService | null = null;
 
-    constructor(private http: HttpClient) {
-        // Try to get MessageService
-        try {
-            this.messageService = inject(MessageService);
-        } catch (error) {
-            console.warn('MessageService not available via inject, will use setter');
-        }
-    }
-
-    setMessageService(messageService: MessageService) {
-        this.messageService = messageService;
-    }
+    constructor(
+        private messageService: MessageService,
+        private http: HttpClient
+    ) {}
 
     /**
      * Handles error or success messages in a centralized way
@@ -40,9 +31,12 @@ export class NotificationService {
             case 'info':
                 summary = 'Info';
                 break;
+            default:
+                summary = 'Info';
+                break;
         }
     
-        this.messageService?.add({
+        this.messageService.add({
             severity,
             summary,
             detail: message

@@ -1,0 +1,57 @@
+<p-toast position="top-right"/>
+
+<main class="w-screen h-screen flex flex-column justify-content-center align-items-center p-3 ">
+  <div class="w-full max-w-26rem flex flex-column gap-2 p-3 border-round-md">
+
+    <a href="/">
+      <img src="logo-full.svg" alt="logo" height="50"/>
+      <!-- in case of low contrast and diferent logo for dark and light mode, use this: -->
+      <!-- <img [src]="(isDarkMode$ | async) ? './logo-full-white.svg' : './logo-full-black.svg'" alt="logo" height="50"/> -->
+    </a>
+
+    <div class="flex align-items-center justify-content-between gap-2">
+      <p class="text-2xl font-semibold">{{ 'auth.register.register' | translate }}</p>
+      <p-button [icon]="(isDarkMode$ | async) ? 'pi pi-moon' : 'pi pi-sun'" severity="secondary" (click)="toggleDarkMode()" pTooltip="Toggle dark mode" outlined="true" tooltipPosition="bottom"/>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="register()" class="flex flex-column gap-2">
+      <div class="flex gap-1 flex-column">
+        <label for="email">{{ 'auth.register.email-address' | translate }}</label>
+        <input formControlName="email" type="email" pInputText [placeholder]="'auth.register.email-address' | translate"/>
+      </div>
+    
+      <div class="flex gap-1 flex-column">
+        <label for="displayName">{{ 'auth.register.display-name' | translate }}</label>
+        <input formControlName="displayName" type="text" pInputText [placeholder]="'auth.register.display-name' | translate"/>
+      </div>
+
+      <div class="flex gap-1 flex-column">
+        <label for="password">{{ 'auth.register.password' | translate }}</label>
+        <p-password formControlName="password" id="password" type="password" [placeholder]="'auth.register.password' | translate" styleClass="w-full" [toggleMask]="true" [inputStyle]="{ 'width': '100%' }" [feedback]="false"/>
+      </div>
+
+      <div class="flex gap-1 flex-column">
+        <label for="confirmPassword">{{ 'auth.register.confirm-password' | translate }}</label>
+        <p-password formControlName="confirmPassword" id="confirmPassword" type="password" [placeholder]="'auth.register.confirm-password' | translate" styleClass="w-full" [toggleMask]="true" [inputStyle]="{ 'width': '100%' }" [feedback]="false"/>
+      </div>
+    
+      <div class="flex gap-3 flex-column mt-2">
+        <p-button [label]="'auth.register.register' | translate" styleClass="w-full" type="submit" [disabled]="!form.valid || loading" [loading]="loading"/>
+
+        <p class="text-center">{{ 'auth.register.already-member' | translate }} <a [routerLink]="['/login']" class="text-primary hover:text-color no-underline">{{ 'auth.register.login' | translate }}</a></p>
+
+        <!-- per ora non c'è la logica per il login con google e apple ma li inserisco per futura implementazione -->
+
+        <div id="social-login" class="flex flex-column gap-3">
+          <p class="text-center uppercase text-color-secondary">{{ 'auth.register.or' | translate }}</p>
+
+          <div class="flex flex-column sm:flex-row gap-2 w-full">
+            <p-button icon="pi pi-google" [label]="('auth.register.register-with' | translate) + ' Google'" outlined="true" styleClass="w-full" type="button" [disabled]="socialLoading" [loading]="socialLoading" fluid="true" class="w-full" (click)="registerWithGoogle($event)"/>
+            <p-button icon="pi pi-apple" [label]="('auth.register.register-with' | translate) + ' Apple'" outlined="true" styleClass="w-full" type="button" [disabled]="socialLoading" [loading]="socialLoading" fluid="true" class="w-full" (click)="registerWithApple($event)"/>
+          </div>
+        </div>
+      </div>
+    </form>
+
+  </div>
+</main>

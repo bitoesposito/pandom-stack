@@ -1,0 +1,79 @@
+<!-- Toast Notifications -->
+<p-toast position="top-right"/>
+
+<main class="w-screen h-screen flex flex-column justify-content-center align-items-center p-3 ">
+  <div class="w-full max-w-26rem flex flex-column gap-2 p-3 border-round-md">
+
+    <a href="/">
+      <img src="logo-full.svg" alt="logo" height="50"/>
+      <!-- in case of low contrast and diferent logo for dark and light mode, use this: -->
+      <!-- <img [src]="(isDarkMode$ | async) ? './logo-full-white.svg' : './logo-full-black.svg'" alt="logo" height="50"/> -->
+    </a>
+
+    <div class="flex align-items-center justify-content-between gap-2">
+      <p class="text-2xl font-semibold">{{ 'auth.reset.title' | translate }}</p>
+      <p-button [icon]="(isDarkMode$ | async) ? 'pi pi-moon' : 'pi pi-sun'" severity="secondary" (click)="toggleDarkMode()" pTooltip="Toggle dark mode" outlined="true" tooltipPosition="bottom"/>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="resetPassword()" class="flex flex-column gap-2">
+      <!-- Email Display (Read-only) -->
+      <div class="flex gap-1 flex-column" *ngIf="userEmail">
+        <label for="email">{{ 'auth.reset.email' | translate }}</label>
+        <input 
+          id="email" 
+          type="email" 
+          [value]="userEmail" 
+          readonly 
+          pInputText
+          class="readonly">
+      </div>
+
+      <!-- Password -->
+      <div class="flex gap-1 flex-column">
+        <label for="password">{{ 'auth.reset.new-password' | translate }}</label>
+        <p-password 
+          id="password"
+          formControlName="password"
+          [placeholder]="'auth.reset.password-placeholder' | translate"
+          styleClass="w-full"
+          [toggleMask]="true"
+          [inputStyle]="{ 'width': '100%' }"
+          [feedback]="true"
+          [promptLabel]="'auth.reset.password-prompt' | translate"
+          [weakLabel]="'auth.reset.password-weak' | translate"
+          [mediumLabel]="'auth.reset.password-medium' | translate"
+          [strongLabel]="'auth.reset.password-strong' | translate">
+        </p-password>
+        <small class="p-error" *ngIf="password.invalid && password.touched">
+          <span *ngIf="password.errors?.['required']">{{ 'auth.reset.password-required' | translate }}</span>
+          <span *ngIf="password.errors?.['pattern']">{{ 'auth.reset.password-pattern' | translate }}</span>
+        </small>
+      </div>
+
+      <!-- Confirm Password -->
+      <div class="flex gap-1 flex-column">
+        <label for="confirmPassword">{{ 'auth.reset.confirm-password' | translate }}</label>
+        <p-password 
+          id="confirmPassword"
+          formControlName="confirmPassword"
+          [placeholder]="'auth.reset.confirm-password-placeholder' | translate"
+          styleClass="w-full"
+          [toggleMask]="true"
+          [inputStyle]="{ 'width': '100%' }"
+          [feedback]="false">
+        </p-password>
+        <small class="p-error" *ngIf="confirmPassword.invalid && confirmPassword.touched">
+          <span *ngIf="confirmPassword.errors?.['required']">{{ 'auth.reset.confirm-password-required' | translate }}</span>
+          <span *ngIf="confirmPassword.errors?.['passwordMismatch']">{{ 'auth.reset.passwords-not-match' | translate }}</span>
+        </small>
+      </div>
+
+      <div class="flex gap-3 flex-column mt-2">
+        <p-button [label]="'auth.reset.reset-password' | translate" styleClass="w-full" type="submit" [disabled]="!form.valid || loading" [loading]="loading"/>
+
+        <p class="text-center">{{ 'auth.reset.remember-password' | translate }} <a [routerLink]="['/login']" class="text-primary hover:text-color no-underline">{{ 'auth.reset.back-to-login' | translate }}</a></p>
+      </div>
+    </form>
+
+  </div>
+</main>

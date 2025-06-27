@@ -45,6 +45,7 @@ export class LoginComponent implements OnInit {
   loading = false;
   socialLoading = false;
   isDarkMode$;
+  focusPassword = false;
 
   form: FormGroup = new FormGroup({
     email: new FormControl(null, [Validators.pattern(/^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,4}$/)]),
@@ -67,6 +68,7 @@ export class LoginComponent implements OnInit {
 
   ngOnInit() {
     this.checkTokenAndRedirect();
+    this.checkEmailFromUrl();
     setTimeout(() => {
       this.checkNotifications();
     }, 100);
@@ -95,16 +97,23 @@ export class LoginComponent implements OnInit {
     }
   }
 
+  private checkEmailFromUrl() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const email = urlParams.get('email');
+    
+    if (email) {
+      this.form.patchValue({ email });
+      this.focusPassword = true;
+    } else {
+      this.focusPassword = false;
+    }
+  }
+
   private checkNotifications() {
     const showNotification = localStorage.getItem('show_password_reset_notification');
-    const showRecoveryNotification = localStorage.getItem('show_password_recovery_notification');
     if (showNotification === 'true') {
       this.notificationService.handleSuccess(this.translate.instant('auth.login.password-reset-success'));
       localStorage.removeItem('show_password_reset_notification');
-    }
-    if (showRecoveryNotification === 'true') {
-      this.notificationService.handleSuccess(this.translate.instant('auth.login.password-recovery-sent'));
-      localStorage.removeItem('show_password_recovery_notification');
     }
   }
 

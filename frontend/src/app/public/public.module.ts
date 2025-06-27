@@ -9,6 +9,7 @@ import { ButtonModule } from 'primeng/button';
 import { ToastModule } from 'primeng/toast';
 import { PublicRoutingModule } from './public-routing.module';
 import { TranslateModule } from '@ngx-translate/core';
+import { RegisterComponent } from './components/register/register.component';
 
 @NgModule({
   declarations: [],
@@ -18,6 +19,7 @@ import { TranslateModule } from '@ngx-translate/core';
     LoginComponent,
     RecoverComponent,
     VerifyComponent,
+    RegisterComponent,
     ReactiveFormsModule,
     FormsModule,
     InputTextModule,

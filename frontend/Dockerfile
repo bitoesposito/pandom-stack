@@ -7,15 +7,12 @@ WORKDIR /frontend
 # Copy package files first for better caching
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci --only=production && \
+# Install dependencies (including dev dependencies needed for building)
+RUN npm install && \
     npm install -g @angular/cli@19.2.10
 
 # Development stage
 FROM base AS development
-
-# Install all dependencies (including dev dependencies)
-RUN npm ci
 
 # Copy source code
 COPY . .
@@ -28,9 +25,6 @@ CMD ["ng", "serve", "--host", "0.0.0.0", "--disable-host-check", "--poll", "2000
 
 # Production build stage
 FROM base AS production
-
-# Install all dependencies
-RUN npm ci
 
 # Copy source code
 COPY . .

@@ -7,6 +7,7 @@ import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { RippleModule } from 'primeng/ripple';
 import { ToastModule } from 'primeng/toast';
+import { TooltipModule } from 'primeng/tooltip';
 import { NotificationService } from '../../../services/notification.service';
 import { AuthService } from '../../../services/auth.service';
 import { finalize } from 'rxjs';
@@ -25,7 +26,12 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
     CommonModule,
     ToastModule,
     ReactiveFormsModule,
-    TranslateModule
+    TranslateModule,
+    TooltipModule
+  ],
+  providers: [
+    MessageService,
+    NotificationService
   ],
   templateUrl: './recover.component.html',
   styleUrl: './recover.component.scss'
@@ -62,22 +68,26 @@ export class RecoverComponent {
     }
 
     this.loading = true;
-    const email = this.email.value;
+    const data = {
+      email: this.email.value
+    };
 
-    this.authService.recoverPassword(email)
+    this.authService.forgotPassword(data)
       .pipe(
         finalize(() => this.loading = false)
       )
       .subscribe({
-        next: (response) => {
-          this.notificationService.handleApiResponse(response, this.translate.instant('auth.recover.recovery-failed'));
-          
+        next: (response: any) => {
           if (response.success) {
-            localStorage.setItem('show_password_recovery_notification', 'true');
-            this.router.navigate(['/login']);
+            this.notificationService.handleSuccess(this.translate.instant('auth.recover.recovery-sent'));
+            this.router.navigate(['/reset'], { 
+              queryParams: { email: this.email.value } 
+            });
+          } else {
+            this.notificationService.handleWarning(response.message || this.translate.instant('auth.recover.recovery-failed'));
           }
         },
-        error: (error) => {
+        error: (error: any) => {
           this.notificationService.handleError(error, this.translate.instant('auth.recover.recovery-error'));
         }
       });

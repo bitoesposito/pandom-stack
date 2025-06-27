@@ -18,39 +18,77 @@
       "apple-login-coming-soon": "Apple login will be available soon!",
       "remember-me": "Remember me"
     },
+    "register": {
+      "register": "Register",
+      "email-address": "Email Address",
+      "password": "Password",
+      "confirm-password": "Confirm Password",
+      "display-name": "Display Name (Optional)",
+      "already-member": "Already a member?",
+      "login": "Login",
+      "or": "or",
+      "register-with": "Register with",
+      "fill-required-fields": "Please fill in all required fields correctly",
+      "passwords-not-match": "Passwords do not match",
+      "registration-failed": "Registration failed",
+      "registration-success": "Registration successful! Please check your email to verify your account.",
+      "registration-error": "An error occurred during registration",
+      "google-register-coming-soon": "Google registration will be available soon!",
+      "apple-register-coming-soon": "Apple registration will be available soon!"
+    },
     "recover": {
-      "title": "Recover Password",
+      "title": "Forgot password",
       "email-address": "Email Address",
       "email-placeholder": "Enter email address",
-      "recovery-message": "If the email exists in the system, you will receive a link to reset your password.",
+      "recovery-message": "If registered, you will receive a mail to reset your password.",
       "send-request": "Send Request",
-      "back-to-login": "Back to Login"
+      "back-to-login": "Back to login",
+      "recovery-sent": "Password recovery mail has been sent successfully!",
+      "recovery-failed": "Failed to send recovery mail",
+      "recovery-error": "An error occurred while sending recovery mail",
+      "fill-required-fields": "Please fill in all required fields correctly"
     },
-    "verify": {
-      "title": "Verify",
-      "password": "Password",
+    "reset": {
+      "title": "Reset Password",
+      "subtitle": "Enter your new password below",
+      "email": "Email Address",
+      "new-password": "New Password",
       "confirm-password": "Confirm Password",
       "password-placeholder": "Enter new password",
       "confirm-password-placeholder": "Confirm new password",
-      "select-password": "Select a password",
-      "password-requirements": {
-        "lowercase": "At least one lowercase letter",
-        "uppercase": "At least one uppercase letter",
-        "number": "At least one number",
-        "min-length": "Minimum 8 characters",
-        "symbol": "At least one symbol"
-      },
-      "verify-button": "Verify",
+      "password-prompt": "Please enter a password",
+      "password-weak": "Too simple",
+      "password-medium": "Average complexity",
+      "password-strong": "Strong password",
+      "password-required": "Password is required",
+      "password-pattern": "Password must be at least 8 characters with uppercase, lowercase, number and special character",
+      "confirm-password-required": "Please confirm your password",
+      "passwords-not-match": "Passwords do not match",
+      "reset-password": "Reset Password",
+      "remember-password": "Remember your password?",
       "back-to-login": "Back to login",
-      "confirm-dialog": {
-        "message": "Confirm that you want to proceed with verification",
-        "header": "Complete verification",
-        "cancel": "Cancel",
-        "confirm": "Confirm"
-      },
-      "success": "Password has been updated successfully",
-      "error": "An error occurred while updating password",
-      "token-error": "Invalid or missing token"
+      "success": "Password reset successfully! Redirecting to login...",
+      "reset-failed": "Password reset failed",
+      "reset-error": "An error occurred during password reset",
+      "invalid-token": "Invalid or expired reset token",
+      "fill-required-fields": "Please fill in all required fields correctly"
+    },
+    "verify": {
+      "title": "Verify your account with the code sent to your email",
+      "verifying": "Verifying...",
+      "wrong-otp": "Invalid verification code. Please try again.",
+      "resend-code": "Resend Code",
+      "resend-code-sent": "Verification code has been resent to your email",
+      "resend-code-failed": "Failed to resend verification code",
+      "resend-code-error": "An error occurred while resending the verification code",
+      "fill-required-fields": "Please fill in all required fields correctly",
+      "verification-failed": "Verification failed",
+      "verification-error": "An error occurred during verification",
+      "success": "Email verified successfully!"
     }
+  },
+  "common": {
+    "dark-mode": "Dark Mode",
+    "light-mode": "Light Mode"
   }
 }

@@ -17,12 +17,12 @@
     <form [formGroup]="form" (ngSubmit)="login()" class="flex flex-column gap-2">
       <div class="flex gap-1 flex-column">
         <label for="email">{{ 'auth.login.email-address' | translate }}</label>
-        <input formControlName="email" type="email" pInputText [placeholder]="'auth.login.email-address' | translate"/>
+        <input formControlName="email" type="email" pInputText [placeholder]="'auth.login.email-address' | translate" [attr.autofocus]="!focusPassword"/>
       </div>
     
       <div class="flex gap-1 flex-column">
         <label for="password">{{ 'auth.login.password' | translate }}</label>
-        <p-password formControlName="password" id="password" type="password" [placeholder]="'auth.login.password' | translate" styleClass="w-full" [toggleMask]="true" [inputStyle]="{ 'width': '100%' }" [feedback]="false"/>
+        <p-password formControlName="password" id="password" type="password" [placeholder]="'auth.login.password' | translate" styleClass="w-full" [toggleMask]="true" [inputStyle]="{ 'width': '100%' }" [feedback]="false" [attr.autofocus]="focusPassword"/>
       </div>
     
       <div class="flex gap-3 flex-column mt-2">
