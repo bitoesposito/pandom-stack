@@ -27,7 +27,7 @@ export class LoginDto {
 
 /**
  * Data Transfer Object for user registration
- * Contains validation rules for email, password and optional display name
+ * Contains validation rules for email and password
  */
 export class RegisterDto {
     @IsEmail({}, { message: 'Invalid email format' })
@@ -43,11 +43,6 @@ export class RegisterDto {
         message: 'Password must include at least one uppercase letter, one lowercase letter, one number, and one special character'
     })
     password: string;
-
-    @IsString()
-    @IsOptional()
-    @Length(1, 100, { message: 'Display name must be between 1 and 100 characters' })
-    display_name?: string;
 }
 
 /**
@@ -72,12 +67,13 @@ export class ForgotPasswordDto {
 
 /**
  * Data Transfer Object for password reset
- * Contains validation rules for token and new password
+ * Contains validation rules for OTP and new password
  */
 export class ResetPasswordDto {
     @IsString()
-    @IsNotEmpty({ message: 'Token is required' })
-    token: string;
+    @IsNotEmpty({ message: 'OTP is required' })
+    @Length(6, 6, { message: 'OTP must be exactly 6 characters' })
+    otp: string;
 
     @IsString()
     @IsNotEmpty({ message: 'New password is required' })

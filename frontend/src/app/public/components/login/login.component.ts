@@ -45,6 +45,7 @@ export class LoginComponent implements OnInit {
   loading = false;
   socialLoading = false;
   isDarkMode$;
+  focusPassword = false;
 
   form: FormGroup = new FormGroup({
     email: new FormControl(null, [Validators.pattern(/^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,4}$/)]),
@@ -67,6 +68,7 @@ export class LoginComponent implements OnInit {
 
   ngOnInit() {
     this.checkTokenAndRedirect();
+    this.checkEmailFromUrl();
     setTimeout(() => {
       this.checkNotifications();
     }, 100);
@@ -80,11 +82,7 @@ export class LoginComponent implements OnInit {
         const decoded: any = jwtDecode(token);
 
         if (decoded.exp && Date.now() < decoded.exp * 1000) {
-          if (decoded.role === 'admin') {
-            this.router.navigate(['/private/dashboard']);
-          } else {
-            this.router.navigate(['/private/edit', decoded.sub]);
-          }
+            this.router.navigate(['/']);
         } else {
           localStorage.removeItem('access_token');
         }
@@ -95,16 +93,23 @@ export class LoginComponent implements OnInit {
     }
   }
 
+  private checkEmailFromUrl() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const email = urlParams.get('email');
+    
+    if (email) {
+      this.form.patchValue({ email });
+      this.focusPassword = true;
+    } else {
+      this.focusPassword = false;
+    }
+  }
+
   private checkNotifications() {
     const showNotification = localStorage.getItem('show_password_reset_notification');
-    const showRecoveryNotification = localStorage.getItem('show_password_recovery_notification');
     if (showNotification === 'true') {
       this.notificationService.handleSuccess(this.translate.instant('auth.login.password-reset-success'));
       localStorage.removeItem('show_password_reset_notification');
-    }
-    if (showRecoveryNotification === 'true') {
-      this.notificationService.handleSuccess(this.translate.instant('auth.login.password-recovery-sent'));
-      localStorage.removeItem('show_password_recovery_notification');
     }
   }
 
@@ -127,6 +132,9 @@ export class LoginComponent implements OnInit {
     }
 
     this.loading = true;
+    // Disabilita tutti i controlli durante il loading
+    this.form.disable();
+    
     const credentials = {
       email: this.email.value,
       password: this.password.value,
@@ -135,7 +143,11 @@ export class LoginComponent implements OnInit {
 
     this.authService.login(credentials)
       .pipe(
-        finalize(() => this.loading = false)
+        finalize(() => {
+          this.loading = false;
+          // Riabilita tutti i controlli dopo il loading
+          this.form.enable();
+        })
       )
       .subscribe({
         next: (response) => {
@@ -159,9 +171,9 @@ export class LoginComponent implements OnInit {
             
             // Redirect based on user role
             if (response.data.user.role === 'admin') {
-              this.router.navigate(['/private/dashboard']);
+              this.router.navigate(['/']);
             } else {
-              this.router.navigate(['/private/edit', response.data.user.uuid]);
+              this.router.navigate(['/']);
             }
           }
         },

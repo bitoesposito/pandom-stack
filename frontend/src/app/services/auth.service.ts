@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { Observable } from 'rxjs';
 import { ApiResponse } from '../models/api.models';
-import { LoginRequestData, LoginResponseData, RecoverResponse, VerifyRequest } from '../models/auth.models';
+import { LoginRequestData, LoginResponseData, RecoverResponse, VerifyRequest, RegisterRequestData, VerifyEmailRequest, ResendVerificationRequest, ForgotPasswordRequest } from '../models/auth.models';
 
 @Injectable({
   providedIn: 'root'
@@ -12,6 +12,15 @@ export class AuthService {
   private readonly API_URL = environment.apiUrl;
 
   constructor(private http: HttpClient) {}
+
+  /**
+   * Registers a new user
+   * @param registrationData Registration data including email, password and optional display name
+   * @returns Observable with registration response
+   */
+  register(registrationData: RegisterRequestData): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(`${this.API_URL}/auth/register`, registrationData);
+  }
 
   /**
    * Authenticates a user with email and password
@@ -23,21 +32,39 @@ export class AuthService {
   }
 
   /**
-   * Initiates password recovery process
-   * @param email User's email address
-   * @returns Observable with recovery response containing token expiration time
-   */
-  recoverPassword(email: string): Observable<ApiResponse<RecoverResponse>> {
-    return this.http.post<ApiResponse<RecoverResponse>>(`${this.API_URL}/auth/recover`, { email });
-  }
-  
-  /**
-   * Verifies recovery token and updates password
-   * @param data Token and new password
+   * Verifies email with verification token
+   * @param data Verification token
    * @returns Observable with verification response
    */
-  verifyToken(data: VerifyRequest): Observable<ApiResponse<null>> {
+  verifyEmail(data: VerifyEmailRequest): Observable<ApiResponse<null>> {
     return this.http.post<ApiResponse<null>>(`${this.API_URL}/auth/verify`, data);
+  }
+
+  /**
+   * Resends verification email
+   * @param data Email address
+   * @returns Observable with resend response
+   */
+  resendVerification(data: ResendVerificationRequest): Observable<ApiResponse<null>> {
+    return this.http.post<ApiResponse<null>>(`${this.API_URL}/auth/resend-verification`, data);
+  }
+
+  /**
+   * Initiates password recovery process
+   * @param data Forgot password data containing email
+   * @returns Observable with recovery response
+   */
+  forgotPassword(data: ForgotPasswordRequest): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(`${this.API_URL}/auth/forgot-password`, data);
+  }
+
+  /**
+   * Resets password using OTP
+   * @param data Reset password data containing OTP and new password
+   * @returns Observable with reset response
+   */
+  resetPassword(data: { otp: string; password: string }): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(`${this.API_URL}/auth/reset-password`, data);
   }
 
   /**

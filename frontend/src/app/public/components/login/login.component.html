@@ -17,19 +17,19 @@
     <form [formGroup]="form" (ngSubmit)="login()" class="flex flex-column gap-2">
       <div class="flex gap-1 flex-column">
         <label for="email">{{ 'auth.login.email-address' | translate }}</label>
-        <input formControlName="email" type="email" pInputText [placeholder]="'auth.login.email-address' | translate"/>
+        <input formControlName="email" type="email" pInputText [placeholder]="'auth.login.email-address' | translate" [attr.autofocus]="!focusPassword"/>
       </div>
     
       <div class="flex gap-1 flex-column">
         <label for="password">{{ 'auth.login.password' | translate }}</label>
-        <p-password formControlName="password" id="password" type="password" [placeholder]="'auth.login.password' | translate" styleClass="w-full" [toggleMask]="true" [inputStyle]="{ 'width': '100%' }" [feedback]="false"/>
+        <p-password formControlName="password" id="password" type="password" [placeholder]="'auth.login.password' | translate" styleClass="w-full" [toggleMask]="true" [inputStyle]="{ 'width': '100%' }" [feedback]="false" [attr.autofocus]="focusPassword"/>
       </div>
     
       <div class="flex gap-3 flex-column mt-2">
         <div class="flex justify-content-between">
           <div class="flex align-items-center">
-            <p-checkbox formControlName="rememberMe" inputId="remember" [binary]="true" (onChange)="toggleRememberMe()" />
-            <label for="remember" class="ml-2 line-height-1 cursor-pointer" (click)="toggleRememberMe()">{{ 'auth.login.remember-me' | translate }}</label>
+            <p-checkbox formControlName="rememberMe" inputId="remember" [binary]="true" />
+            <label for="remember" class="ml-2 line-height-1 cursor-pointer">{{ 'auth.login.remember-me' | translate }}</label>
           </div>
           <a [routerLink]="['/recover']" class="text-primary hover:text-color no-underline">{{ 'auth.login.recover-password' | translate }}</a>
         </div>

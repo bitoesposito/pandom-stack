@@ -1,59 +1,23 @@
-<p-toast class="absolute"/>
+<p-toast position="top-right"/>
 
-<main class="sm:h-screen sm:mt-0 h-min mt-8 w-full flex align-items-center justify-content-center">
-	<content class="flex flex-column gap-3 max-w-26rem w-full px-3">
-		    
-		<div class="flex gap-2 justify-content-between align-items-center">
-			<a href="/">
-				<img [src]="(isDarkMode$ | async) ? './logo-full.svg' : './logo-full-dark.svg'" alt="logo" height="50"/>
-			</a>
+<main class="w-screen h-screen flex flex-column justify-content-center align-items-center p-3 ">
+  <div class="w-full max-w-26rem flex flex-column gap-2 p-3 border-round-md">
 
-			<p-button [icon]="(isDarkMode$ | async) ? 'pi pi-moon' : 'pi pi-sun'" severity="secondary" outlined="true" (click)="toggleDarkMode()" pTooltip="Toggle dark mode" tooltipPosition="bottom"/>
-		</div>
+    <form [formGroup]="form" (ngSubmit)="verify()" class="flex flex-column gap-2 align-items-center gap-3">
+		<i class="material-symbols-outlined text-3xl text-primary">editor_choice</i>
+		<p class="text-center">{{ 'auth.verify.title' | translate }}</p>
 		
-		<p class="text-2xl font-semibold">{{ 'auth.verify.title' | translate }}</p>
-
-		<form [formGroup]="form" (ngSubmit)="verify()" class="flex flex-column gap-2 mb-2">
-			<div class="flex gap-1 flex-column">
-				<label for="password">{{ 'auth.verify.password' | translate }}</label>
-				<p-password formControlName="password" id="password" type="password" [placeholder]="'auth.verify.password-placeholder' | translate" styleClass="w-full" [toggleMask]="true" [inputStyle]="{ 'width': '100%' }" [feedback]="true" weakLabel="Weak" mediumLabel="Medium" strongLabel="Strong" promptLabel="Enter a password">
-					<ng-template #header>
-						<div class="font-semibold text-xm mb-4">{{ 'auth.verify.select-password' | translate }}</div>
-					</ng-template>
-					<ng-template #footer>
-						<p-divider />
-						<ul class="pl-2 ml-2 my-0 leading-normal">
-							<li [class.text-red-500]="password.value && !hasLowercase(password.value)">
-								{{ 'auth.verify.password-requirements.lowercase' | translate }}
-							</li>
-							<li [class.text-red-500]="password.value && !hasUppercase(password.value)">
-								{{ 'auth.verify.password-requirements.uppercase' | translate }}
-							</li>
-							<li [class.text-red-500]="password.value && !hasNumber(password.value)">
-								{{ 'auth.verify.password-requirements.number' | translate }}
-							</li>
-							<li [class.text-red-500]="password.value && !hasMinLength(password.value)">
-								{{ 'auth.verify.password-requirements.min-length' | translate }}
-							</li>
-							<li [class.text-red-500]="password.value && !hasSymbol(password.value)">
-								{{ 'auth.verify.password-requirements.symbol' | translate }}
-							</li>
-						</ul>
-					</ng-template>
-				</p-password>
+		<div class="flex flex-column align-items-center gap-2" style="position: relative;">
+			<p-inputotp formControlName="token" [length]="6" [integerOnly]="true" [ngStyle]="{width: 'fit-content'}" [disabled]="verifying" (paste)="onPaste($event)"/>
+			<div *ngIf="verifying" class="flex align-items-center gap-2 mt-2">
+				<i class="pi pi-spin pi-spinner text-primary"></i>
+				<span class="text-sm text-color-secondary">{{ 'auth.verify.verifying' | translate }}</span>
 			</div>
+		</div>
 
-			<div class="flex gap-1 flex-column">
-				<label for="confirmPassword">{{ 'auth.verify.confirm-password' | translate }}</label>
-				<p-password formControlName="confirmPassword" id="confirmPassword" type="password" [placeholder]="'auth.verify.confirm-password-placeholder' | translate" styleClass="w-full" [toggleMask]="true" [inputStyle]="{ 'width': '100%' }" [feedback]="false"/>
-			</div>
+		<p-button *ngIf="userEmail" [label]="getResendButtonLabel()" styleClass="w-full" type="button" severity="secondary" text="true" [disabled]="resendDisabled || verifying" [loading]="loading" fluid="true" class="w-full" (click)="resendCode()"/>
 
-			<div class="flex gap-2 flex-column mt-2">
-				<p-button type="submit" [label]="'auth.verify.verify-button' | translate" styleClass="w-full" [disabled]="!form.valid || loading" [loading]="loading"/>
-				<p-button class="text-center" [label]="'auth.verify.back-to-login' | translate" severity="secondary" outlined="true" styleClass="w-full" [routerLink]="['/login']" [disabled]="loading"/>
-			</div>
-		</form>
-	</content>
+    </form>
+
+  </div>
 </main>
-
-<p-confirmdialog />

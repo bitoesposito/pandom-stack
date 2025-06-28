@@ -13,8 +13,6 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
   imports: [
     RouterOutlet,
     ImageModule,
-    ToastModule,
-    ConfirmDialogModule,
     TranslateModule
   ],
   providers: [
