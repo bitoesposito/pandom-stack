@@ -59,11 +59,11 @@ export class AuthService {
   }
 
   /**
-   * Resets password using reset token
-   * @param data Reset password data containing token and new password
+   * Resets password using OTP
+   * @param data Reset password data containing OTP and new password
    * @returns Observable with reset response
    */
-  resetPassword(data: { token: string; password: string }): Observable<ApiResponse<any>> {
+  resetPassword(data: { otp: string; password: string }): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(`${this.API_URL}/auth/reset-password`, data);
   }
 

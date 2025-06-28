@@ -68,13 +68,18 @@ export class RecoverComponent {
     }
 
     this.loading = true;
+    this.form.disable();
+    
     const data = {
       email: this.email.value
     };
 
     this.authService.forgotPassword(data)
       .pipe(
-        finalize(() => this.loading = false)
+        finalize(() => {
+          this.loading = false;
+          this.form.enable();
+        })
       )
       .subscribe({
         next: (response: any) => {

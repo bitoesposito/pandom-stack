@@ -67,6 +67,7 @@ export class VerifyComponent implements OnInit, OnDestroy {
     if (this.timerInterval) {
       clearInterval(this.timerInterval);
     }
+    localStorage.removeItem('last_resend_time');
   }
 
   private checkEmailFromUrl() {
@@ -167,52 +168,58 @@ export class VerifyComponent implements OnInit, OnDestroy {
       return;
     }
 
+    // Controllo aggiuntivo per evitare chiamate multiple
+    if (this.verifying) {
+      return;
+    }
+
     this.verifying = true;
     this.verificationAttempted = true;
-    this.form.get('token')?.disable(); // Disable the OTP input
+    // Disabilita tutti i controlli durante la verifica
+    this.form.disable();
 
     const data = {
       token: this.token.value
     };
 
-    // Add minimum delay of 3 seconds for better UX
+    // Add minimum delay of 1 second for better UX
     const startTime = Date.now();
-    const minDelay = 1000; // 3 seconds
+    const minDelay = 1000; // 1 second
 
     this.authService.verifyEmail(data)
       .pipe(
         finalize(() => {
-          const elapsedTime = Date.now() - startTime;
-          const remainingDelay = Math.max(0, minDelay - elapsedTime);
-          
-          setTimeout(() => {
-            this.verifying = false;
-          }, remainingDelay);
+          // Non riabilitare il form qui, lo facciamo solo in caso di errore
         })
       )
       .subscribe({
         next: (response: any) => {
           if (response.success) {
             this.notificationService.handleSuccess(this.translate.instant('auth.verify.success'));
-            // Redirect to login page with email pre-filled
+            localStorage.removeItem('last_resend_time');
+            // Blocca il form e impedisci altre verifiche
+            this.form.disable();
+            this.verifying = true;
+            this.verificationAttempted = true;
+            // Redirect dopo il toast
             setTimeout(() => {
               this.router.navigate(['/login'], { 
                 queryParams: { email: this.userEmail } 
               });
             }, 2000);
           } else {
-            this.notificationService.handleWarning(this.translate.instant('auth.verify.wrong-otp'));
-            // Clear OTP and allow retry
-            this.form.get('token')?.setValue('');
-            this.form.get('token')?.enable();
+            this.notificationService.handleWarning(response.message || this.translate.instant('auth.verify.verification-failed'));
+            // Riabilita il form solo in caso di errore
+            this.form.enable();
+            this.verifying = false;
             this.verificationAttempted = false;
           }
         },
         error: (error: any) => {
-          this.notificationService.handleWarning(this.translate.instant('auth.verify.wrong-otp'));
-          // Clear OTP and allow retry
-          this.form.get('token')?.setValue('');
-          this.form.get('token')?.enable();
+          this.notificationService.handleError(error, this.translate.instant('auth.verify.verification-error'));
+          // Riabilita il form solo in caso di errore
+          this.form.enable();
+          this.verifying = false;
           this.verificationAttempted = false;
         }
       });
@@ -222,12 +229,43 @@ export class VerifyComponent implements OnInit, OnDestroy {
     this.themeService.toggleDarkMode();
   }
 
+  onPaste(event: ClipboardEvent) {
+    event.preventDefault();
+    
+    const clipboardData = event.clipboardData;
+    if (!clipboardData) return;
+    
+    const pastedText = clipboardData.getData('text');
+    if (!pastedText) return;
+    
+    // Estrai solo i numeri dal testo incollato
+    const numbers = pastedText.replace(/\D/g, '').slice(0, 6);
+    
+    if (numbers.length === 6) {
+      // Temporaneamente disabilita l'auto-submit
+      this.verificationAttempted = true;
+      
+      this.form.patchValue({ token: numbers });
+      
+      // Riabilita l'auto-submit dopo un breve delay
+      setTimeout(() => {
+        this.verificationAttempted = false;
+        // Se il form è valido, procedi con la verifica
+        if (this.form.valid && !this.verifying) {
+          this.verify();
+        }
+      }, 200);
+    }
+  }
+
   private setupAutoSubmit() {
     this.form.get('token')?.valueChanges.subscribe((value: string) => {
       if (value && value.length === 6 && !this.verifying && !this.verificationAttempted) {
         // Auto-submit when OTP is complete and no verification was attempted yet
         setTimeout(() => {
-          this.verify();
+          if (this.form.valid && !this.verifying) {
+            this.verify();
+          }
         }, 100); // Small delay to ensure the value is properly set
       }
     });

@@ -127,7 +127,6 @@ async function seedAdmin() {
     
     // Create admin profile first
     const adminProfile = new UserProfile();
-    adminProfile.display_name = adminEmail;
     adminProfile.tags = ['admin'];
     adminProfile.metadata = { role: adminRole };
     

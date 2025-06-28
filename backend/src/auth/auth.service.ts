@@ -53,9 +53,8 @@ export class AuthService {
       const verificationToken = this.generateSecureToken();
       const verificationExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
-      // Create user profile (always create one, even with empty display_name)
+      // Create user profile (always create one)
       const profile = this.userProfileRepository.create({
-        display_name: registerDto.display_name || undefined,
         tags: [],
         metadata: {}
       });
@@ -68,7 +67,7 @@ export class AuthService {
         role: UserRole.user,
         is_active: true,
         is_verified: false,
-        is_configured: !!registerDto.display_name,
+        is_configured: false,
         profile_uuid: profile.uuid,
         verification_token: verificationToken,
         verification_expires: verificationExpiry
@@ -191,7 +190,6 @@ export class AuthService {
       if (user.profile) {
         response.profile = {
           uuid: user.profile.uuid,
-          display_name: user.profile.display_name,
           tags: user.profile.tags
         };
       }
@@ -280,7 +278,6 @@ export class AuthService {
       if (user.profile) {
         response.profile = {
           uuid: user.profile.uuid,
-          display_name: user.profile.display_name,
           tags: user.profile.tags
         };
       }
@@ -328,7 +325,6 @@ export class AuthService {
       if (user.profile) {
         response.profile = {
           uuid: user.profile.uuid,
-          display_name: user.profile.display_name,
           tags: user.profile.tags,
           metadata: user.profile.metadata,
           created_at: user.profile.created_at.toISOString(),
@@ -441,24 +437,24 @@ export class AuthService {
   }
 
   /**
-   * Reset password via token
+   * Reset password via OTP
    * @param resetPasswordDto - Reset password data
    * @returns Promise<ApiResponseDto<null>>
    */
   async resetPassword(resetPasswordDto: ResetPasswordDto): Promise<ApiResponseDto<null>> {
     try {
-      // Find user by reset token
+      // Find user by reset token (OTP)
       const user = await this.userRepository.findOne({
-        where: { reset_token: resetPasswordDto.token }
+        where: { reset_token: resetPasswordDto.otp }
       });
 
       if (!user) {
-        throw new BadRequestException('Invalid reset OTP code');
+        throw new BadRequestException('Invalid OTP code');
       }
 
       // Check if token is expired
       if (user.reset_token_expiry && user.reset_token_expiry < new Date()) {
-        throw new BadRequestException('Reset OTP code has expired');
+        throw new BadRequestException('OTP code has expired');
       }
 
       // Hash new password

@@ -82,11 +82,7 @@ export class LoginComponent implements OnInit {
         const decoded: any = jwtDecode(token);
 
         if (decoded.exp && Date.now() < decoded.exp * 1000) {
-          if (decoded.role === 'admin') {
-            this.router.navigate(['/private/dashboard']);
-          } else {
-            this.router.navigate(['/private/edit', decoded.sub]);
-          }
+            this.router.navigate(['/']);
         } else {
           localStorage.removeItem('access_token');
         }
@@ -136,6 +132,9 @@ export class LoginComponent implements OnInit {
     }
 
     this.loading = true;
+    // Disabilita tutti i controlli durante il loading
+    this.form.disable();
+    
     const credentials = {
       email: this.email.value,
       password: this.password.value,
@@ -144,7 +143,11 @@ export class LoginComponent implements OnInit {
 
     this.authService.login(credentials)
       .pipe(
-        finalize(() => this.loading = false)
+        finalize(() => {
+          this.loading = false;
+          // Riabilita tutti i controlli dopo il loading
+          this.form.enable();
+        })
       )
       .subscribe({
         next: (response) => {
@@ -168,9 +171,9 @@ export class LoginComponent implements OnInit {
             
             // Redirect based on user role
             if (response.data.user.role === 'admin') {
-              this.router.navigate(['/private/dashboard']);
+              this.router.navigate(['/']);
             } else {
-              this.router.navigate(['/private/edit', response.data.user.uuid]);
+              this.router.navigate(['/']);
             }
           }
         },

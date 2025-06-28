@@ -28,8 +28,8 @@
       <div class="flex gap-3 flex-column mt-2">
         <div class="flex justify-content-between">
           <div class="flex align-items-center">
-            <p-checkbox formControlName="rememberMe" inputId="remember" [binary]="true" (onChange)="toggleRememberMe()" />
-            <label for="remember" class="ml-2 line-height-1 cursor-pointer" (click)="toggleRememberMe()">{{ 'auth.login.remember-me' | translate }}</label>
+            <p-checkbox formControlName="rememberMe" inputId="remember" [binary]="true" />
+            <label for="remember" class="ml-2 line-height-1 cursor-pointer">{{ 'auth.login.remember-me' | translate }}</label>
           </div>
           <a [routerLink]="['/recover']" class="text-primary hover:text-color no-underline">{{ 'auth.login.recover-password' | translate }}</a>
         </div>

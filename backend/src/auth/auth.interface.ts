@@ -48,7 +48,6 @@ export interface LoginResponse {
     };
     profile?: {
         uuid: string;
-        display_name: string;
         tags?: string[];
     };
 }

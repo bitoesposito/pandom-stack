@@ -10,9 +10,6 @@ export class UserProfile {
   @PrimaryGeneratedColumn('uuid')
   uuid: string;
 
-  @Column({ name: 'display_name', nullable: true, length: 100 })
-  display_name: string;
-
   @Column({ type: 'text', array: true, default: [] })
   tags: string[];
 

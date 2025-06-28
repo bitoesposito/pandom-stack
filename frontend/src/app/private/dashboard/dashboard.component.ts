@@ -175,14 +175,6 @@ export class DashboardComponent {
     });
   }
 
-  onEditProfileClick() {
-    if (this.currentUserUuid) {
-      this.router.navigateByUrl(`/private/edit/${this.currentUserUuid}`);
-    } else {
-      this.notificationService.handleError(null, this.translate.instant('dashboard.errors.user-profile-not-found'));
-    }
-  }
-
   getUsers() {
     this.userService.getUsers().subscribe({
       next: (response) => {

@@ -189,7 +189,6 @@ export class SecurityService {
         },
         profile: user.profile ? {
           uuid: user.profile.uuid,
-          display_name: user.profile.display_name,
           tags: user.profile.tags,
           metadata: user.profile.metadata,
           created_at: user.profile.created_at,

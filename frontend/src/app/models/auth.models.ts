@@ -12,12 +12,11 @@ export interface LoginRequestData {
 
 /**
  * Register request data
- * Contains email, password and optional display name
+ * Contains email and password
  */
 export interface RegisterRequestData {
   email: string;
   password: string;
-  display_name?: string;
 }
 
 /**

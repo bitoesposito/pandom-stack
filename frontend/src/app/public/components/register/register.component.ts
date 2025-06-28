@@ -54,9 +54,6 @@ export class RegisterComponent implements OnInit {
     ]),
     confirmPassword: new FormControl(null, [
       Validators.required
-    ]),
-    displayName: new FormControl(null, [
-      Validators.maxLength(100)
     ])
   });
 
@@ -100,10 +97,6 @@ export class RegisterComponent implements OnInit {
     return this.form.get('confirmPassword') as FormControl;
   }
 
-  get displayName(): FormControl {
-    return this.form.get('displayName') as FormControl;
-  }
-
   register() {
     if (this.form.invalid) {
       this.notificationService.handleWarning(this.translate.instant('auth.register.fill-required-fields'));
@@ -116,15 +109,21 @@ export class RegisterComponent implements OnInit {
     }
 
     this.loading = true;
+    // Disabilita tutti i controlli durante il loading
+    this.form.disable();
+    
     const registrationData = {
       email: this.email.value,
-      password: this.password.value,
-      display_name: this.displayName.value || undefined
+      password: this.password.value
     };
 
     this.authService.register(registrationData)
       .pipe(
-        finalize(() => this.loading = false)
+        finalize(() => {
+          this.loading = false;
+          // Riabilita tutti i controlli dopo il loading
+          this.form.enable();
+        })
       )
       .subscribe({
         next: (response: any) => {

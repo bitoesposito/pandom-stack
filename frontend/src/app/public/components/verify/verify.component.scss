@@ -1,0 +1,10 @@
+// Stili per i campi disabilitati durante il loading
+:host ::ng-deep .p-disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+:host ::ng-deep .p-inputotp.p-disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

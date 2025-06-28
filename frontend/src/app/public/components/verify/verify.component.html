@@ -8,7 +8,7 @@
 		<p class="text-center">{{ 'auth.verify.title' | translate }}</p>
 		
 		<div class="flex flex-column align-items-center gap-2" style="position: relative;">
-			<p-inputotp formControlName="token" [length]="6" [integerOnly]="true" [ngStyle]="{width: 'fit-content'}" [disabled]="verifying"/>
+			<p-inputotp formControlName="token" [length]="6" [integerOnly]="true" [ngStyle]="{width: 'fit-content'}" [disabled]="verifying" (paste)="onPaste($event)"/>
 			<div *ngIf="verifying" class="flex align-items-center gap-2 mt-2">
 				<i class="pi pi-spin pi-spinner text-primary"></i>
 				<span class="text-sm text-color-secondary">{{ 'auth.verify.verifying' | translate }}</span>

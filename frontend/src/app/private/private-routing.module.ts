@@ -6,9 +6,9 @@ import { roleGuard } from '../guards/role.guard';
 
 const routes: Routes = [
   {
-    path: 'dashboard',
+    path: '',
     component: DashboardComponent,
-    canActivate: [authGuard, roleGuard]
+    canActivate: [authGuard]
   },
   {
     path: '**',

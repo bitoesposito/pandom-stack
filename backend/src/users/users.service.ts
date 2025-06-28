@@ -47,7 +47,6 @@ export class UsersService {
       // Prepare response data
       const profileData = {
         uuid: user.profile.uuid,
-        display_name: user.profile.display_name,
         tags: user.profile.tags || [],
         metadata: user.profile.metadata || {},
         created_at: user.profile.created_at,
@@ -91,10 +90,6 @@ export class UsersService {
       this.validateProfileData(updateProfileDto);
 
       // Update profile fields
-      if (updateProfileDto.display_name !== undefined) {
-        user.profile.display_name = updateProfileDto.display_name;
-      }
-
       if (updateProfileDto.tags !== undefined) {
         // Ensure tags is an array and filter out empty values
         user.profile.tags = Array.isArray(updateProfileDto.tags) 
@@ -113,16 +108,9 @@ export class UsersService {
       // Save updated profile
       const updatedProfile = await this.userProfileRepository.save(user.profile);
 
-      // Update user's is_configured flag if display_name is set
-      if (updateProfileDto.display_name && !user.is_configured) {
-        user.is_configured = true;
-        await this.userRepository.save(user);
-      }
-
       // Prepare response data
       const profileData = {
         uuid: updatedProfile.uuid,
-        display_name: updatedProfile.display_name,
         tags: updatedProfile.tags || [],
         metadata: updatedProfile.metadata || {},
         created_at: updatedProfile.created_at,
@@ -147,13 +135,6 @@ export class UsersService {
    * @param updateProfileDto - Profile update data
    */
   private validateProfileData(updateProfileDto: UpdateProfileDto): void {
-    // Validate display_name length
-    if (updateProfileDto.display_name !== undefined) {
-      if (updateProfileDto.display_name.length > 100) {
-        throw new BadRequestException('Display name cannot exceed 100 characters');
-      }
-    }
-
     // Validate tags
     if (updateProfileDto.tags !== undefined) {
       if (!Array.isArray(updateProfileDto.tags)) {

@@ -21,11 +21,6 @@
       </div>
     
       <div class="flex gap-1 flex-column">
-        <label for="displayName">{{ 'auth.register.display-name' | translate }}</label>
-        <input formControlName="displayName" type="text" pInputText [placeholder]="'auth.register.display-name' | translate"/>
-      </div>
-
-      <div class="flex gap-1 flex-column">
         <label for="password">{{ 'auth.register.password' | translate }}</label>
         <p-password formControlName="password" id="password" type="password" [placeholder]="'auth.register.password' | translate" styleClass="w-full" [toggleMask]="true" [inputStyle]="{ 'width': '100%' }" [feedback]="false"/>
       </div>

@@ -53,8 +53,8 @@ export class AdminService {
         created_at: user.created_at.toISOString(),
         last_login: user.last_login_at?.toISOString(),
         profile: user.profile ? {
-          first_name: user.profile.display_name?.split(' ')[0],
-          last_name: user.profile.display_name?.split(' ').slice(1).join(' '),
+          first_name: '',
+          last_name: '',
           phone: user.profile.metadata?.phone
         } : undefined
       }));

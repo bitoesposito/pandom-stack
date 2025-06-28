@@ -16,12 +16,8 @@ export const authRedirectGuard: CanActivateFn = (route, state) => {
     const expiry = payload.exp;
     
     if (expiry && Date.now() < expiry * 1000) {
-      // Token valido, reindirizza in base al ruolo
-      if (payload.role === 'admin') {
-        router.navigate(['/private/dashboard']);
-      } else {
-        router.navigate(['/private/edit', payload.sub]);
-      }
+      // Token valido, reindirizza alla dashboard
+      router.navigate(['/private/dashboard']);
       return false;
     }
   } catch {

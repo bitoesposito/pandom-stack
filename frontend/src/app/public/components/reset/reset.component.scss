@@ -1,99 +1,28 @@
-// Reset-specific styles
+p-inputotp {
+  ::ng-deep input {
+    width: 100% !important;
+  }
+}
+
 .readonly {
-  background-color: var(--surface-100);
+  background-color: var(--surface-ground);
   color: var(--text-color-secondary);
   cursor: not-allowed;
-  
-  &:focus {
-    box-shadow: none;
-    border-color: var(--surface-300);
-  }
+  opacity: 0.7;
 }
 
-// Password strength indicator customization
-:host ::ng-deep {
-  .p-password {
-    width: 100%;
-    
-    .p-password-input {
-      width: 100%;
-    }
-    
-    .p-password-panel {
-      background: var(--surface-overlay);
-      border: 1px solid var(--surface-border);
-      border-radius: var(--border-radius);
-      box-shadow: var(--overlay-shadow);
-      
-      .p-password-meter {
-        background: var(--surface-200);
-        
-        .p-password-strength {
-          &.weak {
-            background: var(--red-500);
-          }
-          
-          &.medium {
-            background: var(--orange-500);
-          }
-          
-          &.strong {
-            background: var(--green-500);
-          }
-        }
-      }
-      
-      .p-password-info {
-        color: var(--text-color-secondary);
-        font-size: 0.875rem;
-      }
-    }
-  }
+// Stili per i campi disabilitati durante il loading
+:host ::ng-deep .p-disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
-// Form validation styles
-.form-group {
-  .error-message {
-    color: var(--red-500);
-    font-size: 0.875rem;
-    margin-top: 0.25rem;
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-    
-    &::before {
-      content: "⚠";
-      font-size: 0.75rem;
-    }
-  }
+:host ::ng-deep .p-inputotp.p-disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
-// Submit button enhancement
-.submit-btn {
-  margin-top: 1rem;
-  width: 100%;
-  height: 3rem;
-  font-weight: 600;
-  letter-spacing: 0.025em;
-  
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-}
-
-// Responsive adjustments
-@media (max-width: 768px) {
-  .auth-card {
-    margin: 1rem;
-    padding: 1.5rem;
-  }
-  
-  .auth-title {
-    font-size: 1.5rem;
-  }
-  
-  .auth-subtitle {
-    font-size: 0.875rem;
-  }
+:host ::ng-deep .p-password.p-disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }

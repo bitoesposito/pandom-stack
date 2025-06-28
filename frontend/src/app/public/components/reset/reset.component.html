@@ -15,7 +15,7 @@
       <p-button [icon]="(isDarkMode$ | async) ? 'pi pi-moon' : 'pi pi-sun'" severity="secondary" (click)="toggleDarkMode()" pTooltip="Toggle dark mode" outlined="true" tooltipPosition="bottom"/>
     </div>
 
-    <form [formGroup]="form" (ngSubmit)="resetPassword()" class="flex flex-column gap-2">
+    <form [formGroup]="form" (ngSubmit)="resetPassword()" class="flex flex-column gap-3">
       <!-- Email Display (Read-only) -->
       <div class="flex gap-1 flex-column" *ngIf="userEmail">
         <label for="email">{{ 'auth.reset.email' | translate }}</label>
@@ -26,6 +26,15 @@
           readonly 
           pInputText
           class="readonly">
+      </div>
+
+      <!-- OTP Verification -->
+      <div class="flex gap-1 flex-column">
+        <label for="otp">{{ 'auth.reset.otp' | translate }}</label>
+        <p-inputotp formControlName="otp" [length]="6" [integerOnly]="true" [ngStyle]="{width: '100%'}" fluid="true" class="w-full"/>
+        <small class="text-color-secondary" *ngIf="otp.invalid && otp.touched">
+          <span *ngIf="otp.errors?.['required']">{{ 'auth.reset.otp-required' | translate }}</span>
+        </small>
       </div>
 
       <!-- Password -->
@@ -44,7 +53,7 @@
           [mediumLabel]="'auth.reset.password-medium' | translate"
           [strongLabel]="'auth.reset.password-strong' | translate">
         </p-password>
-        <small class="p-error" *ngIf="password.invalid && password.touched">
+        <small class="text-color-secondary" *ngIf="password.invalid && password.touched">
           <span *ngIf="password.errors?.['required']">{{ 'auth.reset.password-required' | translate }}</span>
           <span *ngIf="password.errors?.['pattern']">{{ 'auth.reset.password-pattern' | translate }}</span>
         </small>
@@ -62,9 +71,13 @@
           [inputStyle]="{ 'width': '100%' }"
           [feedback]="false">
         </p-password>
-        <small class="p-error" *ngIf="confirmPassword.invalid && confirmPassword.touched">
+        <small class="text-color-secondary" *ngIf="confirmPassword.invalid && confirmPassword.touched">
           <span *ngIf="confirmPassword.errors?.['required']">{{ 'auth.reset.confirm-password-required' | translate }}</span>
           <span *ngIf="confirmPassword.errors?.['passwordMismatch']">{{ 'auth.reset.passwords-not-match' | translate }}</span>
+        </small>
+        <!-- Messaggio di conferma quando le password coincidono -->
+        <small class="text-green-600" *ngIf="confirmPassword.valid && confirmPassword.value && password.value === confirmPassword.value">
+          {{ 'auth.reset.passwords-match' | translate }}
         </small>
       </div>
 
