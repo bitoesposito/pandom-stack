@@ -6,6 +6,7 @@ import { MessageService } from 'primeng/api';
 import { ConfirmationService } from 'primeng/api';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { PwaInstallPromptComponent } from './components/pwa-install-prompt/pwa-install-prompt.component';
 
 @Component({
   selector: 'app-root',
@@ -13,7 +14,8 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
   imports: [
     RouterOutlet,
     ImageModule,
-    TranslateModule
+    TranslateModule,
+    PwaInstallPromptComponent
   ],
   providers: [
     MessageService,

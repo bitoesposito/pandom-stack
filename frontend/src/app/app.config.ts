@@ -1,8 +1,7 @@
-import { ApplicationConfig, importProvidersFrom, provideZoneChangeDetection } from '@angular/core';
+import { ApplicationConfig, importProvidersFrom, provideZoneChangeDetection, isDevMode } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { routes } from './app.routes';
 import { provideClientHydration } from '@angular/platform-browser';
-import { provideAnimations } from '@angular/platform-browser/animations';
 import { TranslateModule, TranslateLoader } from '@ngx-translate/core';
 import { HttpClient, HttpClientModule, provideHttpClient, withInterceptors } from '@angular/common/http';
 import { TranslateHttpLoader } from '@ngx-translate/http-loader';
@@ -12,6 +11,7 @@ import { authInterceptor } from './interceptors/auth.interceptor';
 import Aura from '@primeng/themes/aura';
 import { providePrimeNG } from 'primeng/config';
 import { MessageService } from 'primeng/api';
+import { provideServiceWorker } from '@angular/service-worker';
 
 const theme = definePreset(Aura, {
   primitive: {
@@ -681,7 +681,6 @@ export const appConfig: ApplicationConfig = {
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
     provideClientHydration(),
-    provideAnimations(),
     importProvidersFrom(
       HttpClientModule,
       TranslateModule.forRoot({
@@ -699,11 +698,15 @@ export const appConfig: ApplicationConfig = {
         options: {
           darkModeSelector: '.my-app-dark'
         }
-      }
+      },
+      ripple: false
     }),
     provideHttpClient(
       withInterceptors([errorInterceptor, authInterceptor])
     ),
-    MessageService
+    MessageService, provideServiceWorker('ngsw-worker.js', {
+            enabled: !isDevMode(),
+            registrationStrategy: 'registerWhenStable:30000'
+          })
   ]
 };

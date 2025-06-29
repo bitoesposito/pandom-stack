@@ -20,6 +20,7 @@ import { ActivatedRoute } from '@angular/router';
 import { ThemeService } from '../../services/theme.service';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AuthService } from '../../services/auth.service';
+import { PwaService } from '../../services/pwa.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -56,6 +57,8 @@ export class DashboardComponent {
   showNewUserDialog: boolean = false
   searchTerm: string = '';
   isDarkMode$;
+  updateAvailable$;
+  isOnline$;
 
   loading = false;
 
@@ -71,10 +74,42 @@ export class DashboardComponent {
     private route: ActivatedRoute,
     private themeService: ThemeService,
     private translate: TranslateService,
-    private authService: AuthService
+    private authService: AuthService,
+    private pwaService: PwaService
   ) {
     this.isDarkMode$ = this.themeService.isDarkMode$;
+    this.updateAvailable$ = this.pwaService.updateAvailable;
+    this.isOnline$ = this.pwaService.isOnline;
     this.getUsers();
+    this.initializePWA();
+  }
+
+  private initializePWA(): void {
+    // Subscribe to update availability
+    this.updateAvailable$.subscribe(available => {
+      if (available) {
+        this.notificationService.handleInfo(
+          this.translate.instant('pwa.update-available')
+        );
+      }
+    });
+
+    // Subscribe to online/offline status
+    this.isOnline$.subscribe(isOnline => {
+      if (!isOnline) {
+        this.notificationService.handleWarning(
+          this.translate.instant('pwa.offline-mode')
+        );
+      }
+    });
+  }
+
+  async updateApp(): Promise<void> {
+    try {
+      await this.pwaService.activateUpdate();
+    } catch (error) {
+      this.notificationService.handleError(error, this.translate.instant('pwa.update-error'));
+    }
   }
 
   onSearch(event: any) {

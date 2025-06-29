@@ -7,8 +7,11 @@ WORKDIR /frontend
 # Copy package files first for better caching
 COPY package*.json ./
 
+# Remove any existing node_modules and package-lock.json to avoid conflicts
+RUN rm -rf node_modules package-lock.json
+
 # Install dependencies (including dev dependencies needed for building)
-RUN npm install && \
+RUN npm install --legacy-peer-deps && \
     npm install -g @angular/cli@19.2.10
 
 # Development stage
@@ -20,8 +23,8 @@ COPY . .
 # Expose port
 EXPOSE 4200
 
-# Start development server
-CMD ["ng", "serve", "--host", "0.0.0.0", "--disable-host-check", "--poll", "2000"]
+# Start development server (removed --disable-host-check as it's not supported)
+CMD ["ng", "serve", "--host", "0.0.0.0", "--poll", "2000"]
 
 # Production build stage
 FROM base AS production

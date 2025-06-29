@@ -7,6 +7,23 @@
     </div>
     <div class="flex gap-2 align-items-center">
         
+        <!-- Online/Offline Status -->
+        <div class="flex align-items-center gap-1" *ngIf="!(isOnline$ | async)">
+            <i class="pi pi-wifi text-orange-500"></i>
+            <span class="text-xs text-orange-500">{{ 'pwa.offline' | translate }}</span>
+        </div>
+
+        <!-- Update Available Button -->
+        <p-button 
+            *ngIf="updateAvailable$ | async"
+            icon="pi pi-download" 
+            [label]="'pwa.update' | translate" 
+            severity="success" 
+            size="small"
+            (click)="updateApp()" 
+            pTooltip="Update available" 
+            tooltipPosition="bottom"/>
+
         <p-button [icon]="(isDarkMode$ | async) ? 'pi pi-moon' : 'pi pi-sun'" severity="secondary" outlined="true" (click)="toggleDarkMode()" pTooltip="Toggle dark mode" tooltipPosition="bottom"/>
 
         <p-button icon="pi pi-sign-out text-sm" [label]="'dashboard.disconnect' | translate" severity="secondary" text="true" (click)="disconnect()" />
