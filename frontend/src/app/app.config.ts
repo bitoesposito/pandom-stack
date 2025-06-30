@@ -12,6 +12,7 @@ import Aura from '@primeng/themes/aura';
 import { providePrimeNG } from 'primeng/config';
 import { MessageService } from 'primeng/api';
 import { provideServiceWorker } from '@angular/service-worker';
+import { provideAnimations } from '@angular/platform-browser/animations';
 
 const theme = definePreset(Aura, {
   primitive: {
@@ -707,6 +708,7 @@ export const appConfig: ApplicationConfig = {
     MessageService, provideServiceWorker('ngsw-worker.js', {
             enabled: !isDevMode(),
             registrationStrategy: 'registerWhenStable:30000'
-          })
+          }),
+    provideAnimations()
   ]
 };

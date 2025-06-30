@@ -10,34 +10,29 @@ import { TranslateModule } from '@ngx-translate/core';
   standalone: true,
   imports: [CommonModule, ButtonModule, CardModule, TranslateModule],
   template: `
-    <div *ngIf="showInstallPrompt" class="pwa-install-prompt">
-      <p-card styleClass="pwa-install-card">
-        <ng-template pTemplate="header">
-          <div class="flex align-items-center gap-2">
-            <i class="pi pi-download text-primary"></i>
-            <span class="font-semibold">{{ 'pwa.install.title' | translate }}</span>
-          </div>
-        </ng-template>
-        
-        <div class="pwa-install-content">
-          <p>{{ 'pwa.install.description' | translate }}</p>
-          <div class="flex gap-2 mt-3">
-            <p-button 
-              [label]="'pwa.install.install' | translate" 
-              severity="primary" 
-              size="small"
-              (click)="installPWA()">
-            </p-button>
-            <p-button 
-              [label]="'pwa.install.later' | translate" 
-              severity="secondary" 
-              outlined="true"
-              size="small"
-              (click)="dismissPrompt()">
-            </p-button>
-          </div>
+    <div *ngIf="showInstallPrompt" class="fixed bottom-0 right-0 m-3 p-3 z-5 surface-ground shadow-2 border-round-md max-w-20rem flex flex-column gap-2">
+      <div class="flex align-items-center gap-2">
+        <i class="pi pi-download text-primary"></i>
+        <span class="font-semibold">{{ 'pwa.install.title' | translate }}</span>
+      </div>
+      <div class="flex flex-column gap-2">
+        <p>{{ 'pwa.install.description' | translate }}</p>
+        <div class="flex gap-2">
+          <p-button 
+            [label]="'pwa.install.install' | translate" 
+            severity="primary" 
+            size="small"
+            (click)="installPWA()">
+          </p-button>
+          <p-button 
+            [label]="'pwa.install.later' | translate" 
+            severity="secondary" 
+            outlined="true"
+            size="small"
+            (click)="dismissPrompt()">
+          </p-button>
         </div>
-      </p-card>
+      </div>
     </div>
   `,
   styles: [`
