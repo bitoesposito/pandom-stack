@@ -2,6 +2,8 @@ import { Injectable } from '@angular/core';
 import { SwUpdate, VersionReadyEvent } from '@angular/service-worker';
 import { filter, map } from 'rxjs/operators';
 import { BehaviorSubject } from 'rxjs';
+import { OfflineStorageService } from './offline-storage.service';
+import { SyncQueueService } from './sync-queue.service';
 
 @Injectable({
   providedIn: 'root'
@@ -10,7 +12,11 @@ export class PwaService {
   private updateAvailable$ = new BehaviorSubject<boolean>(false);
   private isOnline$ = new BehaviorSubject<boolean>(navigator.onLine);
 
-  constructor(private swUpdate: SwUpdate) {
+  constructor(
+    private swUpdate: SwUpdate,
+    private offlineStorage: OfflineStorageService,
+    private syncQueue: SyncQueueService
+  ) {
     this.initializePWA();
   }
 
@@ -35,10 +41,16 @@ export class PwaService {
     // Monitor online/offline status
     window.addEventListener('online', () => {
       this.isOnline$.next(true);
+      console.log('App is online');
+      // Processa coda di sincronizzazione quando torna online
+      this.syncQueue.processQueue();
     });
 
     window.addEventListener('offline', () => {
       this.isOnline$.next(false);
+      console.log('App is offline');
+      // Salva timestamp inizio offline
+      localStorage.setItem('offline-start', Date.now().toString());
     });
   }
 
@@ -70,5 +82,22 @@ export class PwaService {
 
   canInstallPWA(): boolean {
     return 'serviceWorker' in navigator && 'PushManager' in window;
+  }
+
+  async initializeOfflineServices(): Promise<void> {
+    try {
+      console.log('Initializing offline services...');
+      await this.offlineStorage.initializeDB();
+      console.log('Offline services initialized successfully');
+    } catch (error) {
+      console.error('Failed to initialize offline services:', error);
+    }
+  }
+
+  getOfflineStatus(): { isOnline: boolean; canWorkOffline: boolean } {
+    return {
+      isOnline: navigator.onLine,
+      canWorkOffline: 'serviceWorker' in navigator && 'indexedDB' in window
+    };
   }
 } 

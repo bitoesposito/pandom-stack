@@ -5,12 +5,11 @@
     <div>
         <img [src]="(isDarkMode$ | async) ? './logo-full.svg' : '../logo-full.svg'" alt="logo" height="44" />
     </div>
-    <div class="flex gap-2 align-items-center">
+    <div class="flex align-items-center">
         
         <!-- Online/Offline Status -->
-        <div class="flex align-items-center gap-1" *ngIf="!(isOnline$ | async)">
-            <i class="pi pi-wifi text-orange-500"></i>
-            <span class="text-xs text-orange-500">{{ 'pwa.offline' | translate }}</span>
+        <div class="flex align-items-center gap-1 p-2" *ngIf="!(isOnline$ | async)">
+            <i class="pi pi-wifi text-red-500"></i>
         </div>
 
         <!-- Update Available Button -->
