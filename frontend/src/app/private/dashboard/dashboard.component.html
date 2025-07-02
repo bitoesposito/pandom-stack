@@ -5,7 +5,7 @@
     <div>
         <img [src]="(isDarkMode$ | async) ? './logo-full.svg' : '../logo-full.svg'" alt="logo" height="44" />
     </div>
-    <div class="flex align-items-center">
+    <div class="flex gap-2 align-items-center">
         
         <!-- Online/Offline Status -->
         <div class="flex align-items-center gap-1 p-2" *ngIf="!(isOnline$ | async)">
@@ -25,7 +25,7 @@
 
         <p-button [icon]="(isDarkMode$ | async) ? 'pi pi-moon' : 'pi pi-sun'" severity="secondary" outlined="true" (click)="toggleDarkMode()" pTooltip="Toggle dark mode" tooltipPosition="bottom"/>
 
-        <p-button icon="pi pi-sign-out text-sm" [label]="'dashboard.disconnect' | translate" severity="secondary" text="true" (click)="disconnect()" />
+        <p-button icon="pi pi-sign-out text-sm" styleClass="hover:text-red-500" severity="secondary" text="true" (click)="disconnect()" />
     </div>
 </nav>
 
