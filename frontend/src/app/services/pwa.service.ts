@@ -4,6 +4,7 @@ import { filter, map } from 'rxjs/operators';
 import { BehaviorSubject } from 'rxjs';
 import { OfflineStorageService } from './offline-storage.service';
 import { SyncQueueService } from './sync-queue.service';
+import { NotificationService } from './notification.service';
 
 @Injectable({
   providedIn: 'root'
@@ -15,7 +16,8 @@ export class PwaService {
   constructor(
     private swUpdate: SwUpdate,
     private offlineStorage: OfflineStorageService,
-    private syncQueue: SyncQueueService
+    private syncQueue: SyncQueueService,
+    private notification: NotificationService
   ) {
     this.initializePWA();
   }
@@ -41,15 +43,17 @@ export class PwaService {
     // Monitor online/offline status
     window.addEventListener('online', () => {
       this.isOnline$.next(true);
-      console.log('App is online');
-      // Processa coda di sincronizzazione quando torna online
-      this.syncQueue.processQueue();
+      this.notification.handleInfo('Sei tornato online');
+      this.syncQueue.processQueue().then(() => {
+        this.notification.handleSuccess('Sincronizzazione completata');
+      }).catch(() => {
+        this.notification.handleWarning('Errore durante la sincronizzazione');
+      });
     });
 
     window.addEventListener('offline', () => {
       this.isOnline$.next(false);
-      console.log('App is offline');
-      // Salva timestamp inizio offline
+      this.notification.handleWarning('Sei offline. Le modifiche verranno salvate localmente.');
       localStorage.setItem('offline-start', Date.now().toString());
     });
   }
@@ -86,11 +90,9 @@ export class PwaService {
 
   async initializeOfflineServices(): Promise<void> {
     try {
-      console.log('Initializing offline services...');
       await this.offlineStorage.initializeDB();
-      console.log('Offline services initialized successfully');
     } catch (error) {
-      console.error('Failed to initialize offline services:', error);
+      this.notification.handleError(error, 'Errore inizializzazione servizi offline');
     }
   }
 

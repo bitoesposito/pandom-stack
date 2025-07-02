@@ -1,46 +1,11 @@
 import { Injectable } from '@angular/core';
-
-export interface OfflineUserData {
-  user: any;
-  profile: any;
-  security_logs: any[];
-  last_sync: string;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface OfflineOperation {
-  id: string;
-  type: 'CREATE' | 'UPDATE' | 'DELETE';
-  endpoint: string;
-  data: any;
-  timestamp: string;
-  retry_count: number;
-  max_retries: number;
-  retry_delay: number;
-  priority: 'high' | 'normal' | 'low';
-  dependencies?: string[];
-}
-
-export interface SecurityLogEntry {
-  id: number;
-  userId: string;
-  event_type: string;
-  timestamp: string;
-  details: any;
-  source: 'online' | 'offline';
-  session_id?: string;
-  ip_address?: string;
-  user_agent?: string;
-}
-
-export interface DatabaseStats {
-  total_users: number;
-  total_operations: number;
-  total_logs: number;
-  storage_size: number;
-  last_cleanup: string;
-}
+import {
+  OfflineUserData,
+  OfflineOperation,
+  SecurityLogEntry,
+  DatabaseStats
+} from '../models/offline.models';
+import { NotificationService } from './notification.service';
 
 @Injectable({
   providedIn: 'root'
@@ -50,11 +15,16 @@ export class OfflineStorageService {
   private readonly DB_NAME = 'pandom-offline';
   private readonly DB_VERSION = 1;
 
+  constructor(private notification: NotificationService) {}
+
   async initializeDB(): Promise<void> {
     return new Promise((resolve, reject) => {
       const request = indexedDB.open(this.DB_NAME, this.DB_VERSION);
 
-      request.onerror = () => reject(request.error);
+      request.onerror = () => {
+        this.notification.handleError(request.error, 'Errore inizializzazione database offline');
+        reject(request.error);
+      };
       request.onsuccess = () => {
         this.db = request.result;
         resolve();
@@ -88,65 +58,103 @@ export class OfflineStorageService {
   }
 
   async storeUserData(userData: OfflineUserData): Promise<void> {
-    if (!this.db) throw new Error('Database not initialized');
-    
+    if (!this.db) {
+      this.notification.handleError('Database not initialized', 'Database non inizializzato');
+      throw new Error('Database not initialized');
+    }
     const transaction = this.db.transaction(['users'], 'readwrite');
     const store = transaction.objectStore('users');
-    
     return new Promise((resolve, reject) => {
       const request = store.put(userData);
-      request.onsuccess = () => resolve();
-      request.onerror = () => reject(request.error);
+      request.onsuccess = () => {
+        this.notification.handleSuccess('Dati utente salvati offline');
+        resolve();
+      };
+      request.onerror = () => {
+        this.notification.handleError(request.error, 'Errore salvataggio dati offline');
+        reject(request.error);
+      };
     });
   }
 
   async getUserData(userId: string): Promise<OfflineUserData | null> {
-    if (!this.db) throw new Error('Database not initialized');
-    
+    if (!this.db) {
+      this.notification.handleError('Database not initialized', 'Database non inizializzato');
+      throw new Error('Database not initialized');
+    }
     const transaction = this.db.transaction(['users'], 'readonly');
     const store = transaction.objectStore('users');
-    
     return new Promise((resolve, reject) => {
       const request = store.get(userId);
-      request.onsuccess = () => resolve(request.result || null);
-      request.onerror = () => reject(request.error);
+      request.onsuccess = () => {
+        if (!request.result) {
+          this.notification.handleWarning('Nessun dato offline trovato per questo utente');
+        }
+        resolve(request.result || null);
+      };
+      request.onerror = () => {
+        this.notification.handleError(request.error, 'Errore recupero dati offline');
+        reject(request.error);
+      };
     });
   }
 
   async getAllUsers(): Promise<OfflineUserData[]> {
-    if (!this.db) throw new Error('Database not initialized');
-    
+    if (!this.db) {
+      this.notification.handleError('Database not initialized', 'Database non inizializzato');
+      throw new Error('Database not initialized');
+    }
     const transaction = this.db.transaction(['users'], 'readonly');
     const store = transaction.objectStore('users');
-    
     return new Promise((resolve, reject) => {
       const request = store.getAll();
-      request.onsuccess = () => resolve(request.result || []);
-      request.onerror = () => reject(request.error);
+      request.onsuccess = () => {
+        resolve(request.result || []);
+      };
+      request.onerror = () => {
+        this.notification.handleError(request.error, 'Errore recupero lista utenti offline');
+        reject(request.error);
+      };
     });
   }
 
   async deleteUserData(userId: string): Promise<void> {
-    if (!this.db) throw new Error('Database not initialized');
-    
+    if (!this.db) {
+      this.notification.handleError('Database not initialized', 'Database non inizializzato');
+      throw new Error('Database not initialized');
+    }
     const transaction = this.db.transaction(['users'], 'readwrite');
     const store = transaction.objectStore('users');
-    
     return new Promise((resolve, reject) => {
       const request = store.delete(userId);
-      request.onsuccess = () => resolve();
-      request.onerror = () => reject(request.error);
+      request.onsuccess = () => {
+        this.notification.handleSuccess('Dati utente offline eliminati');
+        resolve();
+      };
+      request.onerror = () => {
+        this.notification.handleError(request.error, 'Errore eliminazione dati offline');
+        reject(request.error);
+      };
     });
   }
 
   async addPendingOperation(operation: OfflineOperation): Promise<void> {
-    if (!this.db) throw new Error('Database not initialized');
-    
+    if (!this.db) {
+      this.notification.handleError('Database not initialized', 'Database non inizializzato');
+      throw new Error('Database not initialized');
+    }
     const transaction = this.db.transaction(['pendingOperations'], 'readwrite');
     const store = transaction.objectStore('pendingOperations');
-    
     return new Promise((resolve, reject) => {
       const request = store.add(operation);
+      request.onsuccess = () => {
+        this.notification.handleSuccess('Operazione accodata offline');
+        resolve();
+      };
+      request.onerror = () => {
+        this.notification.handleError(request.error, 'Errore accodamento operazione offline');
+        reject(request.error);
+      };
       request.onsuccess = () => resolve();
       request.onerror = () => reject(request.error);
     });
@@ -180,15 +188,22 @@ export class OfflineStorageService {
   }
 
   async removePendingOperation(operationId: string): Promise<void> {
-    if (!this.db) throw new Error('Database not initialized');
-    
+    if (!this.db) {
+      this.notification.handleError('Database not initialized', 'Database non inizializzato');
+      throw new Error('Database not initialized');
+    }
     const transaction = this.db.transaction(['pendingOperations'], 'readwrite');
     const store = transaction.objectStore('pendingOperations');
-    
     return new Promise((resolve, reject) => {
       const request = store.delete(operationId);
-      request.onsuccess = () => resolve();
-      request.onerror = () => reject(request.error);
+      request.onsuccess = () => {
+        this.notification.handleSuccess('Operazione offline rimossa dalla coda');
+        resolve();
+      };
+      request.onerror = () => {
+        this.notification.handleError(request.error, 'Errore rimozione operazione offline');
+        reject(request.error);
+      };
     });
   }
 
@@ -206,29 +221,42 @@ export class OfflineStorageService {
   }
 
   async addSecurityLog(log: Omit<SecurityLogEntry, 'id'>): Promise<void> {
-    if (!this.db) throw new Error('Database not initialized');
-    
+    if (!this.db) {
+      this.notification.handleError('Database not initialized', 'Database non inizializzato');
+      throw new Error('Database not initialized');
+    }
     const transaction = this.db.transaction(['securityLogs'], 'readwrite');
     const store = transaction.objectStore('securityLogs');
-    
     return new Promise((resolve, reject) => {
       const request = store.add(log);
-      request.onsuccess = () => resolve();
-      request.onerror = () => reject(request.error);
+      request.onsuccess = () => {
+        this.notification.handleSuccess('Log di sicurezza aggiunto offline');
+        resolve();
+      };
+      request.onerror = () => {
+        this.notification.handleError(request.error, 'Errore aggiunta log di sicurezza offline');
+        reject(request.error);
+      };
     });
   }
 
   async getSecurityLogs(userId: string): Promise<SecurityLogEntry[]> {
-    if (!this.db) throw new Error('Database not initialized');
-    
+    if (!this.db) {
+      this.notification.handleError('Database not initialized', 'Database non inizializzato');
+      throw new Error('Database not initialized');
+    }
     const transaction = this.db.transaction(['securityLogs'], 'readonly');
     const store = transaction.objectStore('securityLogs');
     const index = store.index('userId');
-    
     return new Promise((resolve, reject) => {
       const request = index.getAll(userId);
-      request.onsuccess = () => resolve(request.result || []);
-      request.onerror = () => reject(request.error);
+      request.onsuccess = () => {
+        resolve(request.result || []);
+      };
+      request.onerror = () => {
+        this.notification.handleError(request.error, 'Errore recupero log di sicurezza offline');
+        reject(request.error);
+      };
     });
   }
 
@@ -246,29 +274,30 @@ export class OfflineStorageService {
   }
 
   async cleanupOldData(maxAge: number): Promise<void> {
-    if (!this.db) throw new Error('Database not initialized');
-    
+    if (!this.db) {
+      this.notification.handleError('Database not initialized', 'Database non inizializzato');
+      throw new Error('Database not initialized');
+    }
     const cutoffDate = new Date(Date.now() - (maxAge * 24 * 60 * 60 * 1000)).toISOString();
-    
-    // Pulisci log di sicurezza vecchi
     const transaction = this.db.transaction(['securityLogs'], 'readwrite');
     const store = transaction.objectStore('securityLogs');
     const index = store.index('timestamp');
-    
     return new Promise((resolve, reject) => {
       const request = index.openCursor(IDBKeyRange.upperBound(cutoffDate));
-      
       request.onsuccess = (event) => {
         const cursor = (event.target as IDBRequest).result;
         if (cursor) {
           cursor.delete();
           cursor.continue();
         } else {
+          this.notification.handleSuccess('Dati obsoleti puliti offline');
           resolve();
         }
       };
-      
-      request.onerror = () => reject(request.error);
+      request.onerror = () => {
+        this.notification.handleError(request.error, 'Errore pulizia dati obsoleti offline');
+        reject(request.error);
+      };
     });
   }
 
@@ -294,19 +323,25 @@ export class OfflineStorageService {
   }
 
   async clearAllData(): Promise<void> {
-    if (!this.db) throw new Error('Database not initialized');
-    
-    const stores = ['users', 'pendingOperations', 'securityLogs', 'offlineMetrics'];
-    
-    for (const storeName of stores) {
-      const transaction = this.db.transaction([storeName], 'readwrite');
-      const store = transaction.objectStore(storeName);
-      
-      await new Promise<void>((resolve, reject) => {
-        const request = store.clear();
-        request.onsuccess = () => resolve();
-        request.onerror = () => reject(request.error);
-      });
+    if (!this.db) {
+      this.notification.handleError('Database not initialized', 'Database non inizializzato');
+      throw new Error('Database not initialized');
+    }
+    const stores = ['users', 'pendingOperations', 'securityLogs'];
+    try {
+      for (const storeName of stores) {
+        const transaction = this.db.transaction([storeName], 'readwrite');
+        const store = transaction.objectStore(storeName);
+        await new Promise<void>((resolve, reject) => {
+          const request = store.clear();
+          request.onsuccess = () => resolve();
+          request.onerror = () => reject(request.error);
+        });
+      }
+      this.notification.handleSuccess('Tutti i dati offline sono stati cancellati');
+    } catch (error) {
+      this.notification.handleError(error, 'Errore durante la cancellazione dei dati offline');
+      throw error;
     }
   }
 
@@ -314,6 +349,7 @@ export class OfflineStorageService {
     if (this.db) {
       this.db.close();
       this.db = null;
+      this.notification.handleInfo('Database offline chiuso');
     }
   }
 } 

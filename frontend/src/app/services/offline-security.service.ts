@@ -1,13 +1,10 @@
 import { Injectable } from '@angular/core';
 import { AuthService } from './auth.service';
-import { OfflineStorageService, SecurityLogEntry } from './offline-storage.service';
-
-export interface OfflineSecurityConfig {
-  encryptionEnabled: boolean;
-  algorithm: string;
-  keyLength: number;
-  iterations: number;
-}
+import { OfflineStorageService } from './offline-storage.service';
+import {
+  SecurityLogEntry,
+  OfflineSecurityConfig
+} from '../models/offline.models';
 
 @Injectable({
   providedIn: 'root'

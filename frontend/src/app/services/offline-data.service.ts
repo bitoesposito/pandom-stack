@@ -1,16 +1,13 @@
 import { Injectable } from '@angular/core';
 import { UserService } from './user.service';
 import { AuthService } from './auth.service';
-import { OfflineStorageService, OfflineUserData } from './offline-storage.service';
+import { OfflineStorageService } from './offline-storage.service';
 import { SyncQueueService } from './sync-queue.service';
-
-export interface OfflineMetrics {
-  offline_time: number;
-  operations_queued: number;
-  sync_success_rate: number;
-  data_freshness: number;
-  last_sync: string;
-}
+import {
+  OfflineUserData,
+  OfflineMetrics
+} from '../models/offline.models';
+import { NotificationService } from './notification.service';
 
 @Injectable({
   providedIn: 'root'
@@ -20,7 +17,8 @@ export class OfflineDataService {
     private userService: UserService,
     private authService: AuthService,
     private offlineStorage: OfflineStorageService,
-    private syncQueue: SyncQueueService
+    private syncQueue: SyncQueueService,
+    private notification: NotificationService
   ) {}
 
   async syncUserData(userId: string): Promise<void> {
@@ -45,8 +43,10 @@ export class OfflineDataService {
       };
       
       await this.offlineStorage.storeUserData(offlineUserData);
+      this.notification.handleSuccess('Dati utente sincronizzati offline');
       console.log('User data synced successfully');
     } catch (error) {
+      this.notification.handleError(error, 'Errore durante la sincronizzazione dei dati utente offline');
       console.error('Failed to sync user data:', error);
       throw error;
     }
@@ -62,33 +62,36 @@ export class OfflineDataService {
   }
 
   async updateProfileOffline(profileData: any): Promise<void> {
-    const token = this.authService.getToken();
-    if (!token) throw new Error('User not authenticated');
-    
-    // Estrai userId dal token JWT (implementazione semplificata)
-    const userId = this.extractUserIdFromToken(token);
-    if (!userId) throw new Error('Could not extract user ID from token');
+    try {
+      const token = this.authService.getToken();
+      if (!token) throw new Error('User not authenticated');
+      const userId = this.extractUserIdFromToken(token);
+      if (!userId) throw new Error('Could not extract user ID from token');
 
-    console.log('Updating profile offline:', profileData);
+      console.log('Updating profile offline:', profileData);
 
-    // Salva modifica in coda sync
-    await this.syncQueue.addToQueue({
-      type: 'UPDATE',
-      endpoint: '/profile',
-      data: profileData,
-      retry_count: 0,
-      max_retries: 3,
-      retry_delay: 1000,
-      priority: 'normal'
-    });
+      // Salva modifica in coda sync
+      await this.syncQueue.addToQueue({
+        type: 'UPDATE',
+        endpoint: '/profile',
+        data: profileData,
+        retry_count: 0,
+        max_retries: 3,
+        retry_delay: 1000,
+        priority: 'normal'
+      });
 
-    // Aggiorna cache locale
-    const currentData = await this.getOfflineUserData(userId);
-    if (currentData) {
-      currentData.profile = { ...currentData.profile, ...profileData };
-      currentData.updated_at = new Date().toISOString();
-      await this.offlineStorage.storeUserData(currentData);
-      console.log('Local profile updated');
+      // Aggiorna cache locale
+      const currentData = await this.getOfflineUserData(userId);
+      if (currentData) {
+        currentData.profile = { ...currentData.profile, ...profileData };
+        currentData.updated_at = new Date().toISOString();
+        await this.offlineStorage.storeUserData(currentData);
+        this.notification.handleSuccess('Profilo aggiornato offline');
+      }
+    } catch (error) {
+      this.notification.handleError(error, 'Errore aggiornamento profilo offline');
+      throw error;
     }
   }
 
@@ -124,27 +127,33 @@ export class OfflineDataService {
   }
 
   async exportOfflineData(userId: string): Promise<Blob> {
-    const userData = await this.getOfflineUserData(userId);
-    
-    if (!userData) {
-      throw new Error('No offline data available');
-    }
-
-    const exportData = {
-      user: userData.user,
-      profile: userData.profile,
-      security_logs: userData.security_logs,
-      export_info: {
-        exported_at: new Date().toISOString(),
-        exported_by: userId,
-        format: 'json',
-        source: 'offline',
-        version: '1.0'
+    try {
+      const userData = await this.getOfflineUserData(userId);
+      
+      if (!userData) {
+        throw new Error('No offline data available');
       }
-    };
 
-    const jsonString = JSON.stringify(exportData, null, 2);
-    return new Blob([jsonString], { type: 'application/json' });
+      const exportData = {
+        user: userData.user,
+        profile: userData.profile,
+        security_logs: userData.security_logs,
+        export_info: {
+          exported_at: new Date().toISOString(),
+          exported_by: userId,
+          format: 'json',
+          source: 'offline',
+          version: '1.0'
+        }
+      };
+
+      const jsonString = JSON.stringify(exportData, null, 2);
+      this.notification.handleSuccess('Dati esportati offline');
+      return new Blob([jsonString], { type: 'application/json' });
+    } catch (error) {
+      this.notification.handleError(error, 'Errore export dati offline');
+      throw error;
+    }
   }
 
   async downloadOfflineData(userId: string): Promise<void> {

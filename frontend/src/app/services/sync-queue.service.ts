@@ -1,28 +1,15 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
-import { OfflineStorageService, OfflineOperation } from './offline-storage.service';
-
-export interface QueueStats {
-  total_operations: number;
-  pending_operations: number;
-  completed_operations: number;
-  failed_operations: number;
-  high_priority: number;
-  normal_priority: number;
-  low_priority: number;
-  average_processing_time: number;
-  last_sync: string;
-}
-
-export interface SyncResult {
-  operation_id: string;
-  success: boolean;
-  error?: string;
-  retry_count: number;
-  timestamp: string;
-  response_data?: any;
-}
+import {
+  OfflineStorageService
+} from './offline-storage.service';
+import {
+  OfflineOperation,
+  QueueStats,
+  SyncResult
+} from '../models/offline.models';
+import { NotificationService } from './notification.service';
 
 @Injectable({
   providedIn: 'root'
@@ -35,7 +22,8 @@ export class SyncQueueService {
 
   constructor(
     private http: HttpClient,
-    private offlineStorage: OfflineStorageService
+    private offlineStorage: OfflineStorageService,
+    private notification: NotificationService
   ) {
     this.initializeSync();
   }
@@ -65,68 +53,31 @@ export class SyncQueueService {
       retry_delay: operation.retry_delay || this.retryDelay,
       priority: operation.priority || 'normal'
     };
-
     await this.offlineStorage.addPendingOperation(fullOperation);
-    console.log('Operation added to sync queue:', fullOperation.id);
+    this.notification.handleInfo('Operazione accodata per la sincronizzazione offline');
   }
 
   async processQueue(): Promise<void> {
     if (this.isSyncing || !navigator.onLine) {
-      console.log('Sync skipped - already syncing or offline');
       return;
     }
-    
     this.isSyncing = true;
-    console.log('Starting sync queue processing...');
-    
+    this.notification.handleInfo('Sincronizzazione offline in corso...');
     try {
       const operations = await this.offlineStorage.getPendingOperations();
-      
-      // Ordina per priorità: high -> normal -> low
       const sortedOperations = this.sortOperationsByPriority(operations);
-      
       for (const operation of sortedOperations) {
         try {
           await this.processOperation(operation);
           await this.offlineStorage.removePendingOperation(operation.id);
-          
-          this.syncResults.push({
-            operation_id: operation.id,
-            success: true,
-            retry_count: operation.retry_count,
-            timestamp: new Date().toISOString()
-          });
-          
-          console.log('Operation synced successfully:', operation.id);
+          this.notification.handleSuccess('Operazione sincronizzata con successo');
         } catch (error) {
-          console.error('Sync operation failed:', error);
-          
-          // Incrementa retry count
-          operation.retry_count++;
-          
-          if (operation.retry_count >= operation.max_retries) {
-            // Rimuovi operazione dopo troppi tentativi
-            await this.offlineStorage.removePendingOperation(operation.id);
-            
-            this.syncResults.push({
-              operation_id: operation.id,
-              success: false,
-              error: error instanceof Error ? error.message : 'Unknown error',
-              retry_count: operation.retry_count,
-              timestamp: new Date().toISOString()
-            });
-            
-            console.error('Operation failed permanently:', operation.id);
-          } else {
-            // Aggiorna operazione con nuovo retry count
-            await this.offlineStorage.addPendingOperation(operation);
-            console.log('Operation queued for retry:', operation.id);
-          }
+          this.notification.handleError(error, 'Errore durante la sincronizzazione di un\'operazione offline');
         }
       }
     } finally {
       this.isSyncing = false;
-      console.log('Sync queue processing completed');
+      this.notification.handleInfo('Sincronizzazione offline completata');
     }
   }
 
