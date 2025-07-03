@@ -90,6 +90,17 @@
       "success": "Email verified successfully!"
     }
   },
+  "user": {
+    "user": "User",
+    "profile": "Your profile",
+    "logged-in-as": "Logged in as",
+    "verified": "verified profile"
+  },
+  "navigation": {
+    "logout": "Logout",
+    "dark-mode": "Switch to dark mode",
+    "light-mode": "Switch to light mode"
+  },
   "dashboard": {
     "disconnect": "Disconnect",
     "confirm-dialog": {
@@ -120,9 +131,8 @@
     }
   },
   "pwa": {
-    "update": "Update",
     "offline": "Offline",
-    "update-available": "A new version is available. Click update to refresh.",
+    "update-available": "Update available",
     "offline-mode": "You are currently offline. Some features may be limited.",
     "update-error": "Failed to update the application",
     "install": {

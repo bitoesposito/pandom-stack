@@ -17,6 +17,9 @@ import { ThemeService } from '../../services/theme.service';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AuthService } from '../../services/auth.service';
 import { PwaService } from '../../services/pwa.service';
+import { AvatarModule } from 'primeng/avatar';
+import { AvatarGroupModule } from 'primeng/avatargroup';
+import { PopoverModule } from 'primeng/popover';
 
 @Component({
   selector: 'app-dashboard',
@@ -35,7 +38,10 @@ import { PwaService } from '../../services/pwa.service';
     DialogModule,
     FormsModule,
     ReactiveFormsModule,
-    TranslateModule
+    TranslateModule,
+    AvatarModule,
+    AvatarGroupModule,
+    PopoverModule
   ],
   providers: [
     ConfirmationService
