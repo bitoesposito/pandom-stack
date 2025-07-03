@@ -28,14 +28,17 @@
                         <small 
                         class="text-sm font-semibold text-color-secondary  max-w-11rem" 
                         style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
-                        user&#64;mailperostavoltaesagerocosielunga.com</small>
+                        user&#64;mail.com</small>
                         <span class=" text-green-500 text-xs">
                             <i class="pi pi-check text-xs"></i>
                             {{ 'user.verified' | translate }}
                         </span>
                     </div>
+
+                    <hr class="surface-border my-1">
     
-                    <p-button
+                    <div class="flex flex-column">
+                        <p-button
                         [label]="'user.profile' | translate"
                         icon="pi pi-user"
                         severity="secondary"
@@ -43,6 +46,16 @@
                         fluid="true"
                         styleClass="justify-content-start"
                         iconPos="left"/>
+
+                    <p-button
+                        [label]="'settings.title' | translate"
+                        icon="pi pi-cog"
+                        severity="secondary"
+                        text="true"
+                        fluid="true"
+                        styleClass="justify-content-start"
+                        iconPos="left"/>
+                    </div>
                 </div>
 
                 <hr class="surface-border my-1">

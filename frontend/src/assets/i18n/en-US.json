@@ -96,6 +96,9 @@
     "logged-in-as": "Logged in as",
     "verified": "verified profile"
   },
+  "settings": {
+    "title": "Settings"
+  },
   "navigation": {
     "logout": "Logout",
     "dark-mode": "Switch to dark mode",
