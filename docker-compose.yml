@@ -192,7 +192,8 @@ services:
     volumes:
       - ./backend:/src/app
       - /src/app/node_modules
-    command: sh -c "sleep 10 && npm run seed-admin"
+    working_dir: /src/app
+    command: sh -c "sleep 10 && ls -la && ls -la src/utilis/ && npm run seed-admin"
     env_file:
       - .env
     environment:

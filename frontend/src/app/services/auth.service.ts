@@ -159,4 +159,12 @@ export class AuthService {
     }
     return this.http.post<ApiResponse<LoginResponseData>>(`${this.API_URL}/auth/refresh`, { refresh_token: refreshToken });
   }
+
+  /**
+   * Ottiene i dati del profilo utente corrente
+   * @returns Observable con i dati del profilo
+   */
+  getCurrentUser(): Observable<any> {
+    return this.http.get<any>(`${this.API_URL}/auth/me`);
+  }
 } 

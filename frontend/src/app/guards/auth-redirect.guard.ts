@@ -1,5 +1,6 @@
 import { CanActivateFn, Router } from '@angular/router';
 import { inject } from '@angular/core';
+import { jwtDecode } from 'jwt-decode';
 import { AuthService } from '../services/auth.service';
 
 export const authRedirectGuard: CanActivateFn = (route, state) => {
@@ -12,10 +13,9 @@ export const authRedirectGuard: CanActivateFn = (route, state) => {
   }
 
   try {
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    const expiry = payload.exp;
+    const decoded: any = jwtDecode(token);
     
-    if (expiry && Date.now() < expiry * 1000) {
+    if (decoded.exp && Date.now() < decoded.exp * 1000) {
       // Token valido, reindirizza alla dashboard
       router.navigate(['/private/dashboard']);
       return false;

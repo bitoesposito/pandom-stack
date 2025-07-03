@@ -20,6 +20,7 @@ import { PwaService } from '../../services/pwa.service';
 import { AvatarModule } from 'primeng/avatar';
 import { AvatarGroupModule } from 'primeng/avatargroup';
 import { PopoverModule } from 'primeng/popover';
+import { NavBarComponent } from '../nav-bar/nav-bar.component';
 
 @Component({
   selector: 'app-dashboard',
@@ -41,7 +42,8 @@ import { PopoverModule } from 'primeng/popover';
     TranslateModule,
     AvatarModule,
     AvatarGroupModule,
-    PopoverModule
+    PopoverModule,
+    NavBarComponent
   ],
   providers: [
     ConfirmationService
@@ -91,22 +93,5 @@ export class DashboardComponent {
         );
       }
     });
-  }
-
-  async updateApp(): Promise<void> {
-    try {
-      await this.pwaService.activateUpdate();
-    } catch (error) {
-      this.notificationService.handleError(error, this.translate.instant('pwa.update-error'));
-    }
-  }
-
-  disconnect() {
-    this.authService.logout();
-    this.router.navigate(['/login']);
-  }
-
-  toggleDarkMode() {
-    this.themeService.toggleDarkMode();
   }
 }

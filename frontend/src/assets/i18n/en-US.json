@@ -1,4 +1,9 @@
 {
+  "app": {
+    "title": "PANDOM - Stack boilerplate",
+    "description": "A modern full-stack application with authentication, dashboard, and PWA capabilities",
+    "enable-javascript": "Please enable JavaScript to continue using this application."
+  },
   "auth": {
     "login": {
       "login": "Login",
@@ -94,17 +99,34 @@
     "user": "User",
     "profile": "Your profile",
     "logged-in-as": "Logged in as",
-    "verified": "verified profile"
+    "verified": "verified profile",
+    "last-login": "Last login:",
+    "created-at": "Created at:",
+    "active-sessions": "Active Sessions",
+    "show-security-logs": "Show Security Logs",
+    "edit-profile": "Edit profile",
+    "download-data": "Download your data",
+    "change-password": "Change password",
+    "delete-account": "Delete account"
   },
-  "settings": {
-    "title": "Settings"
-  },
-  "navigation": {
-    "logout": "Logout",
-    "dark-mode": "Switch to dark mode",
-    "light-mode": "Switch to light mode"
+  "profile": {
+    "tabs": {
+      "profile": "Profile",
+      "settings": "Settings",
+      "administration": "Administration"
+    },
+    "dialogs": {
+      "edit-profile": "Edit Profile",
+      "download-data": "Download your data",
+      "delete-account": "Delete account",
+      "security-logs": "Security Logs"
+    },
+    "security-logs": {
+      "description": "View your recent security activities and access logs."
+    }
   },
   "dashboard": {
+    "welcome": "Welcome to the dashboard",
     "disconnect": "Disconnect",
     "confirm-dialog": {
       "create": {
@@ -133,6 +155,15 @@
       "user-deleted": "User deleted successfully!"
     }
   },
+  "settings": {
+    "title": "Settings"
+  },
+  "navigation": {
+    "logout": "Logout",
+    "dark-mode": "Switch to dark mode",
+    "light-mode": "Switch to light mode",
+    "toggle-dark-mode": "Toggle dark mode"
+  },
   "pwa": {
     "offline": "Offline",
     "update-available": "Update available",
@@ -147,6 +178,67 @@
   },
   "common": {
     "dark-mode": "Dark Mode",
-    "light-mode": "Light Mode"
+    "light-mode": "Light Mode",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "save": "Save",
+    "edit": "Edit",
+    "delete": "Delete",
+    "download": "Download",
+    "upload": "Upload",
+    "search": "Search",
+    "filter": "Filter",
+    "sort": "Sort",
+    "refresh": "Refresh",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "submit": "Submit",
+    "reset": "Reset",
+    "clear": "Clear",
+    "select": "Select",
+    "choose": "Choose",
+    "add": "Add",
+    "remove": "Remove",
+    "update": "Update",
+    "create": "Create",
+    "view": "View",
+    "details": "Details",
+    "more": "More",
+    "less": "Less",
+    "show": "Show",
+    "hide": "Hide",
+    "enable": "Enable",
+    "disable": "Disable",
+    "active": "Active",
+    "inactive": "Inactive",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "yes": "Yes",
+    "no": "No",
+    "ok": "OK",
+    "apply": "Apply",
+    "reject": "Reject",
+    "approve": "Approve",
+    "pending": "Pending",
+    "completed": "Completed",
+    "failed": "Failed",
+    "cancelled": "Cancelled",
+    "expired": "Expired",
+    "valid": "Valid",
+    "invalid": "Invalid",
+    "required": "Required",
+    "optional": "Optional",
+    "public": "Public",
+    "private": "Private",
+    "admin": "Admin",
+    "user": "User",
+    "guest": "Guest",
+    "moderator": "Moderator",
+    "super-admin": "Super Admin"
   }
 }

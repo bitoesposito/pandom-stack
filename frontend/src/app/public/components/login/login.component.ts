@@ -13,7 +13,6 @@ import { TooltipModule } from 'primeng/tooltip';
 import { NotificationService } from '../../../services/notification.service';
 import { AuthService } from '../../../services/auth.service';
 import { finalize } from 'rxjs';
-import { jwtDecode } from 'jwt-decode';
 import { ThemeService } from '../../../services/theme.service';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
@@ -67,30 +66,10 @@ export class LoginComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.checkTokenAndRedirect();
     this.checkEmailFromUrl();
     setTimeout(() => {
       this.checkNotifications();
     }, 100);
-  }
-
-  private checkTokenAndRedirect() {
-    const token = localStorage.getItem('access_token');
-
-    if (token) {
-      try {
-        const decoded: any = jwtDecode(token);
-
-        if (decoded.exp && Date.now() < decoded.exp * 1000) {
-            this.router.navigate(['/']);
-        } else {
-          localStorage.removeItem('access_token');
-        }
-      } catch (error) {
-        console.error('Error decoding token:', error);
-        localStorage.removeItem('access_token');
-      }
-    }
   }
 
   private checkEmailFromUrl() {

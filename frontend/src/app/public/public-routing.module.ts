@@ -5,27 +5,33 @@ import { RegisterComponent } from './components/register/register.component';
 import { RecoverComponent } from './components/recover/recover.component';
 import { VerifyComponent } from './components/verify/verify.component';
 import { ResetComponent } from './components/reset/reset.component';
+import { authRedirectGuard } from '../guards/auth-redirect.guard';
 
 const routes: Routes = [
   {
     path: 'login',
-    component: LoginComponent
+    component: LoginComponent,
+    canActivate: [authRedirectGuard]
   },
   {
     path: 'register',
-    component: RegisterComponent
+    component: RegisterComponent,
+    canActivate: [authRedirectGuard]
   },
   {
     path: 'recover',
-    component: RecoverComponent
+    component: RecoverComponent,
+    canActivate: [authRedirectGuard]
   },
   {
     path: 'verify',
-    component: VerifyComponent
+    component: VerifyComponent,
+    canActivate: [authRedirectGuard]
   },
   {
     path: 'reset',
-    component: ResetComponent
+    component: ResetComponent,
+    canActivate: [authRedirectGuard]
   },
   {
     path: '**',

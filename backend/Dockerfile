@@ -17,7 +17,7 @@ RUN npm ci --legacy-peer-deps --include=optional --silent
 
 # Sviluppo
 FROM base AS development
-RUN npm install -g @nestjs/cli --silent
+RUN npm install -g @nestjs/cli ts-node --silent
 COPY . .
 EXPOSE 3000
 CMD ["npm", "run", "start:dev"]

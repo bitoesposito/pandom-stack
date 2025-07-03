@@ -1,0 +1,244 @@
+{
+  "app": {
+    "title": "PANDOM - Stack boilerplate",
+    "description": "Un'applicazione full-stack moderna con autenticazione, dashboard e funzionalità PWA",
+    "enable-javascript": "Abilita JavaScript per continuare a utilizzare questa applicazione."
+  },
+  "auth": {
+    "login": {
+      "login": "Accedi",
+      "email-address": "Indirizzo Email",
+      "password": "Password",
+      "recover-password": "Password dimenticata?",
+      "not-a-member": "Non sei registrato?",
+      "register": "Registrati",
+      "or": "oppure",
+      "login-with": "Accedi con",
+      "password-reset-success": "Password reimpostata con successo.",
+      "password-recovery-sent": "Se l'email è registrata, riceverai un link per reimpostare la password.",
+      "fill-required-fields": "Compila tutti i campi obbligatori correttamente",
+      "login-failed": "Accesso fallito",
+      "login-error": "Si è verificato un errore durante l'accesso",
+      "google-login-coming-soon": "L'accesso con Google sarà disponibile presto!",
+      "apple-login-coming-soon": "L'accesso con Apple sarà disponibile presto!",
+      "remember-me": "Ricordami"
+    },
+    "register": {
+      "register": "Registrati",
+      "email-address": "Indirizzo Email",
+      "password": "Password",
+      "confirm-password": "Conferma Password",
+      "display-name": "Nome Visualizzato (Opzionale)",
+      "already-member": "Sei già registrato?",
+      "login": "Accedi",
+      "or": "oppure",
+      "register-with": "Registrati con",
+      "fill-required-fields": "Compila tutti i campi obbligatori correttamente",
+      "passwords-not-match": "Le password non coincidono",
+      "registration-failed": "Registrazione fallita",
+      "registration-success": "Registrazione completata! Controlla la tua email per verificare l'account.",
+      "registration-error": "Si è verificato un errore durante la registrazione",
+      "google-register-coming-soon": "La registrazione con Google sarà disponibile presto!",
+      "apple-register-coming-soon": "La registrazione con Apple sarà disponibile presto!"
+    },
+    "recover": {
+      "title": "Password dimenticata",
+      "email-address": "Indirizzo Email",
+      "email-placeholder": "Inserisci indirizzo email",
+      "recovery-message": "Se registrato, riceverai una mail per reimpostare la password.",
+      "send-request": "Invia Richiesta",
+      "back-to-login": "Torna al login",
+      "recovery-sent": "La mail di recupero password è stata inviata con successo!",
+      "recovery-failed": "Impossibile inviare la mail di recupero",
+      "recovery-error": "Si è verificato un errore durante l'invio della mail di recupero",
+      "fill-required-fields": "Compila tutti i campi obbligatori correttamente"
+    },
+    "reset": {
+      "title": "Reimposta Password",
+      "subtitle": "Inserisci la tua nuova password qui sotto",
+      "email": "Indirizzo Email",
+      "otp": "Codice di Verifica",
+      "otp-required": "Il codice di verifica è obbligatorio",
+      "new-password": "Nuova Password",
+      "confirm-password": "Conferma Password",
+      "password-placeholder": "Inserisci nuova password",
+      "confirm-password-placeholder": "Conferma nuova password",
+      "password-prompt": "Inserisci una password",
+      "password-weak": "Troppo semplice",
+      "password-medium": "Complessità media",
+      "password-strong": "Password forte",
+      "password-required": "La password è obbligatoria",
+      "password-pattern": "La password deve essere di almeno 8 caratteri con maiuscole, minuscole, numeri e caratteri speciali",
+      "confirm-password-required": "Conferma la tua password",
+      "passwords-not-match": "Le password non coincidono",
+      "passwords-match": "Le password coincidono ✓",
+      "reset-password": "Reimposta Password",
+      "remember-password": "Ricordi la tua password?",
+      "back-to-login": "Torna al login",
+      "success": "Password reimpostata con successo! Reindirizzamento al login...",
+      "reset-failed": "Reimpostazione password fallita",
+      "reset-error": "Si è verificato un errore durante la reimpostazione della password",
+      "invalid-token": "Token di reset non valido o scaduto",
+      "fill-required-fields": "Compila tutti i campi obbligatori correttamente"
+    },
+    "verify": {
+      "title": "Verifica il tuo account con il codice inviato alla tua email",
+      "verifying": "Verifica in corso...",
+      "wrong-otp": "Codice di verifica non valido. Riprova.",
+      "resend-code": "Rinvia Codice",
+      "resend-code-sent": "Il codice di verifica è stato rinviato alla tua email",
+      "resend-code-failed": "Impossibile rinviare il codice di verifica",
+      "resend-code-error": "Si è verificato un errore durante il reinvio del codice di verifica",
+      "fill-required-fields": "Compila tutti i campi obbligatori correttamente",
+      "verification-failed": "Verifica fallita",
+      "verification-error": "Si è verificato un errore durante la verifica",
+      "success": "Email verificata con successo!"
+    }
+  },
+  "user": {
+    "user": "Utente",
+    "profile": "Il tuo profilo",
+    "logged-in-as": "Connesso come",
+    "verified": "profilo verificato",
+    "last-login": "Ultimo accesso:",
+    "created-at": "Creato il:",
+    "active-sessions": "Sessioni Attive",
+    "show-security-logs": "Mostra Log di Sicurezza",
+    "edit-profile": "Modifica profilo",
+    "download-data": "Scarica i tuoi dati",
+    "change-password": "Cambia password",
+    "delete-account": "Elimina account"
+  },
+  "profile": {
+    "tabs": {
+      "profile": "Profilo",
+      "settings": "Impostazioni",
+      "administration": "Amministrazione"
+    },
+    "dialogs": {
+      "edit-profile": "Modifica Profilo",
+      "download-data": "Scarica i tuoi dati",
+      "delete-account": "Elimina account",
+      "security-logs": "Log di Sicurezza"
+    },
+    "security-logs": {
+      "description": "Visualizza le tue recenti attività di sicurezza e log di accesso."
+    }
+  },
+  "dashboard": {
+    "welcome": "Benvenuto nella dashboard",
+    "disconnect": "Disconnetti",
+    "confirm-dialog": {
+      "create": {
+        "header": "Crea Utente",
+        "message": "Sei sicuro di voler creare questo utente?",
+        "confirm": "Crea",
+        "cancel": "Annulla"
+      },
+      "delete": {
+        "header": "Elimina Utente",
+        "message": "Sei sicuro di voler eliminare questo utente?",
+        "delete": "Elimina",
+        "cancel": "Annulla"
+      }
+    },
+    "errors": {
+      "fill-required-fields": "Compila tutti i campi obbligatori correttamente",
+      "user-creation-failed": "Creazione utente fallita",
+      "user-creation-error": "Si è verificato un errore durante la creazione dell'utente",
+      "error-retrieving-users": "Errore nel recupero degli utenti",
+      "user-deletion-failed": "Eliminazione utente fallita",
+      "user-deletion-error": "Si è verificato un errore durante l'eliminazione dell'utente"
+    },
+    "success": {
+      "user-created": "Utente creato con successo!",
+      "user-deleted": "Utente eliminato con successo!"
+    }
+  },
+  "settings": {
+    "title": "Impostazioni"
+  },
+  "navigation": {
+    "logout": "Disconnetti",
+    "dark-mode": "Passa alla modalità scura",
+    "light-mode": "Passa alla modalità chiara",
+    "toggle-dark-mode": "Cambia modalità scura"
+  },
+  "pwa": {
+    "offline": "Offline",
+    "update-available": "Aggiornamento disponibile",
+    "offline-mode": "Sei attualmente offline. Alcune funzionalità potrebbero essere limitate.",
+    "update-error": "Impossibile aggiornare l'applicazione",
+    "install": {
+      "title": "Installa PANDOM",
+      "description": "Installa questa app sul tuo dispositivo per un accesso rapido e facile quando sei in movimento.",
+      "install": "Installa",
+      "later": "Non ora"
+    }
+  },
+  "common": {
+    "dark-mode": "Modalità Scura",
+    "light-mode": "Modalità Chiara",
+    "loading": "Caricamento...",
+    "error": "Errore",
+    "success": "Successo",
+    "cancel": "Annulla",
+    "confirm": "Conferma",
+    "save": "Salva",
+    "edit": "Modifica",
+    "delete": "Elimina",
+    "download": "Scarica",
+    "upload": "Carica",
+    "search": "Cerca",
+    "filter": "Filtra",
+    "sort": "Ordina",
+    "refresh": "Aggiorna",
+    "close": "Chiudi",
+    "back": "Indietro",
+    "next": "Avanti",
+    "previous": "Precedente",
+    "submit": "Invia",
+    "reset": "Reimposta",
+    "clear": "Cancella",
+    "select": "Seleziona",
+    "choose": "Scegli",
+    "add": "Aggiungi",
+    "remove": "Rimuovi",
+    "update": "Aggiorna",
+    "create": "Crea",
+    "view": "Visualizza",
+    "details": "Dettagli",
+    "more": "Altro",
+    "less": "Meno",
+    "show": "Mostra",
+    "hide": "Nascondi",
+    "enable": "Abilita",
+    "disable": "Disabilita",
+    "active": "Attivo",
+    "inactive": "Inattivo",
+    "enabled": "Abilitato",
+    "disabled": "Disabilitato",
+    "yes": "Sì",
+    "no": "No",
+    "ok": "OK",
+    "apply": "Applica",
+    "reject": "Rifiuta",
+    "approve": "Approva",
+    "pending": "In attesa",
+    "completed": "Completato",
+    "failed": "Fallito",
+    "cancelled": "Annullato",
+    "expired": "Scaduto",
+    "valid": "Valido",
+    "invalid": "Non valido",
+    "required": "Obbligatorio",
+    "optional": "Opzionale",
+    "public": "Pubblico",
+    "private": "Privato",
+    "admin": "Amministratore",
+    "user": "Utente",
+    "guest": "Ospite",
+    "moderator": "Moderatore",
+    "light-mode": "Modalità Chiara"
+  }
+} 
