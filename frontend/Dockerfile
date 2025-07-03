@@ -1,48 +1,25 @@
-# Frontend Dockerfile - Multi-stage build
-FROM node:20-slim AS base
-
-# Set working directory
+# frontend/Dockerfile
+# Base
+FROM node:20 AS base
 WORKDIR /frontend
-
-# Copy package files first for better caching
 COPY package*.json ./
+RUN npm ci --silent
 
-# Install dependencies (including dev dependencies needed for building)
-RUN npm install && \
-    npm install -g @angular/cli@19.2.10
-
-# Development stage
+# Sviluppo
 FROM base AS development
-
-# Copy source code
+RUN npm install -g @angular/cli@19.2.10 --silent
 COPY . .
-
-# Expose port
 EXPOSE 4200
+CMD ["ng", "serve", "--host", "0.0.0.0", "--poll", "2000"]
 
-# Start development server
-CMD ["ng", "serve", "--host", "0.0.0.0", "--disable-host-check", "--poll", "2000"]
-
-# Production build stage
-FROM base AS production
-
-# Copy source code
+# Build produzione
+FROM base AS build
+RUN npm install -g @angular/cli@19.2.10 --silent
 COPY . .
+RUN npm run build:prod
 
-# Build the application
-RUN ng build --configuration production
-
-# Serve stage
+# Serve statico
 FROM nginx:alpine AS serve
-
-# Copy built application
-COPY --from=production /frontend/dist/* /usr/share/nginx/html/
-
-# Copy nginx configuration if needed
-# COPY nginx.conf /etc/nginx/nginx.conf
-
-# Expose port
+COPY --from=build /frontend/dist/frontend /usr/share/nginx/html
 EXPOSE 80
-
-# Start nginx
 CMD ["nginx", "-g", "daemon off;"]

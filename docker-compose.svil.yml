@@ -4,13 +4,9 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    volumes:
-      - ./backend:/src/app
-      - /src/app/node_modules
-    command: npm run start:dev
-    env_file:
-      - .env
+      target: development
     environment:
+      - NODE_ENV=development
       - JWT_SECRET=${JWT_SECRET}
       - JWT_EXPIRATION=${JWT_EXPIRATION}
       - DATABASE_URL=${DATABASE_URL}
@@ -29,8 +25,17 @@ services:
       - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
       - MINIO_USE_SSL=${MINIO_USE_SSL}
       - MINIO_BUCKET_NAME=${MINIO_BUCKET_NAME}
+      # Configurazione SMTP
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_PORT=${SMTP_PORT}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASS=${SMTP_PASS}
+      - SMTP_FROM=${SMTP_FROM}
     ports:
       - "3000:3000"
+    volumes:
+      - ./backend:/backend
+      - /backend/node_modules
     depends_on:
       postgres:
         condition: service_healthy
@@ -45,12 +50,8 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    volumes:
-      - ./backend:/src/app
-      - /src/app/node_modules
+      target: development
     command: sh -c "sleep 10 && npm run seed-admin"
-    env_file:
-      - .env
     environment:
       - DATABASE_URL=${DATABASE_URL}
       - POSTGRES_HOST=postgres
@@ -72,13 +73,13 @@ services:
       dockerfile: Dockerfile
       context: ./frontend
       target: development
-    volumes:
-      - ./frontend:/frontend
-      - /frontend/node_modules
     environment:
       - NODE_ENV=development
     ports:
       - "4200:4200"
+    volumes:
+      - ./frontend:/frontend
+      - /frontend/node_modules
     depends_on:
       - backend
     healthcheck:

@@ -1,9 +1,8 @@
-# API Dockerfile
-FROM node:23-slim
-
+# Dockerfile - Backend (dev)
+FROM node:20 AS base
 WORKDIR /src/app
 
-# Installa PostgreSQL client tools versione 17 per compatibilità
+# Installa client PostgreSQL solo se serve
 RUN apt-get update && \
     apt-get install -y wget gnupg2 lsb-release && \
     sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list' && \
@@ -13,21 +12,26 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Copia solo i file di dipendenze prima
 COPY package*.json ./
+RUN npm ci --legacy-peer-deps --include=optional --silent
 
-# Installa le dipendenze
-RUN npm install && \
-    npm install pg --save && \
-    npm i -g @nestjs/cli
-
-# Copia il resto del codice
+# Sviluppo
+FROM base AS development
+RUN npm install -g @nestjs/cli --silent
 COPY . .
-
-# Crea directory per i backup
-RUN mkdir -p /src/app/backups
-
 EXPOSE 3000
-
-# Comando corretto (non puoi usare && con CMD)
 CMD ["npm", "run", "start:dev"]
+
+# Build produzione
+FROM base AS build
+COPY . .
+RUN npm run build
+
+# Serve produzione
+FROM node:20 AS production
+WORKDIR /src/app
+COPY --from=build /src/app/dist ./dist
+COPY package*.json ./
+RUN npm ci --only=production --include=optional --silent
+EXPOSE 3000
+CMD ["node", "dist/main.js"]

@@ -90,6 +90,61 @@
       "success": "Email verified successfully!"
     }
   },
+  "user": {
+    "user": "User",
+    "profile": "Your profile",
+    "logged-in-as": "Logged in as",
+    "verified": "verified profile"
+  },
+  "settings": {
+    "title": "Settings"
+  },
+  "navigation": {
+    "logout": "Logout",
+    "dark-mode": "Switch to dark mode",
+    "light-mode": "Switch to light mode"
+  },
+  "dashboard": {
+    "disconnect": "Disconnect",
+    "confirm-dialog": {
+      "create": {
+        "header": "Create User",
+        "message": "Are you sure you want to create this user?",
+        "confirm": "Create",
+        "cancel": "Cancel"
+      },
+      "delete": {
+        "header": "Delete User",
+        "message": "Are you sure you want to delete this user?",
+        "delete": "Delete",
+        "cancel": "Cancel"
+      }
+    },
+    "errors": {
+      "fill-required-fields": "Please fill in all required fields correctly",
+      "user-creation-failed": "User creation failed",
+      "user-creation-error": "An error occurred during user creation",
+      "error-retrieving-users": "Error retrieving users",
+      "user-deletion-failed": "User deletion failed",
+      "user-deletion-error": "An error occurred during user deletion"
+    },
+    "success": {
+      "user-created": "User created successfully!",
+      "user-deleted": "User deleted successfully!"
+    }
+  },
+  "pwa": {
+    "offline": "Offline",
+    "update-available": "Update available",
+    "offline-mode": "You are currently offline. Some features may be limited.",
+    "update-error": "Failed to update the application",
+    "install": {
+      "title": "Install PANDOM",
+      "description": "Install this app on your device for quick and easy access when you're on the go.",
+      "install": "Install",
+      "later": "Not now"
+    }
+  },
   "common": {
     "dark-mode": "Dark Mode",
     "light-mode": "Light Mode"

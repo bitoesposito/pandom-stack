@@ -7,19 +7,19 @@ import { CommonModule } from '@angular/common';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { PaginatorModule } from 'primeng/paginator';
 import { Router, RouterModule } from '@angular/router';
-import { ConfirmationService, MessageService } from 'primeng/api';
-import { jwtDecode } from 'jwt-decode';
+import { ConfirmationService } from 'primeng/api';
 import { NotificationService } from '../../services/notification.service';
 import { ToastModule } from 'primeng/toast';
-import { UserService } from '../../services/user.service';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { TooltipModule } from 'primeng/tooltip';
 import { DialogModule } from 'primeng/dialog';
-import { finalize } from 'rxjs';
-import { ActivatedRoute } from '@angular/router';
 import { ThemeService } from '../../services/theme.service';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AuthService } from '../../services/auth.service';
+import { PwaService } from '../../services/pwa.service';
+import { AvatarModule } from 'primeng/avatar';
+import { AvatarGroupModule } from 'primeng/avatargroup';
+import { PopoverModule } from 'primeng/popover';
 
 @Component({
   selector: 'app-dashboard',
@@ -38,7 +38,10 @@ import { AuthService } from '../../services/auth.service';
     DialogModule,
     FormsModule,
     ReactiveFormsModule,
-    TranslateModule
+    TranslateModule,
+    AvatarModule,
+    AvatarGroupModule,
+    PopoverModule
   ],
   providers: [
     ConfirmationService
@@ -48,16 +51,9 @@ import { AuthService } from '../../services/auth.service';
 })
 export class DashboardComponent {
 
-  users: any[] = [];
-  filteredUsers: any[] = [];
-  paginator: any[] = [];
-  currentUserEmail: string = ''
-  currentUserUuid: string = ''
-  showNewUserDialog: boolean = false
-  searchTerm: string = '';
   isDarkMode$;
-
-  loading = false;
+  updateAvailable$;
+  isOnline$;
 
   form: FormGroup = new FormGroup({
     email: new FormControl({ value: '', disabled: false }, [Validators.required, Validators.pattern(/^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,4}$/)])
@@ -66,151 +62,43 @@ export class DashboardComponent {
   constructor(
     private notificationService: NotificationService,
     private router: Router,
-    private userService: UserService,
-    private confirmationService: ConfirmationService,
-    private route: ActivatedRoute,
     private themeService: ThemeService,
     private translate: TranslateService,
-    private authService: AuthService
+    private authService: AuthService,
+    private pwaService: PwaService
   ) {
     this.isDarkMode$ = this.themeService.isDarkMode$;
-    this.getUsers();
+    this.updateAvailable$ = this.pwaService.updateAvailable;
+    this.isOnline$ = this.pwaService.isOnline;
+    this.initializePWA();
   }
 
-  onSearch(event: any) {
-    this.searchTerm = event.target.value.toLowerCase();
-    this.filterUsers();
-  }
-
-  private filterUsers() {
-    if (!this.searchTerm) {
-      this.filteredUsers = this.users;
-    } else {
-      this.filteredUsers = this.users.filter(user => 
-        user.email.toLowerCase().includes(this.searchTerm)
-      );
-    }
-  }
-
-  confirmCreationDialog(event: Event) {
-    this.confirmationService.confirm({
-      target: event.target as EventTarget,
-      message: this.translate.instant('dashboard.confirm-dialog.create.message'),
-      header: this.translate.instant('dashboard.confirm-dialog.create.header'),
-      closable: true,
-      closeOnEscape: true,
-      icon: 'pi pi-exclamation-circle',
-      rejectButtonProps: {
-        label: this.translate.instant('dashboard.confirm-dialog.create.cancel'),
-        severity: 'secondary',
-        outlined: true,
-      },
-      acceptButtonProps: {
-        label: this.translate.instant('dashboard.confirm-dialog.create.confirm'),
-      },
-      accept: () => {
-        this.create();
-      },
-      reject: () => {
-        this.form.reset();
-        this.showNewUserDialog = false;
-      },
+  private initializePWA(): void {
+    // Subscribe to update availability
+    this.updateAvailable$.subscribe(available => {
+      if (available) {
+        this.notificationService.handleInfo(
+          this.translate.instant('pwa.update-available')
+        );
+      }
     });
-  }
 
-  create() {
-    if (this.form.invalid) {
-      this.notificationService.handleWarning(this.translate.instant('dashboard.errors.fill-required-fields'));
-      return;
-    }
-
-    this.loading = true;
-    this.userService.createUser(this.form.get('email')?.value)
-      .pipe(
-        finalize(() => {
-          this.loading = false;
-          this.showNewUserDialog = false; // Close modal after operation
-          this.form.reset(); // Reset form
-        })
-      )
-      .subscribe({
-        next: (response) => {
-          if (response.success) {
-            this.notificationService.handleSuccess(this.translate.instant('dashboard.success.user-created'));
-            this.getUsers(); // Refresh user list
-          } else {
-            this.notificationService.handleError(response.message, this.translate.instant('dashboard.errors.user-creation-failed'));
-          }
-        },
-        error: (error) => {
-          this.notificationService.handleError(error, this.translate.instant('dashboard.errors.user-creation-error'));
-        }
-      });
-  }
-
-  deleteUserDialog(event: Event, email: string) {
-    this.confirmationService.confirm({
-      target: event.target as EventTarget,
-      message: this.translate.instant('dashboard.confirm-dialog.delete.message'),
-      header: this.translate.instant('dashboard.confirm-dialog.delete.header'),
-      closable: true,
-      closeOnEscape: true,
-      icon: 'pi pi-exclamation-circle',
-      rejectButtonProps: {
-        label: this.translate.instant('dashboard.confirm-dialog.delete.cancel'),
-        severity: 'secondary',
-        outlined: true,
-      },
-      acceptButtonProps: {
-        label: this.translate.instant('dashboard.confirm-dialog.delete.delete'),
-        severity: 'danger'
-      },
-      accept: () => {
-        this.loading = true;
-        this.deleteUser(email);
-      },
-      reject: () => {
-        // No action needed on reject
-      },
-    });
-  }
-
-  getUsers() {
-    this.userService.getUsers().subscribe({
-      next: (response) => {
-        if (response.success) {
-          this.users = response.data || [];
-          this.filteredUsers = this.users;
-          // Aggiorna l'UUID dell'utente corrente dopo aver ottenuto la lista
-          this.setCurrentUserEmail();
-        } else {
-          this.notificationService.showMessage('error', response.message || this.translate.instant('dashboard.errors.error-retrieving-users'));
-        }
-      },
-      error: (error) => {
-        this.notificationService.handleError(error, this.translate.instant('dashboard.errors.error-retrieving-users'));
+    // Subscribe to online/offline status
+    this.isOnline$.subscribe(isOnline => {
+      if (!isOnline) {
+        this.notificationService.handleWarning(
+          this.translate.instant('pwa.offline-mode')
+        );
       }
     });
   }
 
-  deleteUser(email: string) {
-    this.userService.deleteUser(email)
-      .pipe(
-        finalize(() => this.loading = false)
-      )
-      .subscribe({
-        next: (response) => {
-          if (response.success) {
-            this.notificationService.showMessage('success', this.translate.instant('dashboard.success.user-deleted'));
-            this.getUsers(); // Refresh user list
-          } else {
-            this.notificationService.showMessage('error', response.message || this.translate.instant('dashboard.errors.error-deleting-user'));
-          }
-        },
-        error: (error) => {
-          this.notificationService.handleError(error, this.translate.instant('dashboard.errors.error-deleting-user'));
-        }
-      });
+  async updateApp(): Promise<void> {
+    try {
+      await this.pwaService.activateUpdate();
+    } catch (error) {
+      this.notificationService.handleError(error, this.translate.instant('pwa.update-error'));
+    }
   }
 
   disconnect() {
@@ -218,24 +106,7 @@ export class DashboardComponent {
     this.router.navigate(['/login']);
   }
 
-  toggleNewUserDialog() {
-    this.showNewUserDialog = !this.showNewUserDialog
-  }
-
   toggleDarkMode() {
     this.themeService.toggleDarkMode();
-  }
-
-  private setCurrentUserEmail() {
-    const token = localStorage.getItem('access_token');
-    if (token) {
-      try {
-        const decoded: any = jwtDecode(token);
-        this.currentUserEmail = decoded.email || '';
-        this.currentUserUuid = decoded.sub || '';
-      } catch (error) {
-        console.error('Error decoding token:', error);
-      }
-    }
   }
 }
