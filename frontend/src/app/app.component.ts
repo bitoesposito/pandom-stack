@@ -32,9 +32,9 @@ export class AppComponent implements OnInit {
     private offlineStorage: OfflineStorageService,
     private offlineSecurity: OfflineSecurityService
   ) {
-    // Initialize translations
-    translate.setDefaultLang('en-US');
-    translate.use('en-US');
+    // Initialize translations - removed as it's now handled by LanguageService
+    // translate.setDefaultLang('en-US');
+    // translate.use('en-US');
   }
 
   async ngOnInit() {
@@ -44,7 +44,7 @@ export class AppComponent implements OnInit {
 
   private async initializeOfflineServices(): Promise<void> {
     try {
-      console.log('Initializing offline services in app component...');
+      // console.log('Initializing offline services in app component...');
       
       // Inizializza database offline
       await this.offlineStorage.initializeDB();
@@ -54,14 +54,14 @@ export class AppComponent implements OnInit {
       
       // Verifica accesso offline
       const canAccessOffline = await this.offlineSecurity.validateOfflineAccess();
-      console.log('Offline access available:', canAccessOffline);
+              // console.log('Offline access available:', canAccessOffline);
       
       if (canAccessOffline) {
         // Log attività di inizializzazione
         await this.offlineSecurity.logOfflineActivity('App initialized with offline capabilities');
       }
       
-      console.log('Offline services initialized successfully');
+              // console.log('Offline services initialized successfully');
     } catch (error) {
       console.error('Failed to initialize offline services:', error);
     }

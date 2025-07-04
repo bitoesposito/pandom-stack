@@ -26,14 +26,14 @@ export class OfflineSecurityService {
     try {
       const token = this.authService.getToken();
       if (!token) {
-        console.log('No token found, offline access denied');
+        // console.log('No token found, offline access denied');
         return false;
       }
 
       // Verifica token JWT
       const decoded = this.decodeJWT(token);
       if (!decoded) {
-        console.log('Invalid token, offline access denied');
+        // console.log('Invalid token, offline access denied');
         return false;
       }
 
@@ -41,18 +41,18 @@ export class OfflineSecurityService {
       
       // Token valido per almeno 1 ora
       if (decoded.exp < now + 3600) {
-        console.log('Token expires soon, offline access denied');
+        // console.log('Token expires soon, offline access denied');
         return false;
       }
       
       // Verifica ruoli e permessi
       const hasValidRole = this.validatePermissions(decoded);
       if (!hasValidRole) {
-        console.log('Invalid permissions, offline access denied');
+        // console.log('Invalid permissions, offline access denied');
         return false;
       }
 
-      console.log('Offline access validated successfully');
+      // console.log('Offline access validated successfully');
       return true;
     } catch (error) {
       console.error('Offline access validation failed:', error);
@@ -133,7 +133,7 @@ export class OfflineSecurityService {
       };
 
       await this.offlineStorage.addSecurityLog(logEntry);
-      console.log('Offline activity logged:', activity);
+      // console.log('Offline activity logged:', activity);
     } catch (error) {
       console.error('Failed to log offline activity:', error);
     }
@@ -220,7 +220,7 @@ export class OfflineSecurityService {
 
       // Implementa refresh token offline
       // Per ora ritorna false, da implementare quando disponibile
-      console.log('Offline token refresh not implemented yet');
+      // console.log('Offline token refresh not implemented yet');
       return false;
     } catch (error) {
       console.error('Offline token refresh failed:', error);

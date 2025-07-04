@@ -1,0 +1,10 @@
+#language-selector {
+    ::ng-deep .p-select-dropdown {
+        width: unset !important;
+        padding-right: .5rem;
+    }
+
+    ::ng-deep .p-select-label {
+        padding-right: .5rem !important;
+    }
+}

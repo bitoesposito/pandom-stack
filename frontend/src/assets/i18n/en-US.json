@@ -1,4 +1,9 @@
 {
+  "app": {
+    "title": "PANDOM - Stack boilerplate",
+    "description": "A modern full-stack application with authentication, dashboard, and PWA capabilities",
+    "enable-javascript": "Please enable JavaScript to continue using this application."
+  },
   "auth": {
     "login": {
       "login": "Login",
@@ -94,17 +99,100 @@
     "user": "User",
     "profile": "Your profile",
     "logged-in-as": "Logged in as",
-    "verified": "verified profile"
+    "verified": "verified profile",
+    "last-login": "Last login:",
+    "created-at": "Created at:",
+    "active-sessions": "Active Sessions",
+    "show-security-logs": "Show Security Logs",
+    "edit-profile": "Edit profile",
+    "download-data": "Download your data",
+    "change-password": "Change password",
+    "delete-account": "Delete account"
   },
-  "settings": {
-    "title": "Settings"
-  },
-  "navigation": {
-    "logout": "Logout",
-    "dark-mode": "Switch to dark mode",
-    "light-mode": "Switch to light mode"
+  "profile": {
+    "tabs": {
+      "profile": "Profile",
+      "settings": "Settings",
+      "administration": "Administration"
+    },
+    "dialogs": {
+      "edit-profile": "Edit Profile",
+      "download-data": "Download your data",
+      "delete-account": "Delete account",
+      "security-logs": "Security Logs",
+      "change-password": "Change Password"
+    },
+    "security-logs": {
+      "description": "View your recent security activities and access logs.",
+      "loading": "Loading security logs...",
+      "no-logs": "No security logs found.",
+      "error": "Failed to load security logs. Please try again later.",
+      "table": {
+        "action": "Action",
+        "ip-address": "IP Address",
+        "user-agent": "User Agent",
+        "timestamp": "Timestamp",
+        "status": "Status",
+        "details": "Details"
+      },
+      "actions": {
+        "login": "Login",
+        "logout": "Logout",
+        "password-change": "Password Change",
+        "password-reset": "Password Reset",
+        "account-deletion": "Account Deletion",
+        "session-creation": "Session Creation",
+        "session-termination": "Session Termination",
+        "failed-login": "Failed Login Attempt",
+        "suspicious-activity": "Suspicious Activity",
+        "USER_LOGIN_SUCCESS": "Login",
+        "USER_LOGOUT": "Logout",
+        "USER_RESET_PASSWORD": "Password Reset",
+        "USER_CHANGE_PASSWORD": "Password Change",
+        "USER_DELETE_ACCOUNT": "Account Deletion",
+        "SUSPICIOUS_ACTIVITY": "Suspicious Activity",
+        "DATA_EXPORT": "Data Export",
+        "SESSION_CREATION": "Session Creation",
+        "SESSION_TERMINATION": "Session Termination"
+      },
+      "status": {
+        "success": "Success",
+        "failed": "Failed",
+        "pending": "Pending"
+      }
+    },
+    "download": {
+      "description": "Download a copy of all your personal data stored in our system. This includes your profile information, account details, and activity logs.",
+      "info": "Your data will be exported in a secure format and includes all information we have about your account.",
+      "expires": "The download link will expire after 24 hours for security reasons.",
+      "confirm": "Download Data",
+      "success": "Your personal data download has started successfully!",
+      "error": "Failed to download your personal data. Please try again later."
+    },
+    "change-password": {
+      "description": "To change your password, we will send a verification code to your email address. You will then be redirected to the password reset page where you can set your new password.",
+      "info": "A verification code will be sent to your registered email address.",
+      "warning": "You will be logged out after the verification code is sent and redirected to the password reset page.",
+      "confirm": "Send Verification Code",
+      "sending": "Sending verification code...",
+      "email-sent": "Verification code sent successfully! You will be redirected to the password reset page.",
+      "email-failed": "Failed to send verification code. Please try again later.",
+      "no-email": "No email address found for your account."
+    },
+    "delete-account": {
+      "warning-title": "Delete Account",
+      "description": "This action will permanently delete your account and all associated data. This process cannot be undone.",
+      "info": "All your personal data, settings, and account information will be permanently removed.",
+      "irreversible": "This action is irreversible and cannot be undone.",
+      "data-retention": "Some data may be retained for legal or regulatory purposes as required by law.",
+      "deleting": "Deleting your account...",
+      "confirm": "Delete Account",
+      "success": "Your account has been successfully deleted. You will be redirected to the login page.",
+      "failed": "Failed to delete your account. Please try again later."
+    }
   },
   "dashboard": {
+    "welcome": "Welcome to the dashboard",
     "disconnect": "Disconnect",
     "confirm-dialog": {
       "create": {
@@ -133,6 +221,15 @@
       "user-deleted": "User deleted successfully!"
     }
   },
+  "settings": {
+    "title": "Settings"
+  },
+  "navigation": {
+    "logout": "Logout",
+    "dark-mode": "Switch to dark mode",
+    "light-mode": "Switch to light mode",
+    "toggle-dark-mode": "Toggle dark mode"
+  },
   "pwa": {
     "offline": "Offline",
     "update-available": "Update available",
@@ -147,6 +244,77 @@
   },
   "common": {
     "dark-mode": "Dark Mode",
-    "light-mode": "Light Mode"
+    "light-mode": "Light Mode",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "save": "Save",
+    "edit": "Edit",
+    "delete": "Delete",
+    "download": "Download",
+    "upload": "Upload",
+    "search": "Search",
+    "filter": "Filter",
+    "sort": "Sort",
+    "refresh": "Refresh",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "submit": "Submit",
+    "reset": "Reset",
+    "clear": "Clear",
+    "select": "Select",
+    "choose": "Choose",
+    "add": "Add",
+    "remove": "Remove",
+    "update": "Update",
+    "create": "Create",
+    "view": "View",
+    "details": "Details",
+    "more": "More",
+    "less": "Less",
+    "show": "Show",
+    "hide": "Hide",
+    "enable": "Enable",
+    "disable": "Disable",
+    "active": "Active",
+    "inactive": "Inactive",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "yes": "Yes",
+    "no": "No",
+    "ok": "OK",
+    "apply": "Apply",
+    "reject": "Reject",
+    "approve": "Approve",
+    "pending": "Pending",
+    "completed": "Completed",
+    "failed": "Failed",
+    "cancelled": "Cancelled",
+    "expired": "Expired",
+    "valid": "Valid",
+    "invalid": "Invalid",
+    "required": "Required",
+    "optional": "Optional",
+    "public": "Public",
+    "private": "Private",
+    "admin": "Admin",
+    "user": "User",
+    "guest": "Guest",
+    "moderator": "Moderator",
+    "super-admin": "Super Admin",
+    "showing": "Showing",
+    "to": "to",
+    "of": "of",
+    "entries": "entries"
+  },
+  "notification": {
+    "success": "Success",
+    "error": "Error",
+    "info": "Information",
+    "warning": "Warning"
   }
 }

@@ -68,7 +68,7 @@ export class OfflineDataService {
       const userId = this.extractUserIdFromToken(token);
       if (!userId) throw new Error('Could not extract user ID from token');
 
-      console.log('Updating profile offline:', profileData);
+      // console.log('Updating profile offline:', profileData);
 
       // Salva modifica in coda sync
       await this.syncQueue.addToQueue({
@@ -103,7 +103,7 @@ export class OfflineDataService {
     const userId = this.extractUserIdFromToken(token);
     if (!userId) throw new Error('Could not extract user ID from token');
 
-    console.log('Updating user data offline:', userData);
+    // console.log('Updating user data offline:', userData);
 
     // Salva modifica in coda sync
     await this.syncQueue.addToQueue({
@@ -169,7 +169,7 @@ export class OfflineDataService {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
       
-      console.log('Offline data downloaded successfully');
+      // console.log('Offline data downloaded successfully');
     } catch (error) {
       console.error('Failed to download offline data:', error);
       throw error;
@@ -237,7 +237,7 @@ export class OfflineDataService {
   async clearOfflineData(userId: string): Promise<void> {
     try {
       await this.offlineStorage.deleteUserData(userId);
-      console.log('Offline data cleared for user:', userId);
+      // console.log('Offline data cleared for user:', userId);
     } catch (error) {
       console.error('Failed to clear offline data:', error);
       throw error;

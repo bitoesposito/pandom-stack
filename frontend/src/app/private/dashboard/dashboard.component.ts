@@ -7,7 +7,7 @@ import { CommonModule } from '@angular/common';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { PaginatorModule } from 'primeng/paginator';
 import { Router, RouterModule } from '@angular/router';
-import { ConfirmationService } from 'primeng/api';
+import { ConfirmationService, MessageService } from 'primeng/api';
 import { NotificationService } from '../../services/notification.service';
 import { ToastModule } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
@@ -20,6 +20,7 @@ import { PwaService } from '../../services/pwa.service';
 import { AvatarModule } from 'primeng/avatar';
 import { AvatarGroupModule } from 'primeng/avatargroup';
 import { PopoverModule } from 'primeng/popover';
+import { NavBarComponent } from '../nav-bar/nav-bar.component';
 
 @Component({
   selector: 'app-dashboard',
@@ -41,10 +42,13 @@ import { PopoverModule } from 'primeng/popover';
     TranslateModule,
     AvatarModule,
     AvatarGroupModule,
-    PopoverModule
+    PopoverModule,
+    NavBarComponent
   ],
   providers: [
-    ConfirmationService
+    ConfirmationService,
+    MessageService,
+    NotificationService
   ],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'
@@ -91,22 +95,5 @@ export class DashboardComponent {
         );
       }
     });
-  }
-
-  async updateApp(): Promise<void> {
-    try {
-      await this.pwaService.activateUpdate();
-    } catch (error) {
-      this.notificationService.handleError(error, this.translate.instant('pwa.update-error'));
-    }
-  }
-
-  disconnect() {
-    this.authService.logout();
-    this.router.navigate(['/login']);
-  }
-
-  toggleDarkMode() {
-    this.themeService.toggleDarkMode();
   }
 }
