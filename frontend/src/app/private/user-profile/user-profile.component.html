@@ -153,7 +153,8 @@
             [scrollable]="true"
             responsiveLayout="scroll"
             currentPageReportTemplate="{{ 'common.showing' | translate }} {first} {{ 'common.to' | translate }} {last} {{ 'common.of' | translate }} {totalRecords} {{ 'common.entries' | translate }}"
-            [rowsPerPageOptions]="[5, 10, 25, 50]">
+            [rowsPerPageOptions]="[5, 10, 25, 50]"
+            [paginatorDropdownAppendTo]="'body'">
             
             <ng-template pTemplate="header">
                 <tr>
