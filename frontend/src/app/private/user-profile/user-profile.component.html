@@ -1,5 +1,7 @@
 <app-nav-bar></app-nav-bar>
 
+<p-toast class="absolute" />
+
 <main style="max-width: 1200px;" class="m-auto flex flex-column p-3 gap-3 mt-2">
 
     <p-tabs value="0">
@@ -42,17 +44,18 @@
                             }
                         </div>
 
-                        <p-button styleClass="white-space-nowrap justify-content-start" fluid="true" [label]="'user.show-security-logs' | translate" icon="pi pi-shield" severity="secondary" outlined="true" (click)="toggleDialog('security')" />
+                        <p-button styleClass="white-space-nowrap justify-content-start" fluid="true" [label]="'user.show-security-logs' | translate" icon="pi pi-shield" severity="secondary" outlined="true" (click)="toggleDialog('security')" [disabled]="isProcessing || isDownloading" />
                     </div>
                 </div>
 
                 <hr class="surface-border my-1"/>
 
                 <div class="flex flex-column gap-2">
-                    <p-button styleClass="white-space-nowrap justify-content-start" fluid="true" [label]="'user.edit-profile' | translate" icon="pi pi-pencil" severity="secondary" outlined="true" (click)="toggleDialog('edit')"/>
-                    <p-button styleClass="white-space-nowrap justify-content-start" fluid="true" [label]="'user.download-data' | translate" icon="pi pi-download" severity="secondary" outlined="true" (click)="toggleDialog('download')" />
-                    <p-button styleClass="white-space-nowrap justify-content-start" fluid="true" [label]="'user.change-password' | translate" icon="pi pi-key" severity="secondary" outlined="true"/>
-                    <p-button styleClass="white-space-nowrap justify-content-start" fluid="true" [label]="'user.delete-account' | translate" icon="pi pi-trash" severity="danger" outlined="true" (click)="toggleDialog('delete')" />
+                    <!-- al momento le tabelle per le informazioni dell'utente sono vuote, perciò è inutile implementare il modifica profilo -->
+                    <!-- <p-button styleClass="white-space-nowrap justify-content-start" fluid="true" [label]="'user.edit-profile' | translate" icon="pi pi-pencil" severity="secondary" outlined="true" (click)="toggleDialog('edit')" [disabled]="isProcessing || isDownloading"/> -->
+                    <p-button styleClass="white-space-nowrap justify-content-start" fluid="true" [label]="'user.download-data' | translate" icon="pi pi-download" severity="secondary" outlined="true" (click)="toggleDialog('download')" [disabled]="isProcessing || isDownloading"/>
+                    <p-button styleClass="white-space-nowrap justify-content-start" fluid="true" [label]="'user.change-password' | translate" icon="pi pi-key" severity="secondary" outlined="true" (click)="toggleDialog('change-password')" [disabled]="isProcessing || isDownloading"/>
+                    <p-button styleClass="white-space-nowrap justify-content-start" fluid="true" [label]="'user.delete-account' | translate" icon="pi pi-trash" severity="danger" outlined="true" (click)="toggleDialog('delete')" [disabled]="isProcessing || isDownloading"/>
                 </div>
                 
             </p-tabpanel>
@@ -72,17 +75,166 @@
 </p-dialog>
 
 <p-dialog [header]="'profile.dialogs.download-data' | translate" [modal]="true" [(visible)]="isDownloadDialogVisible" [breakpoints]="{ '1199px': '75vw', '575px': '90vw' }" [style]="{ width: '50vw' }" [draggable]="false" [resizable]="false">
-    <div class="flex flex-column gap-2">
+    <div class="flex flex-column gap-3">
+        <p class="text-color-secondary text-sm">{{ 'profile.download.description' | translate }}</p>
+        
+        <div class="flex flex-column gap-2">
+            <div class="flex align-items-center gap-2">
+                <i class="pi pi-info-circle text-blue-500"></i>
+                <span class="text-sm">{{ 'profile.download.info' | translate }}</span>
+            </div>
+            <div class="flex align-items-center gap-2">
+                <i class="pi pi-clock text-orange-500"></i>
+                <span class="text-sm">{{ 'profile.download.expires' | translate }}</span>
+            </div>
+        </div>
+
+        <div class="flex gap-2 justify-content-end">
+            <p-button [label]="'common.cancel' | translate" severity="secondary" outlined="true" (click)="isDownloadDialogVisible = false" [disabled]="isDownloading" />
+            <p-button [label]="'profile.download.confirm' | translate" severity="primary" (click)="downloadPersonalData()" [loading]="isDownloading" [disabled]="isDownloading" />
+        </div>
     </div>
 </p-dialog>
 
 <p-dialog [header]="'profile.dialogs.delete-account' | translate" [modal]="true" [(visible)]="isDeleteDialogVisible" [breakpoints]="{ '1199px': '75vw', '575px': '90vw' }" [style]="{ width: '50vw' }" [draggable]="false" [resizable]="false">
-    <div class="flex flex-column gap-2">
+    <div class="flex flex-column gap-3">
+        <div class="flex align-items-center gap-2">
+            <i class="pi pi-exclamation-triangle text-red-500 text-xl"></i>
+            <p class="text-red-500 font-semibold">{{ 'profile.delete-account.warning-title' | translate }}</p>
+        </div>
+        
+        <p class="text-color-secondary text-sm">{{ 'profile.delete-account.description' | translate }}</p>
+        
+        <div class="flex flex-column gap-2">
+            <div class="flex align-items-center gap-2">
+                <i class="pi pi-info-circle text-blue-500"></i>
+                <span class="text-sm">{{ 'profile.delete-account.info' | translate }}</span>
+            </div>
+            <div class="flex align-items-center gap-2">
+                <i class="pi pi-exclamation-triangle text-orange-500"></i>
+                <span class="text-sm">{{ 'profile.delete-account.irreversible' | translate }}</span>
+            </div>
+            <div class="flex align-items-center gap-2">
+                <i class="pi pi-clock text-orange-500"></i>
+                <span class="text-sm">{{ 'profile.delete-account.data-retention' | translate }}</span>
+            </div>
+            <div *ngIf="isProcessing" class="flex align-items-center gap-2">
+                <i class="pi pi-spin pi-spinner text-red-500"></i>
+                <span class="text-sm text-red-500">{{ 'profile.delete-account.deleting' | translate }}</span>
+            </div>
+        </div>
+
+        <div class="flex gap-2 justify-content-end">
+            <p-button [label]="'common.cancel' | translate" severity="secondary" outlined="true" (click)="isDeleteDialogVisible = false" [disabled]="isProcessing" />
+            <p-button [label]="'profile.delete-account.confirm' | translate" severity="danger" (click)="deleteAccount()" [loading]="isProcessing" [disabled]="isProcessing" />
+        </div>
     </div>
 </p-dialog>
 
-<p-dialog [header]="'profile.dialogs.security-logs' | translate" [modal]="true" [(visible)]="isSecurityLogsDialogVisible" [breakpoints]="{ '1199px': '75vw', '575px': '90vw' }" [style]="{ width: '70vw' }" [draggable]="false" [resizable]="false">
-    <div class="flex flex-column gap-2">
-        <p class="text-color-secondary text-sm">{{ 'profile.security-logs.description' | translate }}</p>
+<p-dialog [header]="'profile.dialogs.security-logs' | translate" [modal]="true" [(visible)]="isSecurityLogsDialogVisible" [breakpoints]="{ '1199px': '75vw', '575px': '90vw' }" [draggable]="false" [resizable]="false" [maximizable]="true">
+    <div class="flex flex-column gap-3">        
+        <div *ngIf="isLoadingSecurityLogs" class="flex justify-content-center p-4">
+            <i class="pi pi-spin pi-spinner text-xl"></i>
+            <span class="ml-2">{{ 'profile.security-logs.loading' | translate }}</span>
+        </div>
+
+        <div *ngIf="!isLoadingSecurityLogs && securityLogs.length === 0" class="flex justify-content-center p-4">
+            <i class="pi pi-info-circle text-xl text-blue-500"></i>
+            <span class="ml-2">{{ 'profile.security-logs.no-logs' | translate }}</span>
+        </div>
+
+        <p-table 
+            *ngIf="!isLoadingSecurityLogs && securityLogs.length > 0"
+            [value]="securityLogs" 
+            [paginator]="true" 
+            [rows]="5"
+            [showCurrentPageReport]="true"
+            [tableStyle]="{ 'min-width': '50rem' }"
+            [scrollable]="true"
+            responsiveLayout="scroll"
+            currentPageReportTemplate="{{ 'common.showing' | translate }} {first} {{ 'common.to' | translate }} {last} {{ 'common.of' | translate }} {totalRecords} {{ 'common.entries' | translate }}"
+            [rowsPerPageOptions]="[5, 10, 25, 50]">
+            
+            <ng-template pTemplate="header">
+                <tr>
+                    <th>{{ 'profile.security-logs.table.action' | translate }}</th>
+                    <th>{{ 'profile.security-logs.table.ip-address' | translate }}</th>
+                    <th>{{ 'profile.security-logs.table.user-agent' | translate }}</th>
+                    <th>{{ 'profile.security-logs.table.timestamp' | translate }}</th>
+                    <th>{{ 'profile.security-logs.table.status' | translate }}</th>
+                    <th>{{ 'profile.security-logs.table.details' | translate }}</th>
+                </tr>
+            </ng-template>
+            
+            <ng-template pTemplate="body" let-log>
+                <tr>
+                    <td>
+                        <span class="font-medium">{{ getActionName(log.action) | translate }}</span>
+                    </td>
+                    <td>
+                        <code class="text-sm">{{ log.ip_address }}</code>
+                    </td>
+                    <td>
+                        <span pTooltip="{{ log.user_agent }}" tooltipPosition="top" class="text-sm">
+                            {{ truncateUserAgent(log.user_agent) }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="text-sm">{{ formatTimestamp(log.timestamp) }}</span>
+                    </td>
+                    <td>
+                        <p-tag 
+                            [value]="getStatusText(log.success) | translate" 
+                            [severity]="getStatusSeverity(log.success)"
+                            [rounded]="true">
+                        </p-tag>
+                    </td>
+                    <td>
+                        <div *ngIf="log.details" class="flex flex-column gap-1">
+                            <div *ngFor="let detail of log.details | keyvalue" class="text-xs">
+                                <span class="font-medium">{{ detail.key }}:</span>
+                                <span class="text-color-secondary ml-1">{{ detail.value }}</span>
+                            </div>
+                        </div>
+                        <span *ngIf="!log.details" class="text-color-secondary text-xs">-</span>
+                    </td>
+                </tr>
+            </ng-template>
+            
+            <ng-template pTemplate="emptymessage">
+                <tr>
+                    <td colspan="6" class="text-center p-4">
+                        <i class="pi pi-info-circle text-xl text-blue-500"></i>
+                        <p class="mt-2">{{ 'profile.security-logs.no-logs' | translate }}</p>
+                    </td>
+                </tr>
+            </ng-template>
+        </p-table>
+    </div>
+</p-dialog>
+
+<p-dialog [header]="'profile.dialogs.change-password' | translate" [modal]="true" [(visible)]="isChangePasswordDialogVisible" [breakpoints]="{ '1199px': '75vw', '575px': '90vw' }" [style]="{ width: '50vw' }" [draggable]="false" [resizable]="false">
+    <div class="flex flex-column gap-3">
+        <p class="text-color-secondary text-sm">{{ 'profile.change-password.description' | translate }}</p>
+        
+        <div class="flex flex-column gap-2">
+            <div class="flex align-items-center gap-2">
+                <i class="pi pi-info-circle text-blue-500"></i>
+                <span class="text-sm">{{ 'profile.change-password.info' | translate }}</span>
+            </div>
+            <div class="flex align-items-center gap-2">
+                <i class="pi pi-exclamation-triangle text-orange-500"></i>
+                <span class="text-sm">{{ 'profile.change-password.warning' | translate }}</span>
+            </div>
+            <div *ngIf="isProcessing" class="flex align-items-center gap-2">
+                <i class="pi pi-spin pi-spinner text-blue-500"></i>
+                <span class="text-sm text-blue-500">{{ 'profile.change-password.sending' | translate }}</span>
+            </div>
+        </div>
+
+        <div class="flex gap-2 justify-content-end">
+            <p-button [label]="'common.cancel' | translate" severity="secondary" outlined="true" (click)="isChangePasswordDialogVisible = false" [disabled]="isProcessing" />
+            <p-button [label]="'profile.change-password.confirm' | translate" severity="primary" (click)="requestPasswordChange()" [loading]="isProcessing" [disabled]="isProcessing" />
+        </div>
     </div>
 </p-dialog>

@@ -7,7 +7,7 @@ import { CommonModule } from '@angular/common';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { PaginatorModule } from 'primeng/paginator';
 import { Router, RouterModule } from '@angular/router';
-import { ConfirmationService } from 'primeng/api';
+import { ConfirmationService, MessageService } from 'primeng/api';
 import { NotificationService } from '../../services/notification.service';
 import { ToastModule } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
@@ -46,7 +46,9 @@ import { NavBarComponent } from '../nav-bar/nav-bar.component';
     NavBarComponent
   ],
   providers: [
-    ConfirmationService
+    ConfirmationService,
+    MessageService,
+    NotificationService
   ],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'

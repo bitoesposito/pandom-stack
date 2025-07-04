@@ -162,17 +162,12 @@ export class ResetComponent implements OnInit {
     };
 
     this.authService.resetPassword(data)
-      .pipe(
-        finalize(() => {
-          this.loading = false;
-          // Riabilita tutti i controlli dopo il loading
-          this.form.enable();
-        })
-      )
       .subscribe({
         next: (response: any) => {
+          this.loading = false;
           if (response.success) {
             this.notificationService.handleSuccess(this.translate.instant('auth.reset.success'));
+            // Keep form disabled during redirect delay
             // Redirect to login page after successful password reset
             setTimeout(() => {
               this.router.navigate(['/login'], { 
@@ -180,10 +175,15 @@ export class ResetComponent implements OnInit {
               });
             }, 2000);
           } else {
+            // Re-enable form only on error
+            this.form.enable();
             this.notificationService.handleWarning(response.message || this.translate.instant('auth.reset.reset-failed'));
           }
         },
         error: (error: any) => {
+          this.loading = false;
+          // Re-enable form on error
+          this.form.enable();
           this.notificationService.handleError(error, this.translate.instant('auth.reset.reset-error'));
         }
       });

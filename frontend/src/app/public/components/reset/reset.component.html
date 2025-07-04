@@ -4,7 +4,7 @@
 <main class="w-screen h-screen flex flex-column justify-content-center align-items-center p-3 ">
   <div class="w-full max-w-26rem flex flex-column gap-2 p-3 border-round-md">
 
-    <a href="/">
+    <a href="/" [class.pointer-events-none]="loading" [class.opacity-50]="loading">
       <img src="logo-full.svg" alt="logo" height="50"/>
       <!-- in case of low contrast and diferent logo for dark and light mode, use this: -->
       <!-- <img [src]="(isDarkMode$ | async) ? './logo-full-white.svg' : './logo-full-black.svg'" alt="logo" height="50"/> -->
@@ -12,7 +12,7 @@
 
     <div class="flex align-items-center justify-content-between gap-2">
       <p class="text-2xl font-semibold">{{ 'auth.reset.title' | translate }}</p>
-      <p-button [icon]="(isDarkMode$ | async) ? 'pi pi-moon' : 'pi pi-sun'" severity="secondary" (click)="toggleDarkMode()" pTooltip="Toggle dark mode" outlined="true" tooltipPosition="bottom"/>
+      <p-button [icon]="(isDarkMode$ | async) ? 'pi pi-moon' : 'pi pi-sun'" severity="secondary" (click)="toggleDarkMode()" pTooltip="Toggle dark mode" outlined="true" tooltipPosition="bottom" [disabled]="loading"/>
     </div>
 
     <form [formGroup]="form" (ngSubmit)="resetPassword()" class="flex flex-column gap-3">
@@ -84,7 +84,7 @@
       <div class="flex gap-3 flex-column mt-2">
         <p-button [label]="'auth.reset.reset-password' | translate" styleClass="w-full" type="submit" [disabled]="!form.valid || loading" [loading]="loading"/>
 
-        <p class="text-center">{{ 'auth.reset.remember-password' | translate }} <a [routerLink]="['/login']" class="text-primary hover:text-color no-underline">{{ 'auth.reset.back-to-login' | translate }}</a></p>
+        <p class="text-center">{{ 'auth.reset.remember-password' | translate }} <a [routerLink]="['/login']" class="text-primary hover:text-color no-underline" [class.pointer-events-none]="loading" [class.opacity-50]="loading">{{ 'auth.reset.back-to-login' | translate }}</a></p>
       </div>
     </form>
 
