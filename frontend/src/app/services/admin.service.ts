@@ -37,10 +37,15 @@ export class AdminService {
    * Get user management data
    * @param page - Page number
    * @param limit - Items per page
+   * @param search - Search query
    * @returns Observable with user management data
    */
-  getUsers(page: number = 1, limit: number = 10): Observable<ApiResponse<UserManagementResponse>> {
-    return this.http.get<ApiResponse<UserManagementResponse>>(`${this.API_URL}/admin/users?page=${page}&limit=${limit}`, {
+  getUsers(page: number = 1, limit: number = 10, search?: string): Observable<ApiResponse<UserManagementResponse>> {
+    let url = `${this.API_URL}/admin/users?page=${page}&limit=${limit}`;
+    if (search && search.trim() !== '') {
+      url += `&search=${encodeURIComponent(search)}`;
+    }
+    return this.http.get<ApiResponse<UserManagementResponse>>(url, {
       headers: this.getHeaders()
     });
   }

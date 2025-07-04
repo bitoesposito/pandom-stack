@@ -30,11 +30,10 @@ export interface UserManagementResponse {
     email: string;
     role: string;
     is_verified: boolean;
-    is_suspended: boolean;
     created_at: string;
-    last_login_at: string;
+    last_login_at?: string;
     profile?: {
-      uuid: string;
+      uuid?: string;
       display_name?: string;
       bio?: string;
     };

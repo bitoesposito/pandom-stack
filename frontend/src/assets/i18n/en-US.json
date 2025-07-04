@@ -122,7 +122,8 @@
       "delete-account": "Delete account",
       "security-logs": "Security Logs",
       "change-password": "Change Password",
-      "audit-logs": "Audit Logs"
+      "audit-logs": "Audit Logs",
+      "user-management": "User Management"
     },
     "security-logs": {
       "description": "View your recent security activities and access logs.",
@@ -227,7 +228,8 @@
       "refresh": "Refresh Status",
       "healthy": "Healthy",
       "degraded": "Degraded",
-      "down": "Down"
+      "down": "Down",
+      "no-alerts": "No issues detected. Everything is running smoothly!"
     },
     "administration": {
       "loading": "Loading administration data...",
@@ -239,7 +241,35 @@
       "error-rate": "Error Rate",
       "alerts": "System Alerts",
       "refresh": "Refresh Data",
-      "view-audit-logs": "View Audit Logs"
+      "view-audit-logs": "View Audit Logs",
+      "manage-users": "Manage Users",
+      "no-alerts": "No issues detected. Everything is running smoothly!"
+    },
+    "user-management": {
+      "loading": "Loading users...",
+      "error": "Failed to load users. Please try again later.",
+      "no-users": "No users found.",
+      "search-placeholder": "Search users by email...",
+      "suspend-success": "User suspended successfully.",
+      "suspend-error": "Failed to suspend user. Please try again later.",
+      "delete-success": "User deleted successfully.",
+      "delete-error": "Failed to delete user. Please try again later.",
+      "table": {
+        "name": "Name",
+        "email": "Email",
+        "role": "Role",
+        "verified": "Verified",
+        "created": "Created",
+        "last-login": "Last Login",
+        "actions": "Actions"
+      },
+      "status": {
+        "verified": "Verified",
+        "unverified": "Unverified"
+      },
+      "actions": {
+        "delete": "Delete User"
+      }
     }
   },
   "dashboard": {

@@ -9,13 +9,11 @@ export interface UserManagementResponseDto {
     uuid: string;
     email: string;
     role: 'user' | 'admin';
-    status: 'active' | 'suspended' | 'deleted';
+    is_verified: boolean;
     created_at: string;
-    last_login?: string;
+    last_login_at?: string;
     profile?: {
-      first_name?: string;
-      last_name?: string;
-      phone?: string;
+      display_name?: string;
     };
   }>;
   pagination: {

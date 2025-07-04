@@ -28,34 +28,41 @@ export class AdminService {
    * Get users for management
    * @param page - Page number
    * @param limit - Items per page
+   * @param search - Search query
    * @returns Promise<ApiResponseDto<UserManagementResponseDto>>
    */
-  async getUsers(page: number = 1, limit: number = 10): Promise<ApiResponseDto<UserManagementResponseDto>> {
+  async getUsers(page: number = 1, limit: number = 10, search?: string): Promise<ApiResponseDto<UserManagementResponseDto>> {
     try {
-      this.logger.log('Getting users for admin management', { page, limit });
+      this.logger.log('Getting users for admin management', { page, limit, search });
 
       const skip = (page - 1) * limit;
 
-      // Get users with profiles
-      const [users, total] = await this.userRepository.findAndCount({
-        relations: ['profile'],
-        skip,
-        take: limit,
-        order: { created_at: 'DESC' }
-      });
+      // Build query
+      const query = this.userRepository.createQueryBuilder('user')
+        .leftJoinAndSelect('user.profile', 'profile')
+        .where('user.is_active = :active', { active: true });
+
+      if (search && search.trim() !== '') {
+        query.andWhere(
+          '(user.email ILIKE :search OR profile.metadata->>\'display_name\' ILIKE :search)',
+          { search: `%${search}%` }
+        );
+      }
+
+      query.skip(skip).take(limit).orderBy('user.created_at', 'DESC');
+
+      const [users, total] = await query.getManyAndCount();
 
       // Transform users for admin view
       const transformedUsers = users.map(user => ({
         uuid: user.uuid,
         email: user.email,
-        role: user.role as 'user' | 'admin',
-        status: user.is_active ? 'active' as const : 'suspended' as const,
+        role: user.role,
+        is_verified: user.is_verified,
         created_at: user.created_at.toISOString(),
-        last_login: user.last_login_at?.toISOString(),
+        last_login_at: user.last_login_at?.toISOString(),
         profile: user.profile ? {
-          first_name: '',
-          last_name: '',
-          phone: user.profile.metadata?.phone
+          display_name: user.profile.metadata?.display_name
         } : undefined
       }));
 
@@ -75,62 +82,6 @@ export class AdminService {
       return ApiResponseDto.success(response, 'Users retrieved successfully');
     } catch (error) {
       this.logger.error('Failed to get users', { error: error.message });
-      throw error;
-    }
-  }
-
-  /**
-   * Suspend user account
-   * @param uuid - User UUID
-   * @param adminId - Admin user ID
-   * @param adminEmail - Admin email
-   * @returns Promise<ApiResponseDto<null>>
-   */
-  async suspendUser(uuid: string, adminId: string, adminEmail: string): Promise<ApiResponseDto<null>> {
-    try {
-      this.logger.log('Suspending user account', { uuid, adminId });
-
-      // Verify user exists
-      const user = await this.userRepository.findOne({
-        where: { uuid }
-      });
-
-      if (!user) {
-        throw new NotFoundException('User not found');
-      }
-
-      // Prevent suspending admin users
-      if (user.role === UserRole.admin) {
-        throw new BadRequestException('Cannot suspend admin users');
-      }
-
-      // Prevent suspending self
-      if (user.uuid === adminId) {
-        throw new BadRequestException('Cannot suspend your own account');
-      }
-
-      // Update user status
-      user.is_active = false;
-      await this.userRepository.save(user);
-
-      // Log the suspension
-      await this.auditService.log({
-        event_type: AuditEventType.USER_STATUS_CHANGED,
-        user_id: adminId,
-        user_email: adminEmail,
-        status: 'SUCCESS',
-        details: {
-          action: 'suspend_user',
-          target_user_id: uuid,
-          target_user_email: user.email,
-          timestamp: new Date().toISOString()
-        }
-      });
-
-      this.logger.log('User suspended successfully', { uuid, adminId });
-      return ApiResponseDto.success(null, 'User suspended successfully');
-    } catch (error) {
-      this.logger.error('Failed to suspend user', { uuid, error: error.message });
       throw error;
     }
   }

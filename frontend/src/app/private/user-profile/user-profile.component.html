@@ -43,8 +43,6 @@
                                 </div>
                             }
                         </div>
-
-                        <p-button styleClass="white-space-nowrap justify-content-start" fluid="true" [label]="'user.show-security-logs' | translate" icon="pi pi-shield" severity="secondary" outlined="true" (click)="toggleDialog('security')" [disabled]="isProcessing || isDownloading" />
                     </div>
                 </div>
 
@@ -53,6 +51,7 @@
                 <div class="flex flex-column gap-2">
                     <!-- al momento le tabelle per le informazioni dell'utente sono vuote, perciò è inutile implementare il modifica profilo -->
                     <!-- <p-button styleClass="white-space-nowrap justify-content-start" fluid="true" [label]="'user.edit-profile' | translate" icon="pi pi-pencil" severity="secondary" outlined="true" (click)="toggleDialog('edit')" [disabled]="isProcessing || isDownloading"/> -->
+                    <p-button styleClass="white-space-nowrap justify-content-start" fluid="true" [label]="'user.show-security-logs' | translate" icon="pi pi-shield" severity="secondary" outlined="true" (click)="toggleDialog('security')" [disabled]="isProcessing || isDownloading" />
                     <p-button styleClass="white-space-nowrap justify-content-start" fluid="true" [label]="'user.download-data' | translate" icon="pi pi-download" severity="secondary" outlined="true" (click)="toggleDialog('download')" [disabled]="isProcessing || isDownloading"/>
                     <p-button styleClass="white-space-nowrap justify-content-start" fluid="true" [label]="'user.change-password' | translate" icon="pi pi-key" severity="secondary" outlined="true" (click)="toggleDialog('change-password')" [disabled]="isProcessing || isDownloading"/>
                     <p-button styleClass="white-space-nowrap justify-content-start" fluid="true" [label]="'user.delete-account' | translate" icon="pi pi-trash" severity="danger" outlined="true" (click)="toggleDialog('delete')" [disabled]="isProcessing || isDownloading"/>
@@ -102,9 +101,35 @@
                             </div>
                         </div>
 
+                        <!-- User management -->
+                        <div class="flex gap-2 w-full sm:flex-row flex-column">
+                            <p-button 
+                                [label]="'profile.administration.manage-users' | translate" 
+                                icon="pi pi-users" 
+                                severity="secondary" 
+                                outlined="true" 
+                                (click)="toggleDialog('user-management')" 
+                                [disabled]="isLoadingUsers" 
+                                fluid="true"
+                                class="w-full"/>
+                            <p-button 
+                                [label]="'profile.administration.view-audit-logs' | translate" 
+                                icon="pi pi-list" 
+                                severity="secondary" 
+                                outlined="true" 
+                                (click)="toggleDialog('audit-logs')" 
+                                [disabled]="isLoadingAuditLogs" 
+                                fluid="true"
+                                class="w-full"/>
+                        </div>
+
                         <!-- Alerts -->
                         <h4>{{ 'profile.administration.alerts' | translate }}</h4>
                             <div class="flex flex-column gap-2">
+                                <div *ngIf="adminMetrics.alerts.length === 0" class="flex align-items-center gap-2 p-2 border-1 surface-border border-round">
+                                    <i class="pi pi-check-circle text-green-500"></i>
+                                    <span class="flex-1 text-color-secondary">{{ 'profile.administration.no-alerts' | translate }}</span>
+                                </div>
                                 <div *ngFor="let alert of adminMetrics.alerts" class="flex align-items-center gap-2 p-2 border-1 surface-border border-round">
                                     <i *ngIf="alert.type === 'error'" class="pi pi-exclamation-triangle text-red-500"></i>
                                     <i *ngIf="alert.type === 'warning'" class="pi pi-exclamation-triangle text-orange-500"></i>
@@ -116,13 +141,6 @@
 
                         <!-- Action buttons -->
                         <div class="flex gap-2 justify-content-end">
-                            <p-button 
-                                [label]="'profile.administration.view-audit-logs' | translate" 
-                                icon="pi pi-list" 
-                                severity="secondary" 
-                                outlined="true" 
-                                (click)="toggleDialog('audit-logs')" 
-                                [disabled]="isLoadingAuditLogs" />
                             <p-button 
                                 [label]="'profile.administration.refresh' | translate" 
                                 icon="pi pi-refresh" 
@@ -378,7 +396,8 @@
                         <p-tag 
                             [value]="getStatusText(log.success) | translate" 
                             [severity]="getSecurityStatusSeverity(log.success)"
-                            [rounded]="true">
+                            [rounded]="true"
+                            class="text-xs font-semibold uppercase">
                         </p-tag>
                     </td>
                     <td>
@@ -398,6 +417,123 @@
                     <td colspan="6" class="text-center p-4">
                         <i class="pi pi-info-circle text-xl text-blue-500"></i>
                         <p class="mt-2">{{ 'profile.security-logs.no-logs' | translate }}</p>
+                    </td>
+                </tr>
+            </ng-template>
+        </p-table>
+    </div>
+</p-dialog>
+
+<p-dialog [header]="'profile.dialogs.user-management' | translate" [modal]="true" [(visible)]="isUserManagementDialogVisible" [breakpoints]="{ '1199px': '75vw', '575px': '90vw' }" [draggable]="false" [resizable]="false" [maximizable]="true">
+    <div class="flex flex-column gap-3">        
+        <!-- Search bar -->
+        <div class="flex gap-2 align-items-center">
+            <input 
+                pInputText 
+                type="text" 
+                [(ngModel)]="userSearchQuery" 
+                (keyup.enter)="onUserSearch()"
+                [placeholder]="'profile.user-management.search-placeholder' | translate" 
+                class="w-full" />
+            <p-button 
+                [label]="'common.search' | translate" 
+                icon="pi pi-search" 
+                severity="secondary" 
+                outlined="true" 
+                (click)="onUserSearch()" 
+                [disabled]="isLoadingUsers" />
+        </div>
+
+        <!-- Loading state -->
+        <div *ngIf="isLoadingUsers" class="flex justify-content-center p-4">
+            <i class="pi pi-spin pi-spinner text-xl"></i>
+            <span class="ml-2">{{ 'profile.user-management.loading' | translate }}</span>
+        </div>
+
+        <!-- Users table -->
+        <p-table 
+            *ngIf="!isLoadingUsers"
+            [value]="users" 
+            [paginator]="true" 
+            [rows]="usersRows"
+            [totalRecords]="usersTotal"
+            (onPage)="onUsersPageChange($event)"
+            [showCurrentPageReport]="true"
+            [tableStyle]="{ 'min-width': '50rem' }"
+            [scrollable]="true"
+            responsiveLayout="scroll"
+            currentPageReportTemplate="{{ 'common.showing' | translate }} {first} {{ 'common.to' | translate }} {last} {{ 'common.of' | translate }} {totalRecords} {{ 'common.entries' | translate }}"
+            [rowsPerPageOptions]="[10, 25, 50, 100]"
+            [paginatorDropdownAppendTo]="'body'">
+            
+            <ng-template pTemplate="header">
+                <tr>
+                    <th>{{ 'profile.user-management.table.name' | translate }}</th>
+                    <th>{{ 'profile.user-management.table.email' | translate }}</th>
+                    <th>{{ 'profile.user-management.table.role' | translate }}</th>
+                    <th>{{ 'profile.user-management.table.verified' | translate }}</th>
+                    <th>{{ 'profile.user-management.table.created' | translate }}</th>
+                    <th>{{ 'profile.user-management.table.last-login' | translate }}</th>
+                    <th>{{ 'profile.user-management.table.actions' | translate }}</th>
+                </tr>
+            </ng-template>
+            
+            <ng-template pTemplate="body" let-user>
+                <tr>
+                    <td>
+                        <div class="flex flex-column">
+                            <span class="font-medium">{{ getUserDisplayName(user) }}</span>
+                            <small class="text-color-secondary">{{ user.uuid }}</small>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="font-medium">{{ user.email }}</span>
+                    </td>
+                    <td>
+                        <p-tag 
+                            [value]="user.role | translate" 
+                            [severity]="getRoleSeverity(user.role)"
+                            [rounded]="true"
+                            class="text-xs font-semibold uppercase">
+                        </p-tag>
+                    </td>
+                    <td>
+                        <p-tag 
+                            [value]="user.is_verified ? ('profile.user-management.status.verified' | translate) : ('profile.user-management.status.unverified' | translate)" 
+                            [severity]="user.is_verified ? 'success' : 'warning'"
+                            [rounded]="true"
+                            class="text-xs font-semibold uppercase">
+                        </p-tag>
+                    </td>
+                    <td>
+                        <span class="text-sm">{{ user.created_at | date:'dd/MM/yyyy' }}</span>
+                    </td>
+                    <td>
+                        <span class="text-sm">{{ user.last_login_at | date:'dd/MM/yyyy HH:mm' }}</span>
+                    </td>
+                    <td>
+                        <div class="flex gap-1">
+                            <p-button 
+                                icon="pi pi-trash" 
+                                severity="danger" 
+                                size="small"
+                                [loading]="isDeletingUser && selectedUserForAction?.uuid === user.uuid"
+                                [disabled]="isDeletingUser || user.role === 'admin'"
+                                pTooltip="{{ 'profile.user-management.actions.delete' | translate }}"
+                                tooltipPosition="top"
+                                (click)="deleteUser(user)"
+                                fluid="true"
+                                class="w-full"/>
+                        </div>
+                    </td>
+                </tr>
+            </ng-template>
+            
+            <ng-template pTemplate="emptymessage">
+                <tr>
+                    <td colspan="7" class="text-center p-4">
+                        <i class="pi pi-info-circle text-xl text-blue-500"></i>
+                        <p class="mt-2">{{ 'profile.user-management.no-users' | translate }}</p>
                     </td>
                 </tr>
             </ng-template>

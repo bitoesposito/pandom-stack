@@ -16,6 +16,8 @@ import { MessageService } from 'primeng/api';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
+import { InputTextModule } from 'primeng/inputtext';
+import { FormsModule } from '@angular/forms';
 import { SystemStatusResponse } from '../../models/resilience.models';
 import { SystemMetricsResponse } from '../../models/admin.models';
 
@@ -32,7 +34,9 @@ import { SystemMetricsResponse } from '../../models/admin.models';
     ToastModule,
     TableModule,
     TagModule,
-    TooltipModule
+    TooltipModule,
+    InputTextModule,
+    FormsModule
   ],
   providers: [MessageService, NotificationService],
   templateUrl: './user-profile.component.html',
@@ -64,6 +68,17 @@ export class UserProfileComponent implements OnInit {
   auditLogsPage: number = 1;
   auditLogsRows: number = 10;
   auditLogsTotal: number = 0;
+  
+  // User management
+  users: any[] = [];
+  isUserManagementDialogVisible: boolean = false;
+  isLoadingUsers: boolean = false;
+  usersPage: number = 1;
+  usersRows: number = 10;
+  usersTotal: number = 0;
+  userSearchQuery: string = '';
+  isDeletingUser: boolean = false;
+  selectedUserForAction: any = null;
 
   get activeSessionsCount(): number {
     return this.sessions.filter(session => session.is_active).length;
@@ -196,6 +211,13 @@ export class UserProfileComponent implements OnInit {
         this.isAuditLogsDialogVisible = !this.isAuditLogsDialogVisible;
         if (this.isAuditLogsDialogVisible) {
           this.loadAuditLogs(1, this.auditLogsRows);
+        }
+        break;
+      case 'user-management':
+        console.log('Opening user management dialog');
+        this.isUserManagementDialogVisible = !this.isUserManagementDialogVisible;
+        if (this.isUserManagementDialogVisible) {
+          this.loadUsers(1, this.usersRows);
         }
         break;
       default:
@@ -554,5 +576,84 @@ export class UserProfileComponent implements OnInit {
       'suspicious_activity': 'profile.security-logs.actions.suspicious-activity',
     };
     return actionMap[action] || action;
+  }
+
+  // User Management Methods
+  loadUsers(page: number = 1, rows: number = 10) {
+    console.log('Loading users with page:', page, 'rows:', rows, 'search:', this.userSearchQuery);
+    this.isLoadingUsers = true;
+    this.adminService.getUsers(page, rows, this.userSearchQuery).subscribe({
+      next: (data: any) => {
+        this.users = data.data.users || [];
+        this.usersTotal = data.data.pagination?.total || 0;
+        this.usersPage = data.data.pagination?.page || page;
+        this.usersRows = data.data.pagination?.limit || rows;
+        console.log('Users loaded:', this.users);
+        this.isLoadingUsers = false;
+      },
+      error: (err: any) => {
+        console.error('Errore nel caricamento degli utenti:', err);
+        this.notificationService.handleError(err, 'profile.user-management.error');
+        this.isLoadingUsers = false;
+      }
+    });
+  }
+
+  onUsersPageChange(event: any) {
+    const newPage = Math.floor(event.first / event.rows) + 1;
+    if (isNaN(newPage) || newPage < 1) {
+      return;
+    }
+    this.loadUsers(newPage, event.rows);
+  }
+
+  onUserSearch() {
+    // Reset to first page when searching
+    this.loadUsers(1, this.usersRows);
+  }
+
+  deleteUser(user: any) {
+    this.selectedUserForAction = user;
+    this.isDeletingUser = true;
+    
+    this.adminService.deleteUser(user.uuid).subscribe({
+      next: (data: any) => {
+        this.notificationService.handleSuccess('profile.user-management.delete-success');
+        this.loadUsers(this.usersPage, this.usersRows); // Reload current page
+        this.isDeletingUser = false;
+        this.selectedUserForAction = null;
+      },
+      error: (err: any) => {
+        console.error('Errore nella cancellazione dell\'utente:', err);
+        this.notificationService.handleError(err, 'profile.user-management.delete-error');
+        this.isDeletingUser = false;
+        this.selectedUserForAction = null;
+      }
+    });
+  }
+
+  getRoleSeverity(role: string): string {
+    switch (role) {
+      case 'admin':
+        return 'danger';
+      case 'user':
+        return 'info';
+      default:
+        return 'secondary';
+    }
+  }
+
+  getUserDisplayName(user: any): string {
+    if (user.first_name && user.last_name) {
+      return `${user.first_name} ${user.last_name}`;
+    } else if (user.first_name) {
+      return user.first_name;
+    } else if (user.last_name) {
+      return user.last_name;
+    } else if (user.profile?.display_name) {
+      return user.profile.display_name;
+    } else {
+      return user.email;
+    }
   }
 }

@@ -35,22 +35,10 @@ export class AdminController {
     async getUsers(
         @Query('page') page: string = '1',
         @Query('limit') limit: string = '10',
+        @Query('search') search: string | undefined,
         @Req() req: AuthenticatedAdminRequest
     ): Promise<ApiResponseDto<any>> {
-        return this.adminService.getUsers(parseInt(page), parseInt(limit));
-    }
-
-    /**
-     * Suspend user account
-     * PUT /admin/users/:uuid/suspend
-     */
-    @Put('users/:uuid/suspend')
-    @HttpCode(HttpStatus.OK)
-    async suspendUser(
-        @Param('uuid') uuid: string,
-        @Req() req: AuthenticatedAdminRequest
-    ): Promise<ApiResponseDto<null>> {
-        return this.adminService.suspendUser(uuid, req.user.uuid, req.user.email);
+        return this.adminService.getUsers(parseInt(page), parseInt(limit), search);
     }
 
     /**

@@ -122,7 +122,8 @@
       "delete-account": "Elimina account",
       "security-logs": "Log di Sicurezza",
       "change-password": "Cambia Password",
-      "audit-logs": "Log di Audit"
+      "audit-logs": "Log di Audit",
+      "user-management": "Gestione Utenti"
     },
     "security-logs": {
       "description": "Visualizza le tue recenti attività di sicurezza e log di accesso.",
@@ -163,7 +164,8 @@
         "pending": "In Attesa"
       },
       "no-results-on-page": "Nessun risultato in questa pagina. Torno alla prima pagina.",
-      "pagination-reset": "Pagina reimpostata per risultati vuoti."
+      "pagination-reset": "Pagina reimpostata per risultati vuoti.",
+      "no-alerts": "Nessun problema rilevato. Tutto funziona correttamente!"
     },
     "download": {
       "description": "Scarica una copia di tutti i tuoi dati personali memorizzati nel nostro sistema. Questo include le informazioni del tuo profilo, i dettagli dell'account e i log delle attività.",
@@ -224,7 +226,35 @@
       "error-rate": "Tasso di Errore",
       "alerts": "Avvisi di Sistema",
       "refresh": "Aggiorna Dati",
-      "view-audit-logs": "Visualizza Log di Audit"
+      "view-audit-logs": "Visualizza Log di Audit",
+      "manage-users": "Gestisci Utenti",
+      "no-alerts": "Nessun problema rilevato. Tutto funziona correttamente!"
+    },
+    "user-management": {
+      "loading": "Caricamento utenti...",
+      "error": "Impossibile caricare gli utenti. Riprova più tardi.",
+      "no-users": "Nessun utente trovato.",
+      "search-placeholder": "Cerca utenti per email...",
+      "suspend-success": "Utente sospeso con successo.",
+      "suspend-error": "Impossibile sospendere l'utente. Riprova più tardi.",
+      "delete-success": "Utente eliminato con successo.",
+      "delete-error": "Impossibile eliminare l'utente. Riprova più tardi.",
+      "table": {
+        "name": "Nome",
+        "email": "Email",
+        "role": "Ruolo",
+        "verified": "Verificato",
+        "created": "Creato",
+        "last-login": "Ultimo Accesso",
+        "actions": "Azioni"
+      },
+      "status": {
+        "verified": "Verificato",
+        "unverified": "Non Verificato"
+      },
+      "actions": {
+        "delete": "Elimina Utente"
+      }
     },
     "audit-logs": {
       "loading": "Caricamento log di audit...",
