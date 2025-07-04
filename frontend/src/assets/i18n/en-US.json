@@ -113,14 +113,16 @@
     "tabs": {
       "profile": "Profile",
       "settings": "Settings",
-      "administration": "Administration"
+      "administration": "Administration",
+      "system-status": "System Status"
     },
     "dialogs": {
       "edit-profile": "Edit Profile",
       "download-data": "Download your data",
       "delete-account": "Delete account",
       "security-logs": "Security Logs",
-      "change-password": "Change Password"
+      "change-password": "Change Password",
+      "audit-logs": "Audit Logs"
     },
     "security-logs": {
       "description": "View your recent security activities and access logs.",
@@ -159,7 +161,24 @@
         "success": "Success",
         "failed": "Failed",
         "pending": "Pending"
-      }
+      },
+      "no-results-on-page": "No results on this page. Returning to the first page.",
+      "pagination-reset": "Page reset due to empty results."
+    },
+    "audit-logs": {
+      "loading": "Loading audit logs...",
+      "no-logs": "No audit logs found.",
+      "error": "Failed to load audit logs. Please try again later.",
+      "table": {
+        "action": "Action",
+        "user": "User",
+        "ip-address": "IP Address",
+        "user-agent": "User Agent",
+        "timestamp": "Timestamp",
+        "details": "Details"
+      },
+      "no-results-on-page": "No results on this page. Returning to the first page.",
+      "pagination-reset": "Page reset due to empty results."
     },
     "download": {
       "description": "Download a copy of all your personal data stored in our system. This includes your profile information, account details, and activity logs.",
@@ -189,6 +208,38 @@
       "confirm": "Delete Account",
       "success": "Your account has been successfully deleted. You will be redirected to the login page.",
       "failed": "Failed to delete your account. Please try again later."
+    },
+    "system-status": {
+      "loading": "Loading system status...",
+      "error": "Failed to load system status. Please try again later.",
+      "overall-status": "Overall System Status",
+      "last-check": "Last check",
+      "system-info": "System Information",
+      "version": "Version",
+      "uptime": "Uptime",
+      "services": "Services",
+      "database": "Database",
+      "storage": "Storage",
+      "email": "Email Service",
+      "postgresql": "PostgreSQL",
+      "minio": "MinIO Storage",
+      "smtp": "SMTP Server",
+      "refresh": "Refresh Status",
+      "healthy": "Healthy",
+      "degraded": "Degraded",
+      "down": "Down"
+    },
+    "administration": {
+      "loading": "Loading administration data...",
+      "error": "Failed to load administration data. Please try again later.",
+      "overview": "System Overview",
+      "total-users": "Total Users",
+      "active-users": "Active Users",
+      "new-users-today": "New Users Today",
+      "error-rate": "Error Rate",
+      "alerts": "System Alerts",
+      "refresh": "Refresh Data",
+      "view-audit-logs": "View Audit Logs"
     }
   },
   "dashboard": {

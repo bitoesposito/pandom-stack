@@ -230,24 +230,18 @@ export class AdminService {
       
       // Get active users (logged in last 24 hours)
       const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
-      const activeUsers = await this.userRepository.count({
-        where: {
-          last_login_at: {
-            $gte: yesterday
-          } as any
-        }
-      });
+      const activeUsers = await this.userRepository
+        .createQueryBuilder('user')
+        .where('user.last_login_at >= :yesterday', { yesterday })
+        .getCount();
 
       // Get new users today
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      const newUsersToday = await this.userRepository.count({
-        where: {
-          created_at: {
-            $gte: today
-          } as any
-        }
-      });
+      const newUsersToday = await this.userRepository
+        .createQueryBuilder('user')
+        .where('user.created_at >= :today', { today })
+        .getCount();
 
       // Get recent audit logs for activity metrics
       const recentLogs = await this.auditService.getAuditLogsByType(AuditEventType.USER_LOGIN_SUCCESS, 100);

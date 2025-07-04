@@ -64,10 +64,17 @@ export class SecurityService {
 
   /**
    * Get user security logs
+   * @param page - Page number (default: 1)
+   * @param limit - Items per page (default: 10)
    * @returns Observable with security logs
    */
-  getSecurityLogs(): Observable<ApiResponse<SecurityLogsResponse>> {
-    return this.http.get<ApiResponse<SecurityLogsResponse>>(`${this.API_URL}/security/logs`, {
+  getSecurityLogs(page: number = 1, limit: number = 10): Observable<ApiResponse<SecurityLogsResponse>> {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString()
+    });
+    
+    return this.http.get<ApiResponse<SecurityLogsResponse>>(`${this.API_URL}/security/logs?${params}`, {
       headers: this.getHeaders()
     });
   }

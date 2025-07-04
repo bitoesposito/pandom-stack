@@ -113,14 +113,16 @@
     "tabs": {
       "profile": "Profilo",
       "settings": "Impostazioni",
-      "administration": "Amministrazione"
+      "administration": "Amministrazione",
+      "system-status": "Stato del Sistema"
     },
     "dialogs": {
       "edit-profile": "Modifica Profilo",
       "download-data": "Scarica i tuoi dati",
       "delete-account": "Elimina account",
       "security-logs": "Log di Sicurezza",
-      "change-password": "Cambia Password"
+      "change-password": "Cambia Password",
+      "audit-logs": "Log di Audit"
     },
     "security-logs": {
       "description": "Visualizza le tue recenti attività di sicurezza e log di accesso.",
@@ -159,7 +161,9 @@
         "success": "Successo",
         "failed": "Fallito",
         "pending": "In Attesa"
-      }
+      },
+      "no-results-on-page": "Nessun risultato in questa pagina. Torno alla prima pagina.",
+      "pagination-reset": "Pagina reimpostata per risultati vuoti."
     },
     "download": {
       "description": "Scarica una copia di tutti i tuoi dati personali memorizzati nel nostro sistema. Questo include le informazioni del tuo profilo, i dettagli dell'account e i log delle attività.",
@@ -189,6 +193,53 @@
       "confirm": "Elimina Account",
       "success": "Il tuo account è stato eliminato con successo. Sarai reindirizzato alla pagina di login.",
       "failed": "Impossibile eliminare il tuo account. Riprova più tardi."
+    },
+    "system-status": {
+      "loading": "Caricamento stato del sistema...",
+      "error": "Impossibile caricare lo stato del sistema. Riprova più tardi.",
+      "overall-status": "Stato Generale del Sistema",
+      "last-check": "Ultimo controllo",
+      "system-info": "Informazioni di Sistema",
+      "version": "Versione",
+      "uptime": "Tempo di Attività",
+      "services": "Servizi",
+      "database": "Database",
+      "storage": "Archiviazione",
+      "email": "Servizio Email",
+      "postgresql": "PostgreSQL",
+      "minio": "Archiviazione MinIO",
+      "smtp": "Server SMTP",
+      "refresh": "Aggiorna Stato",
+      "healthy": "Sano",
+      "degraded": "Degradato",
+      "down": "Non Disponibile"
+    },
+    "administration": {
+      "loading": "Caricamento dati amministrazione...",
+      "error": "Impossibile caricare i dati di amministrazione. Riprova più tardi.",
+      "overview": "Panoramica Sistema",
+      "total-users": "Utenti Totali",
+      "active-users": "Utenti Attivi",
+      "new-users-today": "Nuovi Utenti Oggi",
+      "error-rate": "Tasso di Errore",
+      "alerts": "Avvisi di Sistema",
+      "refresh": "Aggiorna Dati",
+      "view-audit-logs": "Visualizza Log di Audit"
+    },
+    "audit-logs": {
+      "loading": "Caricamento log di audit...",
+      "no-logs": "Nessun log di audit trovato.",
+      "error": "Impossibile caricare i log di audit. Riprova più tardi.",
+      "table": {
+        "action": "Azione",
+        "user": "Utente",
+        "ip-address": "Indirizzo IP",
+        "user-agent": "User Agent",
+        "timestamp": "Data e Ora",
+        "details": "Dettagli"
+      },
+      "no-results-on-page": "Nessun risultato in questa pagina. Torno alla prima pagina.",
+      "pagination-reset": "Pagina reimpostata per risultati vuoti."
     }
   },
   "dashboard": {
