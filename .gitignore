@@ -98,9 +98,6 @@ jspm_packages/
 ehthumbs.db
 Thumbs.db
 
-# Docker
-.dockerignore
-
 # Database
 *.db
 *.sqlite
@@ -122,7 +119,6 @@ typings/
 *.tsbuildinfo
 
 # Package manager files
-package-lock.json
 yarn.lock
 pnpm-lock.yaml
 

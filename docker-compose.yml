@@ -1,59 +1,41 @@
 services:
-
-  # Nginx reverse proxy with load balancing
-  nginx:
+  # Single backend instance for development
+  backend:
     build:
-      context: ./nginx
+      context: ./backend
       dockerfile: Dockerfile
+      target: development
+    environment:
+      - NODE_ENV=development
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRATION=${JWT_EXPIRATION}
+      - DATABASE_URL=${DATABASE_URL}
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=${POSTGRES_PORT}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - PORT=${BE_PORT}
+      - ADMIN_EMAIL=${ADMIN_EMAIL}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      - ADMIN_ROLE=${ADMIN_ROLE}
+      - MINIO_ENDPOINT=${MINIO_ENDPOINT}
+      - MINIO_PORT=${MINIO_PORT}
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+      - MINIO_USE_SSL=${MINIO_USE_SSL}
+      - MINIO_BUCKET_NAME=${MINIO_BUCKET_NAME}
+      # Configurazione SMTP
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_PORT=${SMTP_PORT}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASS=${SMTP_PASS}
+      - SMTP_FROM=${SMTP_FROM}
     ports:
-      - "80:80"
-      - "443:443"
+      - "3000:3000"
     volumes:
-      - ./nginx/ssl:/etc/nginx/ssl:ro
-      - nginx_logs:/var/log/nginx
-    depends_on:
-      - backend-1
-      - backend-2
-      - backend-3
-      - frontend-1
-      - frontend-2
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    restart: unless-stopped
-
-  # Multiple backend instances for load balancing
-  backend-1:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    volumes:
-      - ./backend:/src/app
-      - /src/app/node_modules
-    command: npm run start:dev
-    env_file:
-      - .env
-    environment:
-      - JWT_SECRET=${JWT_SECRET}
-      - JWT_EXPIRATION=${JWT_EXPIRATION}
-      - DATABASE_URL=${DATABASE_URL}
-      - POSTGRES_HOST=postgres
-      - POSTGRES_PORT=${POSTGRES_PORT}
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_DB=${POSTGRES_DB}
-      - PORT=${BE_PORT}
-      - ADMIN_EMAIL=${ADMIN_EMAIL}
-      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
-      - ADMIN_ROLE=${ADMIN_ROLE}
-      - MINIO_ENDPOINT=${MINIO_ENDPOINT}
-      - MINIO_PORT=${MINIO_PORT}
-      - MINIO_ROOT_USER=${MINIO_ROOT_USER}
-      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
-      - MINIO_USE_SSL=${MINIO_USE_SSL}
-      - MINIO_BUCKET_NAME=${MINIO_BUCKET_NAME}
+      - ./backend:/backend
+      - /backend/node_modules
     depends_on:
       postgres:
         condition: service_healthy
@@ -63,139 +45,13 @@ services:
       timeout: 10s
       retries: 3
     restart: unless-stopped
-
-  backend-2:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    volumes:
-      - ./backend:/src/app
-      - /src/app/node_modules
-    command: npm run start:dev
-    env_file:
-      - .env
-    environment:
-      - JWT_SECRET=${JWT_SECRET}
-      - JWT_EXPIRATION=${JWT_EXPIRATION}
-      - DATABASE_URL=${DATABASE_URL}
-      - POSTGRES_HOST=postgres
-      - POSTGRES_PORT=${POSTGRES_PORT}
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_DB=${POSTGRES_DB}
-      - PORT=${BE_PORT}
-      - ADMIN_EMAIL=${ADMIN_EMAIL}
-      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
-      - ADMIN_ROLE=${ADMIN_ROLE}
-      - MINIO_ENDPOINT=${MINIO_ENDPOINT}
-      - MINIO_PORT=${MINIO_PORT}
-      - MINIO_ROOT_USER=${MINIO_ROOT_USER}
-      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
-      - MINIO_USE_SSL=${MINIO_USE_SSL}
-      - MINIO_BUCKET_NAME=${MINIO_BUCKET_NAME}
-    depends_on:
-      postgres:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    restart: unless-stopped
-
-  backend-3:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    volumes:
-      - ./backend:/src/app
-      - /src/app/node_modules
-    command: npm run start:dev
-    env_file:
-      - .env
-    environment:
-      - JWT_SECRET=${JWT_SECRET}
-      - JWT_EXPIRATION=${JWT_EXPIRATION}
-      - DATABASE_URL=${DATABASE_URL}
-      - POSTGRES_HOST=postgres
-      - POSTGRES_PORT=${POSTGRES_PORT}
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_DB=${POSTGRES_DB}
-      - PORT=${BE_PORT}
-      - ADMIN_EMAIL=${ADMIN_EMAIL}
-      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
-      - ADMIN_ROLE=${ADMIN_ROLE}
-      - MINIO_ENDPOINT=${MINIO_ENDPOINT}
-      - MINIO_PORT=${MINIO_PORT}
-      - MINIO_ROOT_USER=${MINIO_ROOT_USER}
-      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
-      - MINIO_USE_SSL=${MINIO_USE_SSL}
-      - MINIO_BUCKET_NAME=${MINIO_BUCKET_NAME}
-    depends_on:
-      postgres:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    restart: unless-stopped
-
-  # Multiple frontend instances for load balancing
-  frontend-1:
-    build:
-      dockerfile: Dockerfile
-      context: ./frontend
-      target: development
-    volumes:
-      - ./frontend:/frontend
-      - /frontend/node_modules
-    environment:
-      - NODE_ENV=development
-    depends_on:
-      - backend-1
-      - backend-2
-      - backend-3
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:4200"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    restart: unless-stopped
-
-  frontend-2:
-    build:
-      dockerfile: Dockerfile
-      context: ./frontend
-      target: development
-    volumes:
-      - ./frontend:/frontend
-      - /frontend/node_modules
-    environment:
-      - NODE_ENV=development
-    depends_on:
-      - backend-1
-      - backend-2
-      - backend-3
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:4200"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    restart: unless-stopped
-
+  
   backend-seed:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    volumes:
-      - ./backend:/src/app
-      - /src/app/node_modules
-    working_dir: /src/app
-    command: sh -c "sleep 10 && ls -la && ls -la src/utilis/ && npm run seed-admin"
-    env_file:
-      - .env
+      target: development
+    command: sh -c "sleep 10 && npm run seed-admin"
     environment:
       - DATABASE_URL=${DATABASE_URL}
       - POSTGRES_HOST=postgres
@@ -207,10 +63,33 @@ services:
       - ADMIN_PASSWORD=${ADMIN_PASSWORD}
       - ADMIN_ROLE=${ADMIN_ROLE}
     depends_on:
-      backend-1:
+      backend:
         condition: service_started
     restart: "no"
 
+  # Single frontend instance for development
+  frontend:
+    build:
+      dockerfile: Dockerfile
+      context: ./frontend
+      target: development
+    environment:
+      - NODE_ENV=development
+    ports:
+      - "4200:4200"
+    volumes:
+      - ./frontend:/frontend
+      - /frontend/node_modules
+    depends_on:
+      - backend
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4200"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  # Database
   postgres:
     image: postgres:17
     environment:
@@ -229,6 +108,7 @@ services:
       timeout: 5s
       retries: 5
 
+  # MinIO for file storage
   minio:
     image: minio/minio
     ports:
@@ -246,38 +126,6 @@ services:
       timeout: 5s
       retries: 5
 
-  # Backup automation services
-  backup-cron:
-    image: curlimages/curl:latest
-    volumes:
-      - ./backend/backups:/backups
-      - ./scripts:/scripts
-    entrypoint: ["/bin/sh", "-c", "while true; do /scripts/backup-cron.sh; sleep 21600; done"]
-    depends_on:
-      - backend-1
-    restart: unless-stopped
-
-  cleanup-backups:
-    image: alpine:latest
-    volumes:
-      - ./backend/backups:/backups
-      - ./scripts:/scripts
-    entrypoint: ["/bin/sh", "-c", "while true; do /scripts/cleanup-backups.sh; sleep 86400; done"]
-    depends_on:
-      - backend-1
-    restart: unless-stopped
-
-  verify-backups:
-    image: alpine:latest
-    volumes:
-      - ./backend/backups:/backups
-      - ./scripts:/scripts
-    entrypoint: ["/bin/sh", "-c", "while true; do /scripts/verify-backups.sh; sleep 43200; done"]
-    depends_on:
-      - backend-1
-    restart: unless-stopped
-
 volumes:
   postgres_data:
-  minio_data:
-  nginx_logs:
+  minio_data: 
