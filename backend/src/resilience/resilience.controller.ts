@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Param, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Param, HttpCode, HttpStatus, Query } from '@nestjs/common';
 import { ApiResponseDto } from '../common/common.interface';
 import { ResilienceService } from './resilience.service';
 import { BackupResponseDto, BackupStatusResponseDto } from './resilience.dto';
@@ -34,13 +34,18 @@ export class ResilienceController {
     }
 
     /**
-     * List available backups
+     * List available backups with pagination
      * @Get('/backup')
      */
     @Get('backup')
     @HttpCode(HttpStatus.OK)
-    async listBackups(): Promise<ApiResponseDto<BackupResponseDto[]>> {
-        return this.resilienceService.listBackups();
+    async listBackups(
+        @Query('page') page: string = '1',
+        @Query('limit') limit: string = '10'
+    ): Promise<ApiResponseDto<{backups: BackupResponseDto[], pagination: {page: number, limit: number, total: number}}>> {
+        const pageNum = parseInt(page, 10) || 1;
+        const limitNum = parseInt(limit, 10) || 10;
+        return this.resilienceService.listBackups(pageNum, limitNum);
     }
 
     /**

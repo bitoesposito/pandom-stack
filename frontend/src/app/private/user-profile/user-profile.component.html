@@ -15,53 +15,73 @@
                 <div class="flex flex-column gap-2 w-full">
                     <div class="flex gap-2 justify-content-between w-full">
                         <div class="flex flex-column">
-                            <p class="text-color-secondary text-xs select-none">{{ 'user.logged-in-as' | translate }}</p>
-                            <h4 class="sm:max-w-30rem max-w-13rem" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden; max-width: 10rem;" title="{{ user?.email }}">{{ user?.email }}</h4>
-                            <small class="uppercase p-1 py-1 mt-1 surface-50 text-color-secondary border-round-xs select-none w-min border-1 surface-border">{{ user?.role }}</small>
+                            <p class="text-color-secondary text-xs select-none">{{ 'user.logged-in-as' | translate }}
+                            </p>
+                            <h4 class="sm:max-w-30rem max-w-13rem"
+                                style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden; max-width: 10rem;"
+                                title="{{ user?.email }}">{{ user?.email }}</h4>
+                            <small
+                                class="uppercase p-1 py-1 mt-1 surface-50 text-color-secondary border-round-xs select-none w-min border-1 surface-border">{{
+                                user?.role }}</small>
                         </div>
-    
+
                         <div class="flex flex-column align-items-end">
-                            <p class="text-color-secondary opacity-70 text-xs select-none">{{ 'user.last-login' | translate }}</p>
-                            <small class="text-color-secondary text-xs select-none">{{ user?.last_login_at | date:'dd/MM/yyyy HH:mm' }}</small>
-                            <p class="text-color-secondary opacity-70 text-xs select-none mt-1">{{ 'user.created-at' | translate }}</p>
-                            <small class="text-color-secondary text-xs select-none">{{ userProfile?.created_at | date:'dd/MM/yyyy' }}</small>
+                            <p class="text-color-secondary opacity-70 text-xs select-none">{{ 'user.last-login' |
+                                translate }}</p>
+                            <small class="text-color-secondary text-xs select-none">{{ user?.last_login_at |
+                                date:'dd/MM/yyyy HH:mm' }}</small>
+                            <p class="text-color-secondary opacity-70 text-xs select-none mt-1">{{ 'user.created-at' |
+                                translate }}</p>
+                            <small class="text-color-secondary text-xs select-none">{{ userProfile?.created_at |
+                                date:'dd/MM/yyyy' }}</small>
                         </div>
                     </div>
 
-                    <hr class="surface-border my-1"/>
+                    <hr class="surface-border my-1" />
 
                     <div id="active-sessions" class="flex flex-column gap-2">
-                        <p class="text-color-secondary text-xs select-none uppercase">{{ 'user.active-sessions' | translate }} ({{ activeSessionsCount }})</p>
+                        <p class="text-color-secondary text-xs select-none uppercase">{{ 'user.active-sessions' |
+                            translate }} ({{ activeSessionsCount }})</p>
 
                         <div class="border-1 surface-border border-round-md p-2 w-full">
 
                             @for (session of sessions; track session.id) {
-                                <div *ngIf="session.is_active" class="flex flex-column">
-                                    <p class="text-xs text-color-secondary select-none">{{ session.created_at | date:'dd/MM/yyyy HH:mm' }}</p>
-                                    <p>{{ session.ip_address }}</p>
-                                    <p class="text-xs text-color-secondary select-none text-xs" style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;" title="{{ session.user_agent }}">{{ session.user_agent }}</p>
-                                </div>
+                            <div *ngIf="session.is_active" class="flex flex-column">
+                                <p class="text-xs text-color-secondary select-none">{{ session.created_at |
+                                    date:'dd/MM/yyyy HH:mm' }}</p>
+                                <p>{{ session.ip_address }}</p>
+                                <p class="text-xs text-color-secondary select-none text-xs"
+                                    style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;"
+                                    title="{{ session.user_agent }}">{{ session.user_agent }}</p>
+                            </div>
                             }
                         </div>
                     </div>
                 </div>
 
-                <hr class="surface-border my-1"/>
+                <hr class="surface-border my-1" />
 
                 <div class="flex flex-column gap-2">
                     <!-- al momento le tabelle per le informazioni dell'utente sono vuote, perciò è inutile implementare il modifica profilo -->
                     <!-- <p-button styleClass="white-space-nowrap justify-content-start" fluid="true" [label]="'user.edit-profile' | translate" icon="pi pi-pencil" severity="secondary" outlined="true" (click)="toggleDialog('edit')" [disabled]="isProcessing || isDownloading"/> -->
-                    <p-button styleClass="white-space-nowrap justify-content-start" fluid="true" [label]="'user.show-security-logs' | translate" icon="pi pi-shield" severity="secondary" outlined="true" (click)="toggleDialog('security')" [disabled]="isProcessing || isDownloading" />
-                    <p-button styleClass="white-space-nowrap justify-content-start" fluid="true" [label]="'user.download-data' | translate" icon="pi pi-download" severity="secondary" outlined="true" (click)="toggleDialog('download')" [disabled]="isProcessing || isDownloading"/>
-                    <p-button styleClass="white-space-nowrap justify-content-start" fluid="true" [label]="'user.change-password' | translate" icon="pi pi-key" severity="secondary" outlined="true" (click)="toggleDialog('change-password')" [disabled]="isProcessing || isDownloading"/>
-                    <p-button styleClass="white-space-nowrap justify-content-start" fluid="true" [label]="'user.delete-account' | translate" icon="pi pi-trash" severity="danger" outlined="true" (click)="toggleDialog('delete')" [disabled]="isProcessing || isDownloading"/>
+                    <!-- <p-button styleClass="white-space-nowrap justify-content-start" fluid="true" [label]="'user.show-security-logs' | translate" icon="pi pi-shield" severity="secondary" outlined="true" (click)="toggleDialog('security')" [disabled]="isProcessing || isDownloading" /> -->
+                    <p-button styleClass="white-space-nowrap justify-content-start" fluid="true"
+                        [label]="'user.download-data' | translate" icon="pi pi-download" severity="secondary"
+                        outlined="true" (click)="toggleDialog('download')" [disabled]="isProcessing || isDownloading" />
+                    <p-button styleClass="white-space-nowrap justify-content-start" fluid="true"
+                        [label]="'user.change-password' | translate" icon="pi pi-key" severity="secondary"
+                        outlined="true" (click)="toggleDialog('change-password')"
+                        [disabled]="isProcessing || isDownloading" />
+                    <p-button styleClass="white-space-nowrap justify-content-start" fluid="true"
+                        [label]="'user.delete-account' | translate" icon="pi pi-trash" severity="danger" outlined="true"
+                        (click)="toggleDialog('delete')" [disabled]="isProcessing || isDownloading" />
                 </div>
-                
+
             </p-tabpanel>
             <p-tabpanel value="1" class="flex md:flex-row flex-column gap-2 md:gap-3 w-full">
                 <div class="flex flex-column gap-3 w-full">
                     <h4>{{ 'profile.tabs.administration' | translate }}</h4>
-                    
+
                     <!-- Loading state -->
                     <div *ngIf="isLoadingAdminMetrics" class="flex justify-content-center p-4">
                         <i class="pi pi-spin pi-spinner text-xl"></i>
@@ -76,26 +96,33 @@
                             <div class="grid">
                                 <div class="col-12 md:col-3">
                                     <div class="flex flex-column gap-1">
-                                        <span class="text-color-secondary text-sm">{{ 'profile.administration.total-users' | translate }}</span>
+                                        <span class="text-color-secondary text-sm">{{
+                                            'profile.administration.total-users' | translate }}</span>
                                         <span class="font-medium text-xl">{{ adminMetrics.overview.total_users }}</span>
                                     </div>
                                 </div>
                                 <div class="col-12 md:col-3">
                                     <div class="flex flex-column gap-1">
-                                        <span class="text-color-secondary text-sm">{{ 'profile.administration.active-users' | translate }}</span>
-                                        <span class="font-medium text-xl">{{ adminMetrics.overview.active_users }}</span>
+                                        <span class="text-color-secondary text-sm">{{
+                                            'profile.administration.active-users' | translate }}</span>
+                                        <span class="font-medium text-xl">{{ adminMetrics.overview.active_users
+                                            }}</span>
                                     </div>
                                 </div>
                                 <div class="col-12 md:col-3">
                                     <div class="flex flex-column gap-1">
-                                        <span class="text-color-secondary text-sm">{{ 'profile.administration.new-users-today' | translate }}</span>
-                                        <span class="font-medium text-xl">{{ adminMetrics.overview.new_users_today }}</span>
+                                        <span class="text-color-secondary text-sm">{{
+                                            'profile.administration.new-users-today' | translate }}</span>
+                                        <span class="font-medium text-xl">{{ adminMetrics.overview.new_users_today
+                                            }}</span>
                                     </div>
                                 </div>
                                 <div class="col-12 md:col-3">
                                     <div class="flex flex-column gap-1">
-                                        <span class="text-color-secondary text-sm">{{ 'profile.administration.error-rate' | translate }}</span>
-                                        <span class="font-medium text-xl">{{ (adminMetrics.overview.error_rate * 100).toFixed(1) }}%</span>
+                                        <span class="text-color-secondary text-sm">{{
+                                            'profile.administration.error-rate' | translate }}</span>
+                                        <span class="font-medium text-xl">{{ (adminMetrics.overview.error_rate *
+                                            100).toFixed(1) }}%</span>
                                     </div>
                                 </div>
                             </div>
@@ -103,50 +130,38 @@
 
                         <!-- User management -->
                         <div class="flex gap-2 w-full sm:flex-row flex-column">
-                            <p-button 
-                                [label]="'profile.administration.manage-users' | translate" 
-                                icon="pi pi-users" 
-                                severity="secondary" 
-                                outlined="true" 
-                                (click)="toggleDialog('user-management')" 
-                                [disabled]="isLoadingUsers" 
-                                fluid="true"
-                                class="w-full"/>
-                            <p-button 
-                                [label]="'profile.administration.view-audit-logs' | translate" 
-                                icon="pi pi-list" 
-                                severity="secondary" 
-                                outlined="true" 
-                                (click)="toggleDialog('audit-logs')" 
-                                [disabled]="isLoadingAuditLogs" 
-                                fluid="true"
-                                class="w-full"/>
+                            <p-button [label]="'profile.administration.manage-users' | translate" icon="pi pi-users"
+                                severity="secondary" outlined="true" (click)="toggleDialog('user-management')"
+                                [disabled]="isLoadingUsers" fluid="true" class="w-full" />
+                            <p-button [label]="'profile.administration.view-audit-logs' | translate" icon="pi pi-list"
+                                severity="secondary" outlined="true" (click)="toggleDialog('audit-logs')"
+                                [disabled]="isLoadingAuditLogs" fluid="true" class="w-full" />
                         </div>
 
                         <!-- Alerts -->
                         <h4>{{ 'profile.administration.alerts' | translate }}</h4>
-                            <div class="flex flex-column gap-2">
-                                <div *ngIf="adminMetrics.alerts.length === 0" class="flex align-items-center gap-2 p-2 border-1 surface-border border-round">
-                                    <i class="pi pi-check-circle text-green-500"></i>
-                                    <span class="flex-1 text-color-secondary">{{ 'profile.administration.no-alerts' | translate }}</span>
-                                </div>
-                                <div *ngFor="let alert of adminMetrics.alerts" class="flex align-items-center gap-2 p-2 border-1 surface-border border-round">
-                                    <i *ngIf="alert.type === 'error'" class="pi pi-exclamation-triangle text-red-500"></i>
-                                    <i *ngIf="alert.type === 'warning'" class="pi pi-exclamation-triangle text-orange-500"></i>
-                                    <i *ngIf="alert.type === 'info'" class="pi pi-info-circle text-blue-500"></i>
-                                    <span class="flex-1">{{ alert.message }}</span>
-                                    <small class="text-color-secondary">{{ formatSystemTimestamp(alert.timestamp) }}</small>
-                                </div>
+                        <div class="flex flex-column gap-2">
+                            <div *ngIf="adminMetrics.alerts.length === 0"
+                                class="flex align-items-center gap-2 p-2 border-1 surface-border border-round">
+                                <i class="pi pi-check-circle text-green-500"></i>
+                                <span class="flex-1 text-color-secondary">{{ 'profile.administration.no-alerts' |
+                                    translate }}</span>
                             </div>
+                            <div *ngFor="let alert of adminMetrics.alerts"
+                                class="flex align-items-center gap-2 p-2 border-1 surface-border border-round">
+                                <i *ngIf="alert.type === 'error'" class="pi pi-exclamation-triangle text-red-500"></i>
+                                <i *ngIf="alert.type === 'warning'"
+                                    class="pi pi-exclamation-triangle text-orange-500"></i>
+                                <i *ngIf="alert.type === 'info'" class="pi pi-info-circle text-blue-500"></i>
+                                <span class="flex-1">{{ alert.message }}</span>
+                                <small class="text-color-secondary">{{ formatSystemTimestamp(alert.timestamp) }}</small>
+                            </div>
+                        </div>
 
                         <!-- Action buttons -->
                         <div class="flex gap-2 justify-content-end">
-                            <p-button 
-                                [label]="'profile.administration.refresh' | translate" 
-                                icon="pi pi-refresh" 
-                                severity="secondary" 
-                                outlined="true" 
-                                (click)="loadAdminMetrics()" 
+                            <p-button [label]="'profile.administration.refresh' | translate" icon="pi pi-refresh"
+                                severity="secondary" outlined="true" (click)="loadAdminMetrics()"
                                 [loading]="isLoadingAdminMetrics" />
                         </div>
                     </div>
@@ -160,7 +175,7 @@
             </p-tabpanel>
             <p-tabpanel value="2" class="flex md:flex-row flex-column gap-2 md:gap-3 w-full">
                 <div class="flex flex-column gap-3 w-full">
-                    
+
                     <!-- Loading state -->
                     <div *ngIf="isLoadingSystemStatus" class="flex justify-content-center p-4">
                         <i class="pi pi-spin pi-spinner text-xl"></i>
@@ -174,12 +189,12 @@
                             <div class="flex align-items-center justify-content-between">
                                 <div class="flex flex-column">
                                     <h5 class="m-0">{{ 'profile.system-status.overall-status' | translate }}</h5>
-                                    <p class="text-color-secondary text-sm m-0 mt-1">{{ 'profile.system-status.last-check' | translate }}: {{ formatSystemTimestamp(systemStatus.timestamp) }}</p>
+                                    <p class="text-color-secondary text-sm m-0 mt-1">{{
+                                        'profile.system-status.last-check' | translate }}: {{
+                                        formatSystemTimestamp(systemStatus.timestamp) }}</p>
                                 </div>
-                                <p-tag 
-                                    [value]="systemStatus.status | translate" 
-                                    [severity]="getSystemStatusSeverity(systemStatus.status)"
-                                    [rounded]="true"
+                                <p-tag [value]="systemStatus.status || 'down'"
+                                    [severity]="getSystemStatusSeverity(systemStatus.status)" [rounded]="true"
                                     class="text-xs font-semibold uppercase">
                                 </p-tag>
                             </div>
@@ -191,13 +206,15 @@
                             <div class="grid">
                                 <div class="col-12 md:col-6">
                                     <div class="flex flex-column gap-1">
-                                        <span class="text-color-secondary text-sm">{{ 'profile.system-status.version' | translate }}</span>
+                                        <span class="text-color-secondary text-sm">{{ 'profile.system-status.version' |
+                                            translate }}</span>
                                         <span class="font-medium">{{ systemStatus.version }}</span>
                                     </div>
                                 </div>
                                 <div class="col-12 md:col-6">
                                     <div class="flex flex-column gap-1">
-                                        <span class="text-color-secondary text-sm">{{ 'profile.system-status.uptime' | translate }}</span>
+                                        <span class="text-color-secondary text-sm">{{ 'profile.system-status.uptime' |
+                                            translate }}</span>
                                         <span class="font-medium">{{ formatUptime(systemStatus.uptime) }}</span>
                                     </div>
                                 </div>
@@ -205,65 +222,89 @@
                         </div>
 
                         <!-- Service status -->
-                        <h4>{{ 'profile.system-status.services' | translate }}</h4>
-                            <div class="grid">
-                                <div class="col-12 md:col-4">
-                                    <div class="flex align-items-center justify-content-between p-2 border-1 surface-border border-round">
-                                        <div class="flex flex-column">
-                                            <span class="font-medium">{{ 'profile.system-status.database' | translate }}</span>
-                                            <span class="text-color-secondary text-xs">{{ 'profile.system-status.postgresql' | translate }}</span>
+                        <div class="flex gap-2 justify-content-between align-items-center">
+                            <h4>{{ 'profile.system-status.services' | translate }}</h4>
+
+                            <p-button [label]="'profile.system-status.refresh' | translate" icon="pi pi-refresh"
+                                severity="secondary" outlined="true" (click)="loadSystemStatus()"
+                                [loading]="isLoadingSystemStatus" />
+                        </div>
+
+                        <div class="grid">
+                            <div class="col-12 md:col-4">
+                                <div class="border-1 surface-border p-3 border-round">
+                                    <div class="flex align-items-center justify-content-between">
+                                        <div>
+                                            <span class="block text-500 font-medium mb-2">{{
+                                                'profile.system-status.database' | translate }}</span>
+                                            <div class="text-900 font-medium text-xl">
+                                                <p-tag
+                                                    [value]="systemStatus.services.database || 'down'"
+                                                    [severity]="getSystemStatusSeverity(systemStatus.services.database || 'down')"
+                                                    [rounded]="true" class="text-xs font-semibold uppercase">
+                                                </p-tag>
+                                            </div>
                                         </div>
-                                        <p-tag 
-                                            [value]="systemStatus.services.database | translate" 
-                                            [severity]="getSystemStatusSeverity(systemStatus.services.database)"
-                                            [rounded]="true"
-                                            class="text-xs font-semibold uppercase">
-                                        </p-tag>
-                                    </div>
-                                </div>
-                                <div class="col-12 md:col-4">
-                                    <div class="flex align-items-center justify-content-between p-2 border-1 surface-border border-round">
-                                        <div class="flex flex-column">
-                                            <span class="font-medium">{{ 'profile.system-status.storage' | translate }}</span>
-                                            <span class="text-color-secondary text-xs">{{ 'profile.system-status.minio' | translate }}</span>
+                                        <div class="flex align-items-center justify-content-center bg-blue-100 border-round"
+                                            style="width:2.5rem;height:2.5rem">
+                                            <i class="pi pi-database text-blue-500 text-xl"></i>
                                         </div>
-                                        <p-tag 
-                                            [value]="systemStatus.services.storage | translate" 
-                                            [severity]="getSystemStatusSeverity(systemStatus.services.storage)"
-                                            [rounded]="true"
-                                            class="text-xs font-semibold uppercase">
-                                            
-                                        </p-tag>
-                                    </div>
-                                </div>
-                                <div class="col-12 md:col-4">
-                                    <div class="flex align-items-center justify-content-between p-2 border-1 surface-border border-round">
-                                        <div class="flex flex-column">
-                                            <span class="font-medium">{{ 'profile.system-status.email' | translate }}</span>
-                                            <span class="text-color-secondary text-xs">{{ 'profile.system-status.smtp' | translate }}</span>
-                                        </div>
-                                        <p-tag 
-                                            [value]="systemStatus.services.email | translate" 
-                                            [severity]="getSystemStatusSeverity(systemStatus.services.email)"
-                                            [rounded]="true"
-                                            class="text-xs font-semibold uppercase">
-                                        </p-tag>
                                     </div>
                                 </div>
                             </div>
 
-                        <!-- Refresh button -->
-                        <div class="flex justify-content-end">
-                            <p-button 
-                                [label]="'profile.system-status.refresh' | translate" 
-                                icon="pi pi-refresh" 
-                                severity="secondary" 
-                                outlined="true" 
-                                (click)="loadSystemStatus()" 
-                                [loading]="isLoadingSystemStatus" />
+                            <div class="col-12 md:col-4">
+                                <div class="border-1 surface-border p-3 border-round">
+                                    <div class="flex align-items-center justify-content-between">
+                                        <div>
+                                            <span class="block text-500 font-medium mb-2">{{
+                                                'profile.system-status.storage' | translate }}</span>
+                                            <div class="text-900 font-medium text-xl">
+                                                <p-tag
+                                                    [value]="systemStatus.services.storage || 'down'"
+                                                    [severity]="getSystemStatusSeverity(systemStatus.services.storage || 'down')"
+                                                    [rounded]="true" class="text-xs font-semibold uppercase">
+                                                </p-tag>
+                                            </div>
+                                        </div>
+                                        <div class="flex align-items-center justify-content-center bg-green-100 border-round"
+                                            style="width:2.5rem;height:2.5rem">
+                                            <i class="pi pi-folder-open text-green-500 text-xl"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-12 md:col-4">
+                                <div class="border-1 surface-border p-3 border-round">
+                                    <div class="flex align-items-center justify-content-between">
+                                        <div>
+                                            <span class="block text-500 font-medium mb-2">{{
+                                                'profile.system-status.email' | translate }}</span>
+                                            <div class="text-900 font-medium text-xl">
+                                                <p-tag
+                                                    [value]="systemStatus.services.email || 'down'"
+                                                    [severity]="getSystemStatusSeverity(systemStatus.services.email || 'down')"
+                                                    [rounded]="true" class="text-xs font-semibold uppercase">
+                                                </p-tag>
+                                            </div>
+                                        </div>
+                                        <div class="flex align-items-center justify-content-center bg-orange-100 border-round"
+                                            style="width:2.5rem;height:2.5rem">
+                                            <i class="pi pi-envelope text-orange-500 text-xl"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                </div>
-                
+
+                        <h4>{{ 'profile.system-status.backup-management' | translate }}</h4>
+                        <!-- Backup Management Button -->
+                        <p-button [label]="'profile.system-status.backup-management' | translate" icon="pi pi-database"
+                            severity="secondary" outlined="true" (click)="openBackupManagementDialog()" fluid="true"
+                            class="w-full" />
+                    </div>
+
                     <!-- Error state -->
                     <div *ngIf="!isLoadingSystemStatus && !systemStatus" class="flex justify-content-center p-4">
                         <i class="pi pi-exclamation-triangle text-xl text-orange-500"></i>
@@ -272,7 +313,7 @@
                 </div>
             </p-tabpanel>
         </p-tabpanels>
-    </p-tabs>    
+    </p-tabs>
 </main>
 
 <!-- modale di modifica del profilo -->
@@ -281,10 +322,12 @@
     </div>
 </p-dialog> -->
 
-<p-dialog [header]="'profile.dialogs.download-data' | translate" [modal]="true" [(visible)]="isDownloadDialogVisible" [breakpoints]="{ '1199px': '75vw', '575px': '90vw' }" [style]="{ width: '50vw' }" [draggable]="false" [resizable]="false">
+<p-dialog [header]="'profile.dialogs.download-data' | translate" [modal]="true" [(visible)]="isDownloadDialogVisible"
+    [breakpoints]="{ '1199px': '75vw', '575px': '90vw' }" [style]="{ width: '50vw' }" [draggable]="false"
+    [resizable]="false">
     <div class="flex flex-column gap-3">
         <p class="text-color-secondary text-sm">{{ 'profile.download.description' | translate }}</p>
-        
+
         <div class="flex flex-column gap-2">
             <div class="flex align-items-center gap-2">
                 <i class="pi pi-info-circle text-blue-500"></i>
@@ -297,21 +340,25 @@
         </div>
 
         <div class="flex gap-2 justify-content-end">
-            <p-button [label]="'common.cancel' | translate" severity="secondary" outlined="true" (click)="isDownloadDialogVisible = false" [disabled]="isDownloading" />
-            <p-button [label]="'profile.download.confirm' | translate" severity="primary" (click)="downloadPersonalData()" [loading]="isDownloading" [disabled]="isDownloading" />
+            <p-button [label]="'common.cancel' | translate" severity="secondary" outlined="true"
+                (click)="isDownloadDialogVisible = false" [disabled]="isDownloading" />
+            <p-button [label]="'profile.download.confirm' | translate" severity="primary"
+                (click)="downloadPersonalData()" [loading]="isDownloading" [disabled]="isDownloading" />
         </div>
     </div>
 </p-dialog>
 
-<p-dialog [header]="'profile.dialogs.delete-account' | translate" [modal]="true" [(visible)]="isDeleteDialogVisible" [breakpoints]="{ '1199px': '75vw', '575px': '90vw' }" [style]="{ width: '50vw' }" [draggable]="false" [resizable]="false">
+<p-dialog [header]="'profile.dialogs.delete-account' | translate" [modal]="true" [(visible)]="isDeleteDialogVisible"
+    [breakpoints]="{ '1199px': '75vw', '575px': '90vw' }" [style]="{ width: '50vw' }" [draggable]="false"
+    [resizable]="false">
     <div class="flex flex-column gap-3">
         <div class="flex align-items-center gap-2">
             <i class="pi pi-exclamation-triangle text-red-500 text-xl"></i>
             <p class="text-red-500 font-semibold">{{ 'profile.delete-account.warning-title' | translate }}</p>
         </div>
-        
+
         <p class="text-color-secondary text-sm">{{ 'profile.delete-account.description' | translate }}</p>
-        
+
         <div class="flex flex-column gap-2">
             <div class="flex align-items-center gap-2">
                 <i class="pi pi-info-circle text-blue-500"></i>
@@ -332,14 +379,18 @@
         </div>
 
         <div class="flex gap-2 justify-content-end">
-            <p-button [label]="'common.cancel' | translate" severity="secondary" outlined="true" (click)="isDeleteDialogVisible = false" [disabled]="isProcessing" />
-            <p-button [label]="'profile.delete-account.confirm' | translate" severity="danger" (click)="deleteAccount()" [loading]="isProcessing" [disabled]="isProcessing" />
+            <p-button [label]="'common.cancel' | translate" severity="secondary" outlined="true"
+                (click)="isDeleteDialogVisible = false" [disabled]="isProcessing" />
+            <p-button [label]="'profile.delete-account.confirm' | translate" severity="danger" (click)="deleteAccount()"
+                [loading]="isProcessing" [disabled]="isProcessing" />
         </div>
     </div>
 </p-dialog>
 
-<p-dialog [header]="'profile.dialogs.security-logs' | translate" [modal]="true" [(visible)]="isSecurityLogsDialogVisible" [breakpoints]="{ '1199px': '75vw', '575px': '90vw' }" [draggable]="false" [resizable]="false" [maximizable]="true">
-    <div class="flex flex-column gap-3">        
+<p-dialog [header]="'profile.dialogs.security-logs' | translate" [modal]="true"
+    [(visible)]="isSecurityLogsDialogVisible" [breakpoints]="{ '1199px': '75vw', '575px': '90vw' }" [draggable]="false"
+    [resizable]="false" [maximizable]="true">
+    <div class="flex flex-column gap-3">
         <div *ngIf="isLoadingSecurityLogs" class="flex justify-content-center p-4">
             <i class="pi pi-spin pi-spinner text-xl"></i>
             <span class="ml-2">{{ 'profile.security-logs.loading' | translate }}</span>
@@ -350,21 +401,13 @@
             <span class="ml-2">{{ 'profile.security-logs.no-logs' | translate }}</span>
         </div>
 
-        <p-table 
-            *ngIf="!isLoadingSecurityLogs && securityLogs.length > 0"
-            [value]="securityLogs" 
-            [paginator]="true" 
-            [rows]="securityLogsRows"
-            [totalRecords]="securityLogsTotal"
-            (onPage)="onSecurityLogsPageChange($event)"
-            [showCurrentPageReport]="true"
-            [tableStyle]="{ 'min-width': '50rem' }"
-            [scrollable]="true"
+        <p-table *ngIf="!isLoadingSecurityLogs && securityLogs.length > 0" [value]="securityLogs" [paginator]="true"
+            [rows]="securityLogsRows" [totalRecords]="securityLogsTotal" (onPage)="onSecurityLogsPageChange($event)"
+            [showCurrentPageReport]="true" [tableStyle]="{ 'min-width': '50rem' }" [scrollable]="true"
             responsiveLayout="scroll"
             currentPageReportTemplate="{{ 'common.showing' | translate }} {first} {{ 'common.to' | translate }} {last} {{ 'common.of' | translate }} {totalRecords} {{ 'common.entries' | translate }}"
-            [rowsPerPageOptions]="[10, 25, 50, 100]"
-            [paginatorDropdownAppendTo]="'body'">
-            
+            [rowsPerPageOptions]="[10, 25, 50, 100]" [paginatorDropdownAppendTo]="'body'">
+
             <ng-template pTemplate="header">
                 <tr>
                     <th>{{ 'profile.security-logs.table.action' | translate }}</th>
@@ -375,11 +418,11 @@
                     <th>{{ 'profile.security-logs.table.details' | translate }}</th>
                 </tr>
             </ng-template>
-            
+
             <ng-template pTemplate="body" let-log>
                 <tr>
                     <td>
-                        <span class="font-medium">{{ getActionName(log.action) | translate }}</span>
+                        <span class="font-medium">{{ getActionName(log.action) }}</span>
                     </td>
                     <td>
                         <code class="text-sm">{{ log.ip_address }}</code>
@@ -393,10 +436,8 @@
                         <span class="text-sm">{{ formatTimestamp(log.timestamp) }}</span>
                     </td>
                     <td>
-                        <p-tag 
-                            [value]="getStatusText(log.success) | translate" 
-                            [severity]="getSecurityStatusSeverity(log.success)"
-                            [rounded]="true"
+                        <p-tag [value]="getStatusText(log.success)"
+                            [severity]="getSecurityStatusSeverity(log.success)" [rounded]="true"
                             class="text-xs font-semibold uppercase">
                         </p-tag>
                     </td>
@@ -411,7 +452,7 @@
                     </td>
                 </tr>
             </ng-template>
-            
+
             <ng-template pTemplate="emptymessage">
                 <tr>
                     <td colspan="6" class="text-center p-4">
@@ -424,24 +465,16 @@
     </div>
 </p-dialog>
 
-<p-dialog [header]="'profile.dialogs.user-management' | translate" [modal]="true" [(visible)]="isUserManagementDialogVisible" [breakpoints]="{ '1199px': '75vw', '575px': '90vw' }" [draggable]="false" [resizable]="false" [maximizable]="true">
-    <div class="flex flex-column gap-3">        
+<p-dialog [header]="'profile.dialogs.user-management' | translate" [modal]="true"
+    [(visible)]="isUserManagementDialogVisible" [breakpoints]="{ '1199px': '75vw', '575px': '90vw' }"
+    [draggable]="false" [resizable]="false" [maximizable]="true">
+    <div class="flex flex-column gap-3">
         <!-- Search bar -->
         <div class="flex gap-2 align-items-center">
-            <input 
-                pInputText 
-                type="text" 
-                [(ngModel)]="userSearchQuery" 
-                (keyup.enter)="onUserSearch()"
-                [placeholder]="'profile.user-management.search-placeholder' | translate" 
-                class="w-full" />
-            <p-button 
-                [label]="'common.search' | translate" 
-                icon="pi pi-search" 
-                severity="secondary" 
-                outlined="true" 
-                (click)="onUserSearch()" 
-                [disabled]="isLoadingUsers" />
+            <input pInputText type="text" [(ngModel)]="userSearchQuery" (keyup.enter)="onUserSearch()"
+                [placeholder]="'profile.user-management.search-placeholder' | translate" class="w-full" />
+            <p-button [label]="'common.search' | translate" icon="pi pi-search" severity="secondary" outlined="true"
+                (click)="onUserSearch()" [disabled]="isLoadingUsers" />
         </div>
 
         <!-- Loading state -->
@@ -451,21 +484,12 @@
         </div>
 
         <!-- Users table -->
-        <p-table 
-            *ngIf="!isLoadingUsers"
-            [value]="users" 
-            [paginator]="true" 
-            [rows]="usersRows"
-            [totalRecords]="usersTotal"
-            (onPage)="onUsersPageChange($event)"
-            [showCurrentPageReport]="true"
-            [tableStyle]="{ 'min-width': '50rem' }"
-            [scrollable]="true"
-            responsiveLayout="scroll"
+        <p-table *ngIf="!isLoadingUsers" [value]="users" [paginator]="true" [rows]="usersRows"
+            [totalRecords]="usersTotal" (onPage)="onUsersPageChange($event)" [showCurrentPageReport]="true"
+            [tableStyle]="{ 'min-width': '50rem' }" [scrollable]="true" responsiveLayout="scroll"
             currentPageReportTemplate="{{ 'common.showing' | translate }} {first} {{ 'common.to' | translate }} {last} {{ 'common.of' | translate }} {totalRecords} {{ 'common.entries' | translate }}"
-            [rowsPerPageOptions]="[10, 25, 50, 100]"
-            [paginatorDropdownAppendTo]="'body'">
-            
+            [rowsPerPageOptions]="[10, 25, 50, 100]" [paginatorDropdownAppendTo]="'body'">
+
             <ng-template pTemplate="header">
                 <tr>
                     <th>{{ 'profile.user-management.table.name' | translate }}</th>
@@ -477,7 +501,7 @@
                     <th>{{ 'profile.user-management.table.actions' | translate }}</th>
                 </tr>
             </ng-template>
-            
+
             <ng-template pTemplate="body" let-user>
                 <tr>
                     <td>
@@ -490,18 +514,13 @@
                         <span class="font-medium">{{ user.email }}</span>
                     </td>
                     <td>
-                        <p-tag 
-                            [value]="user.role | translate" 
-                            [severity]="getRoleSeverity(user.role)"
-                            [rounded]="true"
+                        <p-tag [value]="user.role" [severity]="getRoleSeverity(user.role)" [rounded]="true"
                             class="text-xs font-semibold uppercase">
                         </p-tag>
                     </td>
                     <td>
-                        <p-tag 
-                            [value]="user.is_verified ? ('profile.user-management.status.verified' | translate) : ('profile.user-management.status.unverified' | translate)" 
-                            [severity]="user.is_verified ? 'success' : 'warning'"
-                            [rounded]="true"
+                        <p-tag [value]="user.is_verified ? 'verified' : 'unverified'"
+                            [severity]="user.is_verified ? 'success' : 'warning'" [rounded]="true"
                             class="text-xs font-semibold uppercase">
                         </p-tag>
                     </td>
@@ -513,22 +532,16 @@
                     </td>
                     <td>
                         <div class="flex gap-1">
-                            <p-button 
-                                icon="pi pi-trash" 
-                                severity="danger" 
-                                size="small"
+                            <p-button icon="pi pi-trash" severity="danger" size="small"
                                 [loading]="isDeletingUser && selectedUserForAction?.uuid === user.uuid"
                                 [disabled]="isDeletingUser || user.role === 'admin'"
                                 pTooltip="{{ 'profile.user-management.actions.delete' | translate }}"
-                                tooltipPosition="top"
-                                (click)="deleteUser(user)"
-                                fluid="true"
-                                class="w-full"/>
+                                tooltipPosition="top" (click)="deleteUser(user)" fluid="true" class="w-full" />
                         </div>
                     </td>
                 </tr>
             </ng-template>
-            
+
             <ng-template pTemplate="emptymessage">
                 <tr>
                     <td colspan="7" class="text-center p-4">
@@ -541,10 +554,12 @@
     </div>
 </p-dialog>
 
-<p-dialog [header]="'profile.dialogs.change-password' | translate" [modal]="true" [(visible)]="isChangePasswordDialogVisible" [breakpoints]="{ '1199px': '75vw', '575px': '90vw' }" [style]="{ width: '50vw' }" [draggable]="false" [resizable]="false">
+<p-dialog [header]="'profile.dialogs.change-password' | translate" [modal]="true"
+    [(visible)]="isChangePasswordDialogVisible" [breakpoints]="{ '1199px': '75vw', '575px': '90vw' }"
+    [style]="{ width: '50vw' }" [draggable]="false" [resizable]="false">
     <div class="flex flex-column gap-3">
         <p class="text-color-secondary text-sm">{{ 'profile.change-password.description' | translate }}</p>
-        
+
         <div class="flex flex-column gap-2">
             <div class="flex align-items-center gap-2">
                 <i class="pi pi-info-circle text-blue-500"></i>
@@ -561,14 +576,17 @@
         </div>
 
         <div class="flex gap-2 justify-content-end">
-            <p-button [label]="'common.cancel' | translate" severity="secondary" outlined="true" (click)="isChangePasswordDialogVisible = false" [disabled]="isProcessing" />
-            <p-button [label]="'profile.change-password.confirm' | translate" severity="primary" (click)="requestPasswordChange()" [loading]="isProcessing" [disabled]="isProcessing" />
+            <p-button [label]="'common.cancel' | translate" severity="secondary" outlined="true"
+                (click)="isChangePasswordDialogVisible = false" [disabled]="isProcessing" />
+            <p-button [label]="'profile.change-password.confirm' | translate" severity="primary"
+                (click)="requestPasswordChange()" [loading]="isProcessing" [disabled]="isProcessing" />
         </div>
     </div>
 </p-dialog>
 
-<p-dialog [header]="'profile.dialogs.audit-logs' | translate" [modal]="true" [(visible)]="isAuditLogsDialogVisible" [breakpoints]="{ '1199px': '75vw', '575px': '90vw' }" [draggable]="false" [resizable]="false" [maximizable]="true">
-    <div class="flex flex-column gap-3">        
+<p-dialog [header]="'profile.dialogs.audit-logs' | translate" [modal]="true" [(visible)]="isAuditLogsDialogVisible"
+    [breakpoints]="{ '1199px': '75vw', '575px': '90vw' }" [draggable]="false" [resizable]="false" [maximizable]="true">
+    <div class="flex flex-column gap-3">
         <div *ngIf="isLoadingAuditLogs" class="flex justify-content-center p-4">
             <i class="pi pi-spin pi-spinner text-xl"></i>
             <span class="ml-2">{{ 'profile.audit-logs.loading' | translate }}</span>
@@ -579,21 +597,13 @@
             <span class="ml-2">{{ 'profile.audit-logs.no-logs' | translate }}</span>
         </div>
 
-        <p-table 
-            *ngIf="!isLoadingAuditLogs && auditLogs.length > 0"
-            [value]="auditLogs" 
-            [paginator]="true" 
-            [rows]="auditLogsRows"
-            [totalRecords]="auditLogsTotal"
-            (onPage)="onAuditLogsPageChange($event)"
-            [showCurrentPageReport]="true"
-            [tableStyle]="{ 'min-width': '50rem' }"
-            [scrollable]="true"
+        <p-table *ngIf="!isLoadingAuditLogs && auditLogs.length > 0" [value]="auditLogs" [paginator]="true"
+            [rows]="auditLogsRows" [totalRecords]="auditLogsTotal" (onPage)="onAuditLogsPageChange($event)"
+            [showCurrentPageReport]="true" [tableStyle]="{ 'min-width': '50rem' }" [scrollable]="true"
             responsiveLayout="scroll"
             currentPageReportTemplate="{{ 'common.showing' | translate }} {first} {{ 'common.to' | translate }} {last} {{ 'common.of' | translate }} {totalRecords} {{ 'common.entries' | translate }}"
-            [rowsPerPageOptions]="[10, 25, 50, 100]"
-            [paginatorDropdownAppendTo]="'body'">
-            
+            [rowsPerPageOptions]="[10, 25, 50, 100]" [paginatorDropdownAppendTo]="'body'">
+
             <ng-template pTemplate="header">
                 <tr>
                     <th>{{ 'profile.audit-logs.table.action' | translate }}</th>
@@ -604,11 +614,11 @@
                     <th>{{ 'profile.audit-logs.table.details' | translate }}</th>
                 </tr>
             </ng-template>
-            
+
             <ng-template pTemplate="body" let-log>
                 <tr>
                     <td>
-                        <span class="font-medium">{{ getAuditActionName(log.action) | translate }}</span>
+                        <span class="font-medium">{{ getAuditActionName(log.action) }}</span>
                     </td>
                     <td>
                         <div class="flex flex-column">
@@ -638,12 +648,152 @@
                     </td>
                 </tr>
             </ng-template>
-            
+
             <ng-template pTemplate="emptymessage">
                 <tr>
                     <td colspan="6" class="text-center p-4">
                         <i class="pi pi-info-circle text-xl text-blue-500"></i>
                         <p class="mt-2">{{ 'profile.audit-logs.no-logs' | translate }}</p>
+                    </td>
+                </tr>
+            </ng-template>
+        </p-table>
+    </div>
+</p-dialog>
+
+<!-- Restore Backup Confirmation Dialog -->
+<p-dialog [header]="'profile.system-status.confirm-restore' | translate" [modal]="true"
+    [(visible)]="isRestoreDialogVisible" [breakpoints]="{ '1199px': '75vw', '575px': '90vw' }"
+    [style]="{ width: '50vw' }" [draggable]="false" [resizable]="false">
+    <div class="flex flex-column gap-3">
+        <div class="flex align-items-center gap-2">
+            <i class="pi pi-exclamation-triangle text-red-500 text-xl"></i>
+            <p class="text-red-500 font-semibold">{{ 'profile.system-status.confirm-restore' | translate }}</p>
+        </div>
+
+        <p class="text-color-secondary text-sm">{{ 'profile.system-status.restore-warning' | translate }}</p>
+
+        <div *ngIf="selectedBackupForRestore" class="surface-100 p-3 border-round">
+            <div class="flex flex-column gap-2">
+                <div class="flex align-items-center gap-2">
+                    <i class="pi pi-info-circle text-blue-500"></i>
+                    <span class="text-sm font-medium">{{ 'profile.system-status.table.backup-id' | translate }}:</span>
+                    <code class="text-sm">{{ selectedBackupForRestore.backup_id }}</code>
+                </div>
+                <div class="flex align-items-center gap-2">
+                    <i class="pi pi-file text-blue-500"></i>
+                    <span class="text-sm font-medium">{{ 'profile.system-status.table.file' | translate }}:</span>
+                    <span class="text-sm">{{ selectedBackupForRestore.backup_file }}</span>
+                </div>
+                <div class="flex align-items-center gap-2">
+                    <i class="pi pi-calendar text-blue-500"></i>
+                    <span class="text-sm font-medium">{{ 'profile.system-status.table.created' | translate }}:</span>
+                    <span class="text-sm">{{ formatBackupDate(selectedBackupForRestore.created_at) }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex flex-column gap-2">
+            <div class="flex align-items-center gap-2">
+                <i class="pi pi-exclamation-triangle text-orange-500"></i>
+                <span class="text-sm">{{ 'profile.system-status.restore-confirm' | translate }}</span>
+            </div>
+            <div *ngIf="isRestoringBackup" class="flex align-items-center gap-2">
+                <i class="pi pi-spin pi-spinner text-red-500"></i>
+                <span class="text-sm text-red-500">{{ 'profile.system-status.restoring' | translate }}</span>
+            </div>
+        </div>
+
+        <div class="flex gap-2 justify-content-end">
+            <p-button [label]="'common.cancel' | translate" severity="secondary" outlined="true"
+                (click)="cancelRestoreBackup()" [disabled]="isRestoringBackup" />
+            <p-button [label]="'profile.system-status.actions.restore' | translate" severity="danger"
+                (click)="confirmRestoreBackup()" [loading]="isRestoringBackup" [disabled]="isRestoringBackup" />
+        </div>
+    </div>
+</p-dialog>
+
+<!-- Backup Management Dialog -->
+<p-dialog [header]="'profile.system-status.backup-management' | translate" [modal]="true"
+    [(visible)]="isBackupManagementDialogVisible" [breakpoints]="{ '1199px': '75vw', '575px': '90vw' }"
+    [draggable]="false" [resizable]="false" [maximizable]="true">
+    <div class="flex flex-column gap-3">
+        <!-- Backup Actions -->
+        <div class="flex gap-2 justify-content-end">
+            <p-button [label]="'profile.system-status.create-backup' | translate" icon="pi pi-plus" severity="primary"
+                (click)="createBackup()" [loading]="isCreatingBackup" [disabled]="isCreatingBackup" />
+
+            <p-button [label]="'profile.system-status.backup-list' | translate" icon="pi pi-refresh"
+                severity="secondary" outlined="true" (click)="loadBackups(backupsPage, backupsRows)"
+                [loading]="isLoadingBackups" [disabled]="isLoadingBackups" />
+        </div>
+
+        <!-- Loading state -->
+        <div *ngIf="isLoadingBackups" class="flex justify-content-center p-4">
+            <i class="pi pi-spin pi-spinner text-xl"></i>
+            <span class="ml-2">{{ 'profile.system-status.loading-backups' | translate }}</span>
+        </div>
+
+        <!-- Empty state -->
+        <div *ngIf="!isLoadingBackups && backups.length === 0" class="flex justify-content-center p-4">
+            <i class="pi pi-info-circle text-xl text-blue-500"></i>
+            <span class="ml-2">{{ 'profile.system-status.no-backups' | translate }}</span>
+        </div>
+
+        <!-- Backup table -->
+        <p-table *ngIf="!isLoadingBackups && backups.length > 0" [value]="backups" [paginator]="true"
+            [rows]="backupsRows" [totalRecords]="backupsTotal" (onPage)="onBackupsPageChange($event)"
+            [showCurrentPageReport]="true" [tableStyle]="{ 'min-width': '50rem' }" [scrollable]="true"
+            responsiveLayout="scroll"
+            currentPageReportTemplate="{{ 'common.showing' | translate }} {first} {{ 'common.to' | translate }} {last} {{ 'common.of' | translate }} {totalRecords} {{ 'common.entries' | translate }}"
+            [rowsPerPageOptions]="[10, 25, 50, 100]" [paginatorDropdownAppendTo]="'body'">
+
+            <ng-template pTemplate="header">
+                <tr>
+                    <th>{{ 'profile.system-status.table.backup-id' | translate }}</th>
+                    <th>{{ 'profile.system-status.table.file' | translate }}</th>
+                    <th>{{ 'profile.system-status.table.size' | translate }}</th>
+                    <th>{{ 'profile.system-status.table.created' | translate }}</th>
+                    <th>{{ 'profile.system-status.table.status' | translate }}</th>
+                    <th>{{ 'profile.system-status.table.actions' | translate }}</th>
+                </tr>
+            </ng-template>
+
+            <ng-template pTemplate="body" let-backup>
+                <tr>
+                    <td>
+                        <code class="text-sm">{{ backup.backup_id }}</code>
+                    </td>
+                    <td>
+                        <span class="font-medium">{{ backup.backup_file }}</span>
+                    </td>
+                    <td>
+                        <span class="text-sm">{{ formatBackupSize(backup.backup_size) }}</span>
+                    </td>
+                    <td>
+                        <span class="text-sm">{{ formatBackupDate(backup.created_at) }}</span>
+                    </td>
+                    <td>
+                        <p-tag [value]="('profile.system-status.status.' + backup.status) | translate"
+                            [severity]="backup.status === 'completed' ? 'success' : backup.status === 'restored' ? 'warn' : 'info'"
+                            [rounded]="true" class="text-xs font-semibold uppercase">
+                        </p-tag>
+                    </td>
+                    <td>
+                        <div class="flex gap-1">
+                            <p-button [label]="'profile.system-status.actions.restore' | translate" icon="pi pi-undo"
+                                severity="warn" size="small" (click)="restoreBackup(backup)"
+                                [disabled]="backup.status === 'restored'" />
+                        </div>
+                    </td>
+                </tr>
+            </ng-template>
+
+            <ng-template pTemplate="emptymessage">
+                <tr>
+                    <td colspan="6" class="text-center p-4">
+                        <i class="pi pi-info-circle text-xl text-blue-500"></i>
+                        <p class="mt-2">{{ 'profile.system-status.no-backups' | translate }}</p>
                     </td>
                 </tr>
             </ng-template>

@@ -10,6 +10,7 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import * as fs from 'fs';
 import * as path from 'path';
+import * as nodemailer from 'nodemailer';
 
 const execAsync = promisify(exec);
 
@@ -275,12 +276,14 @@ export class ResilienceService {
   }
 
   /**
-   * List available backups
-   * @returns Promise<ApiResponseDto<BackupResponseDto[]>>
+   * List available backups with pagination
+   * @param page - Page number (1-based)
+   * @param limit - Number of items per page
+   * @returns Promise<ApiResponseDto<{backups: BackupResponseDto[], pagination: {page: number, limit: number, total: number}}>>
    */
-  async listBackups(): Promise<ApiResponseDto<BackupResponseDto[]>> {
+  async listBackups(page: number = 1, limit: number = 10): Promise<ApiResponseDto<{backups: BackupResponseDto[], pagination: {page: number, limit: number, total: number}}>> {
     try {
-      this.logger.log('Listing available backups from MinIO');
+      this.logger.log('Listing available backups from MinIO', { page, limit });
 
       const backupFiles = await this.minioService.listFiles(this.backupBucketPrefix);
       
@@ -292,7 +295,12 @@ export class ResilienceService {
         .sort()
         .reverse(); // Most recent first
 
-      const backups = filteredBackups.map(file => {
+      const total = filteredBackups.length;
+      const startIndex = (page - 1) * limit;
+      const endIndex = startIndex + limit;
+      const paginatedBackups = filteredBackups.slice(startIndex, endIndex);
+
+      const backups = paginatedBackups.map(file => {
         const backupId = file.replace('backup-', '').replace('.sql', '');
         
         return {
@@ -304,8 +312,23 @@ export class ResilienceService {
         } as BackupResponseDto;
       });
 
-      this.logger.log('Backups listed successfully from MinIO', { count: backups.length });
-      return ApiResponseDto.success(backups, 'Backups listed successfully from MinIO');
+      const pagination = {
+        page,
+        limit,
+        total
+      };
+
+      this.logger.log('Backups listed successfully from MinIO', { 
+        count: backups.length, 
+        total, 
+        page, 
+        limit 
+      });
+      
+      return ApiResponseDto.success(
+        { backups, pagination }, 
+        'Backups listed successfully from MinIO'
+      );
     } catch (error) {
       this.logger.error('Failed to list backups from MinIO', { error: error.message });
       throw error;
@@ -388,13 +411,8 @@ export class ResilienceService {
   private async checkDatabaseHealth(): Promise<'healthy' | 'degraded' | 'down'> {
     try {
       const startTime = Date.now();
-      
-      // Real database health check
       await this.userRepository.query('SELECT 1');
-      
       const responseTime = Date.now() - startTime;
-
-      // Check if database is responsive
       if (responseTime < 100) {
         return 'healthy';
       } else if (responseTime < 1000) {
@@ -414,25 +432,18 @@ export class ResilienceService {
    */
   private async checkStorageHealth(): Promise<'healthy' | 'degraded' | 'down'> {
     try {
-      // In a real implementation, you would check MinIO/S3 connectivity
-      // For now, we'll simulate based on environment variables
       const minioEndpoint = process.env.MINIO_ENDPOINT;
       const minioPort = process.env.MINIO_PORT;
-      
       if (!minioEndpoint || !minioPort) {
         this.logger.warn('MinIO configuration missing');
         return 'degraded';
       }
-
-      // Simulate storage check (in production, make actual HTTP request to MinIO)
       const startTime = Date.now();
-      
-      // This would be a real MinIO health check
-      // await this.minioService.healthCheck();
-      
+      const isHealthy = await this.minioService.healthCheck();
       const responseTime = Date.now() - startTime;
-
-      if (responseTime < 200) {
+      if (!isHealthy) {
+        return 'down';
+      } else if (responseTime < 200) {
         return 'healthy';
       } else if (responseTime < 2000) {
         return 'degraded';
@@ -451,33 +462,28 @@ export class ResilienceService {
    */
   private async checkEmailHealth(): Promise<'healthy' | 'degraded' | 'down'> {
     try {
-      // Check email configuration
       const smtpHost = process.env.SMTP_HOST;
       const smtpPort = process.env.SMTP_PORT;
       const smtpUser = process.env.SMTP_USER;
-      
-      if (!smtpHost || !smtpPort || !smtpUser) {
+      const smtpPass = process.env.SMTP_PASS;
+      if (!smtpHost || !smtpPort || !smtpUser || !smtpPass) {
         this.logger.warn('SMTP configuration missing');
         return 'degraded';
       }
-
-      // In production, you would test SMTP connection
-      // For now, simulate based on configuration presence
-      const hasValidConfig = smtpHost && smtpPort && smtpUser;
-      
-      if (hasValidConfig) {
-        // Simulate SMTP test
-        const startTime = Date.now();
-        // await this.mailService.testConnection();
-        const responseTime = Date.now() - startTime;
-
-        if (responseTime < 500) {
-          return 'healthy';
-        } else if (responseTime < 5000) {
-          return 'degraded';
-        } else {
-          return 'down';
-        }
+      const startTime = Date.now();
+      const transporter = nodemailer.createTransport({
+        host: smtpHost,
+        port: parseInt(smtpPort, 10),
+        secure: false,
+        auth: { user: smtpUser, pass: smtpPass },
+        tls: { rejectUnauthorized: false }
+      });
+      await transporter.verify();
+      const responseTime = Date.now() - startTime;
+      if (responseTime < 500) {
+        return 'healthy';
+      } else if (responseTime < 5000) {
+        return 'degraded';
       } else {
         return 'down';
       }

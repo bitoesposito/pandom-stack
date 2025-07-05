@@ -18,7 +18,7 @@ import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
 import { InputTextModule } from 'primeng/inputtext';
 import { FormsModule } from '@angular/forms';
-import { SystemStatusResponse } from '../../models/resilience.models';
+import { SystemStatusResponse, BackupResponse } from '../../models/resilience.models';
 import { SystemMetricsResponse } from '../../models/admin.models';
 
 @Component({
@@ -51,6 +51,18 @@ export class UserProfileComponent implements OnInit {
   isLoadingSystemStatus: boolean = false;
   adminMetrics: SystemMetricsResponse | null = null;
   isLoadingAdminMetrics: boolean = false;
+  
+  // Backup management
+  backups: BackupResponse[] = [];
+  isLoadingBackups: boolean = false;
+  isCreatingBackup: boolean = false;
+  isRestoringBackup: boolean = false;
+  selectedBackupForRestore: BackupResponse | null = null;
+  isRestoreDialogVisible: boolean = false;
+  isBackupManagementDialogVisible: boolean = false;
+  backupsPage: number = 1;
+  backupsRows: number = 10;
+  backupsTotal: number = 0;
   isEditDialogVisible: boolean = false; 
   isDownloadDialogVisible: boolean = false;
   isDeleteDialogVisible: boolean = false;
@@ -655,5 +667,104 @@ export class UserProfileComponent implements OnInit {
     } else {
       return user.email;
     }
+  }
+
+  // Backup Management Methods
+  loadBackups(page: number = 1, rows: number = 10) {
+    this.isLoadingBackups = true;
+    this.resilienceService.listBackups(page, rows).subscribe({
+      next: (data: any) => {
+        this.backups = data.data.backups || [];
+        this.backupsTotal = data.data.pagination?.total || 0;
+        this.backupsPage = data.data.pagination?.page || page;
+        this.backupsRows = data.data.pagination?.limit || rows;
+        console.log('Backups loaded:', this.backups);
+        this.isLoadingBackups = false;
+      },
+      error: (err: any) => {
+        console.error('Errore nel caricamento dei backup:', err);
+        this.notificationService.handleError(err, 'profile.system-status.backup-list-failed');
+        this.isLoadingBackups = false;
+      }
+    });
+  }
+
+  createBackup() {
+    this.isCreatingBackup = true;
+    this.resilienceService.createBackup().subscribe({
+      next: (data: any) => {
+        this.notificationService.handleSuccess('profile.system-status.backup-created');
+        this.loadBackups(this.backupsPage, this.backupsRows); // Reload current page
+        this.isCreatingBackup = false;
+      },
+      error: (err: any) => {
+        console.error('Errore nella creazione del backup:', err);
+        this.notificationService.handleError(err, 'profile.system-status.backup-creation-failed');
+        this.isCreatingBackup = false;
+      }
+    });
+  }
+
+  restoreBackup(backup: BackupResponse) {
+    this.selectedBackupForRestore = backup;
+    this.isRestoreDialogVisible = true;
+  }
+
+  confirmRestoreBackup() {
+    if (!this.selectedBackupForRestore) return;
+    
+    this.isRestoringBackup = true;
+    this.resilienceService.restoreBackup(this.selectedBackupForRestore.backup_id).subscribe({
+      next: (data: any) => {
+        this.notificationService.handleSuccess('profile.system-status.backup-restored');
+        this.loadBackups(this.backupsPage, this.backupsRows); // Reload current page
+        this.isRestoringBackup = false;
+        this.isRestoreDialogVisible = false;
+        this.selectedBackupForRestore = null;
+      },
+      error: (err: any) => {
+        console.error('Errore nel ripristino del backup:', err);
+        this.notificationService.handleError(err, 'profile.system-status.backup-restore-failed');
+        this.isRestoringBackup = false;
+        this.isRestoreDialogVisible = false;
+        this.selectedBackupForRestore = null;
+      }
+    });
+  }
+
+  cancelRestoreBackup() {
+    this.isRestoreDialogVisible = false;
+    this.selectedBackupForRestore = null;
+  }
+
+  openBackupManagementDialog() {
+    this.isBackupManagementDialogVisible = true;
+    this.loadBackups(1, this.backupsRows); // Load first page
+  }
+
+  onBackupsPageChange(event: any) {
+    const newPage = Math.floor(event.first / event.rows) + 1;
+    if (isNaN(newPage) || newPage < 1) {
+      return;
+    }
+    this.loadBackups(newPage, event.rows);
+  }
+
+  formatBackupSize(size: number): string {
+    if (size === 0) return 'Unknown';
+    const units = ['B', 'KB', 'MB', 'GB'];
+    let unitIndex = 0;
+    let fileSize = size;
+    
+    while (fileSize >= 1024 && unitIndex < units.length - 1) {
+      fileSize /= 1024;
+      unitIndex++;
+    }
+    
+    return `${fileSize.toFixed(1)} ${units[unitIndex]}`;
+  }
+
+  formatBackupDate(dateString: string): string {
+    return new Date(dateString).toLocaleString();
   }
 }

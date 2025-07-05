@@ -43,11 +43,13 @@ export class ResilienceService {
   }
 
   /**
-   * List available backups
-   * @returns Observable with backup list
+   * List available backups with pagination
+   * @param page - Page number (1-based)
+   * @param limit - Number of items per page
+   * @returns Observable with backup list and pagination
    */
-  listBackups(): Observable<ApiResponse<BackupResponse[]>> {
-    return this.http.get<ApiResponse<BackupResponse[]>>(`${this.API_URL}/resilience/backup`, {
+  listBackups(page: number = 1, limit: number = 10): Observable<ApiResponse<{backups: BackupResponse[], pagination: {page: number, limit: number, total: number}}>> {
+    return this.http.get<ApiResponse<{backups: BackupResponse[], pagination: {page: number, limit: number, total: number}}>>(`${this.API_URL}/resilience/backup?page=${page}&limit=${limit}`, {
       headers: this.getHeaders()
     });
   }
