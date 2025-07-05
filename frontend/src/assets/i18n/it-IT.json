@@ -215,6 +215,7 @@
       "degraded": "Degradato",
       "down": "Non operativo",
       "backup-management": "Gestione Backup",
+      "backup-description": "Crea e gestisci backup del database. I backup includono tutti i dati utente, informazioni di autenticazione, profili utente e configurazione del sistema. I backup sono archiviati in modo sicuro e possono essere utilizzati per ripristinare il sistema a uno stato precedente.",
       "backup-overview": "Panoramica Backup",
       "create-backup": "Crea Backup",
       "backup-list": "Lista Backup",
@@ -272,7 +273,15 @@
       "refresh": "Aggiorna",
       "view-audit-logs": "Visualizza log di audit",
       "manage-users": "Gestisci utenti",
-      "no-alerts": "Nessun avviso presente."
+      "no-alerts": "Nessun avviso presente.",
+      "detailed-metrics": "Metriche Dettagliate",
+      "total-requests": "Richieste Totali",
+      "successful-requests": "Richieste Riuscite",
+      "failed-requests": "Richieste Fallite",
+      "avg-response-time": "Tempo Risposta Medio",
+      "top-endpoints": "Endpoint Più Utilizzati",
+      "error-breakdown": "Distribuzione Errori",
+      "status-code": "Codice di Stato"
     },
     "user-management": {
       "search-placeholder": "Cerca utenti per email...",

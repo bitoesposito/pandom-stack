@@ -480,7 +480,7 @@ export class ResilienceService {
       });
       await transporter.verify();
       const responseTime = Date.now() - startTime;
-      if (responseTime < 500) {
+      if (responseTime < 2500) {
         return 'healthy';
       } else if (responseTime < 5000) {
         return 'degraded';

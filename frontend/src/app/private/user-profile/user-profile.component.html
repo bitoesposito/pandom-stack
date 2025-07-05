@@ -76,10 +76,17 @@
         </p-tabPanel>
         <p-tabPanel header="{{ 'profile.tabs.administration' | translate }}" *ngIf="user?.role === 'admin'">
             <div class="flex flex-column gap-3 w-full">
-                <h4>{{ 'profile.tabs.administration' | translate }}</h4>
+
+                <!-- Alerts -->
+                <div class="flex gap-2 justify-content-between align-items-center">
+                    <h4>{{ 'profile.tabs.administration' | translate }}</h4>
+                    <p-button [label]="'profile.administration.refresh' | translate" icon="pi pi-refresh"
+                        severity="secondary" outlined="true" (click)="loadAdminData()"
+                        [loading]="isLoadingAdminMetrics || isLoadingDetailedMetrics" />
+                </div>
 
                 <!-- Loading state -->
-                <div *ngIf="isLoadingAdminMetrics" class="flex justify-content-center p-4">
+                <div *ngIf="isLoadingAdminMetrics || isLoadingDetailedMetrics" class="flex justify-content-center p-4">
                     <i class="pi pi-spin pi-spinner text-xl"></i>
                     <span class="ml-2">{{ 'profile.administration.loading' | translate }}</span>
                 </div>
@@ -134,8 +141,63 @@
                             [disabled]="isLoadingAuditLogs" fluid="true" class="w-full" />
                     </div>
 
-                    <!-- Alerts -->
-                    <h4>{{ 'profile.administration.alerts' | translate }}</h4>
+                    <!-- Detailed Metrics Section -->
+                    <div *ngIf="!isLoadingDetailedMetrics && detailedMetrics" class="border-1 surface-border border-round-md p-3">
+                        <h5 class="m-0 mb-2">{{ 'profile.administration.detailed-metrics' | translate }}</h5>
+                        
+                        <!-- System Performance -->
+                        <div class="grid mb-3">
+                            <div class="col-12 md:col-3">
+                                <div class="flex flex-column gap-1">
+                                    <span class="text-color-secondary text-sm">{{ 'profile.administration.total-requests' | translate }}</span>
+                                    <span class="font-medium text-xl">{{ detailedMetrics.system.totalRequests }}</span>
+                                </div>
+                            </div>
+                            <div class="col-12 md:col-3">
+                                <div class="flex flex-column gap-1">
+                                    <span class="text-color-secondary text-sm">{{ 'profile.administration.successful-requests' | translate }}</span>
+                                    <span class="font-medium text-xl text-green-600">{{ detailedMetrics.system.successfulRequests }}</span>
+                                </div>
+                            </div>
+                            <div class="col-12 md:col-3">
+                                <div class="flex flex-column gap-1">
+                                    <span class="text-color-secondary text-sm">{{ 'profile.administration.failed-requests' | translate }}</span>
+                                    <span class="font-medium text-xl text-red-600">{{ detailedMetrics.system.failedRequests }}</span>
+                                </div>
+                            </div>
+                            <div class="col-12 md:col-3">
+                                <div class="flex flex-column gap-1">
+                                    <span class="text-color-secondary text-sm">{{ 'profile.administration.avg-response-time' | translate }}</span>
+                                    <span class="font-medium text-xl">{{ detailedMetrics.system.averageResponseTime }}ms</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Top Endpoints -->
+                        <div *ngIf="detailedMetrics.system.topEndpoints.length > 0" class="mb-3">
+                            <h6 class="m-0 mb-2">{{ 'profile.administration.top-endpoints' | translate }}</h6>
+                            <div class="flex flex-column gap-1">
+                                <div *ngFor="let endpoint of detailedMetrics.system.topEndpoints.slice(0, 5)" 
+                                     class="flex justify-content-between align-items-center p-2 surface-50 border-round">
+                                    <span class="text-sm font-medium">{{ endpoint.path }}</span>
+                                    <p-tag [value]="endpoint.count.toString()" severity="info" [rounded]="true"></p-tag>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Error Breakdown -->
+                        <div *ngIf="detailedMetrics.system.errorBreakdown.length > 0" class="mb-3">
+                            <h6 class="m-0 mb-2">{{ 'profile.administration.error-breakdown' | translate }}</h6>
+                            <div class="flex flex-column gap-1">
+                                <div *ngFor="let error of detailedMetrics.system.errorBreakdown.slice(0, 5)" 
+                                     class="flex justify-content-between align-items-center p-2 surface-50 border-round">
+                                    <span class="text-sm font-medium">{{ 'profile.administration.status-code' | translate }} {{ error.statusCode }}</span>
+                                    <p-tag [value]="error.count.toString()" severity="danger" [rounded]="true"></p-tag>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="flex flex-column gap-2">
                         <div *ngIf="adminMetrics.alerts.length === 0"
                             class="flex align-items-center gap-2 p-2 border-1 surface-border border-round">
@@ -152,13 +214,6 @@
                             <span class="flex-1">{{ alert.message }}</span>
                             <small class="text-color-secondary">{{ formatSystemTimestamp(alert.timestamp) }}</small>
                         </div>
-                    </div>
-
-                    <!-- Action buttons -->
-                    <div class="flex gap-2 justify-content-end">
-                        <p-button [label]="'profile.administration.refresh' | translate" icon="pi pi-refresh"
-                            severity="secondary" outlined="true" (click)="loadAdminMetrics()"
-                            [loading]="isLoadingAdminMetrics" />
                     </div>
                 </div>
 
@@ -180,6 +235,16 @@
 
                 <!-- System status display -->
                 <div *ngIf="!isLoadingSystemStatus && systemStatus" class="flex flex-column gap-3">
+
+                    <!-- Service status -->
+                    <div class="flex gap-2 justify-content-between align-items-center">
+                        <h4>{{ 'profile.system-status.services' | translate }}</h4>
+
+                        <p-button [label]="'profile.system-status.refresh' | translate" icon="pi pi-refresh"
+                            severity="secondary" outlined="true" (click)="loadSystemStatus()"
+                            [loading]="isLoadingSystemStatus" />
+                    </div>
+                    
                     <!-- Overall system status -->
                     <div class="border-1 surface-border border-round-md p-3">
                         <div class="flex align-items-center justify-content-between">
@@ -215,15 +280,6 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
-
-                    <!-- Service status -->
-                    <div class="flex gap-2 justify-content-between align-items-center">
-                        <h4>{{ 'profile.system-status.services' | translate }}</h4>
-
-                        <p-button [label]="'profile.system-status.refresh' | translate" icon="pi pi-refresh"
-                            severity="secondary" outlined="true" (click)="loadSystemStatus()"
-                            [loading]="isLoadingSystemStatus" />
                     </div>
 
                     <div class="grid">
@@ -295,6 +351,8 @@
                     </div>
 
                     <h4>{{ 'profile.system-status.backup-management' | translate }}</h4>
+                    <!-- Backup Description -->
+                    <p class="text-color-secondary text-sm">{{ 'profile.system-status.backup-description' | translate }}</p>
                     <!-- Backup Management Button -->
                     <p-button [label]="'profile.system-status.backup-management' | translate" icon="pi pi-database"
                         severity="secondary" outlined="true" (click)="openBackupManagementDialog()" fluid="true"

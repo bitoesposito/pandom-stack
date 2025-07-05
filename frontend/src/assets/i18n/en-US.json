@@ -232,6 +232,7 @@
       "storage": "Storage",
       "email": "Email",
       "backup-management": "Backup Management",
+      "backup-description": "Create and manage database backups. Backups include all user data, authentication information, user profiles, and system configuration. Backups are stored securely and can be used to restore the system to a previous state.",
       "backup-list": "Backup List",
       "create-backup": "Create Backup",
       "restore-warning": "This action will restore the system to the state of the selected backup. All current data will be replaced. This action cannot be undone.",
@@ -271,7 +272,15 @@
       "alerts": "Alerts",
       "no-alerts": "No alerts present.",
       "refresh": "Refresh",
-      "error": "Failed to load administration data. Please try again later."
+      "error": "Failed to load administration data. Please try again later.",
+      "detailed-metrics": "Detailed Metrics",
+      "total-requests": "Total Requests",
+      "successful-requests": "Successful Requests",
+      "failed-requests": "Failed Requests",
+      "avg-response-time": "Avg Response Time",
+      "top-endpoints": "Top Endpoints",
+      "error-breakdown": "Error Breakdown",
+      "status-code": "Status Code"
     },
     "user-management": {
       "search-placeholder": "Search users by email...",

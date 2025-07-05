@@ -3,7 +3,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { ApiResponse } from '../models/api.models';
-import { SystemMetricsResponse, UserManagementResponse, AuditLogsResponse } from '../models/admin.models';
+import { SystemMetricsResponse, DetailedSystemMetricsResponse, UserManagementResponse, AuditLogsResponse } from '../models/admin.models';
 import { AuthService } from './auth.service';
 import { tap, catchError } from 'rxjs/operators';
 
@@ -29,6 +29,16 @@ export class AdminService {
    */
   getMetrics(): Observable<ApiResponse<SystemMetricsResponse>> {
     return this.http.get<ApiResponse<SystemMetricsResponse>>(`${this.API_URL}/admin/metrics`, {
+      headers: this.getHeaders()
+    });
+  }
+
+  /**
+   * Get detailed system metrics
+   * @returns Observable with detailed system metrics
+   */
+  getDetailedMetrics(): Observable<ApiResponse<DetailedSystemMetricsResponse>> {
+    return this.http.get<ApiResponse<DetailedSystemMetricsResponse>>(`${this.API_URL}/admin/metrics/detailed`, {
       headers: this.getHeaders()
     });
   }

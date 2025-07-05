@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { LoggerService } from './common/services/logger.service';
+import { MetricsInterceptor } from './common/interceptors/metrics.interceptor';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -75,6 +76,10 @@ async function bootstrap() {
       exposedHeaders: ['Content-Range', 'X-Content-Range'],
       maxAge: 3600
     });
+    
+    // Apply global metrics interceptor
+    const metricsInterceptor = app.get(MetricsInterceptor);
+    app.useGlobalInterceptors(metricsInterceptor);
     
     // Set global prefix in case of SSL configuration with nginx
     // app.setGlobalPrefix('backend');

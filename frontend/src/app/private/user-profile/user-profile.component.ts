@@ -19,7 +19,7 @@ import { TooltipModule } from 'primeng/tooltip';
 import { InputTextModule } from 'primeng/inputtext';
 import { FormsModule } from '@angular/forms';
 import { SystemStatusResponse, BackupResponse } from '../../models/resilience.models';
-import { SystemMetricsResponse } from '../../models/admin.models';
+import { SystemMetricsResponse, DetailedSystemMetricsResponse } from '../../models/admin.models';
 
 @Component({
   selector: 'app-user-profile',
@@ -50,7 +50,9 @@ export class UserProfileComponent implements OnInit {
   systemStatus: SystemStatusResponse | null = null;
   isLoadingSystemStatus: boolean = false;
   adminMetrics: SystemMetricsResponse | null = null;
+  detailedMetrics: DetailedSystemMetricsResponse | null = null;
   isLoadingAdminMetrics: boolean = false;
+  isLoadingDetailedMetrics: boolean = false;
   
   // Backup management
   backups: BackupResponse[] = [];
@@ -118,9 +120,9 @@ export class UserProfileComponent implements OnInit {
   onTabChange(event: any): void {
     // event.index contiene l'indice del tab attivo
     console.log('[DEBUG] Tab changed, event:', event);
-    if (event.index === 1 && this.user?.role === 'admin' && !this.adminMetrics) {
-      console.log('[DEBUG] Trigger loadAdminMetrics (tab 1, admin)');
-      this.loadAdminMetrics();
+    if (event.index === 1 && this.user?.role === 'admin') {
+      console.log('[DEBUG] Trigger loadAdminData (tab 1, admin)');
+      this.loadAdminData();
     }
     if (event.index === 2 && this.user?.role === 'admin' && !this.systemStatus) {
       console.log('[DEBUG] Trigger loadSystemStatus (tab 2, admin)');
@@ -190,9 +192,12 @@ export class UserProfileComponent implements OnInit {
     });
   }
 
-  loadAdminMetrics() {
-    console.log('[DEBUG] Chiamo loadAdminMetrics');
+  loadAdminData() {
+    console.log('[DEBUG] Chiamo loadAdminData');
     this.isLoadingAdminMetrics = true;
+    this.isLoadingDetailedMetrics = true;
+    
+    // Carica metriche base
     this.adminService.getMetrics().subscribe({
       next: (data: any) => {
         console.log('[DEBUG] Risposta admin metrics:', data);
@@ -203,6 +208,20 @@ export class UserProfileComponent implements OnInit {
         console.error('[DEBUG] Errore nel recupero delle metriche admin:', err);
         this.notificationService.handleError(err, 'profile.administration.error');
         this.isLoadingAdminMetrics = false;
+      }
+    });
+
+    // Carica metriche dettagliate
+    this.adminService.getDetailedMetrics().subscribe({
+      next: (data: any) => {
+        console.log('[DEBUG] Risposta detailed metrics:', data);
+        this.detailedMetrics = data.data;
+        this.isLoadingDetailedMetrics = false;
+      },
+      error: (err: any) => {
+        console.error('[DEBUG] Errore nel recupero delle metriche dettagliate:', err);
+        this.notificationService.handleError(err, 'profile.administration.error');
+        this.isLoadingDetailedMetrics = false;
       }
     });
   }

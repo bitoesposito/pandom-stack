@@ -24,6 +24,35 @@ export interface SystemMetricsResponse {
   }>;
 }
 
+export interface DetailedSystemMetricsResponse {
+  system: {
+    totalRequests: number;
+    successfulRequests: number;
+    failedRequests: number;
+    averageResponseTime: number;
+    errorRate: number;
+    requestsPerMinute: number;
+    uniqueUsers: number;
+    topEndpoints: Array<{path: string, count: number}>;
+    errorBreakdown: Array<{statusCode: number, count: number}>;
+  };
+  hourly: Array<{
+    hour: string;
+    requests: number;
+    errors: number;
+    avgResponseTime: number;
+    uniqueUsers: number;
+  }>;
+  alerts: Array<{
+    id: string;
+    type: 'error' | 'warning' | 'info';
+    message: string;
+    timestamp: string;
+    resolved: boolean;
+  }>;
+  timestamp: string;
+}
+
 export interface UserManagementResponse {
   users: Array<{
     uuid: string;

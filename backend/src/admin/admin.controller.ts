@@ -64,6 +64,15 @@ export class AdminController {
     }
 
     /**
+     * Detailed system metrics
+     * GET /admin/metrics/detailed
+     */
+    @Get('metrics/detailed')
+    async getDetailedMetrics(@Req() req: AuthenticatedAdminRequest): Promise<ApiResponseDto<any>> {
+        return this.adminService.getDetailedMetrics();
+    }
+
+    /**
      * View audit logs
      * GET /admin/audit-logs
      */
