@@ -91,6 +91,7 @@ export class MetricsService {
     });
     const topEndpoints = Array.from(endpointCounts.entries())
       .map(([path, count]) => ({ path, count }))
+      .filter(e => e.path !== 'GET /admin/metrics' && e.path !== 'GET /admin/metrics/detailed')
       .sort((a, b) => b.count - a.count)
       .slice(0, 10);
 

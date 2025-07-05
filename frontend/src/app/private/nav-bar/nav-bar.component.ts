@@ -41,6 +41,7 @@ export class NavBarComponent implements OnInit {
   isDarkMode$;
   updateAvailable$;
   isOnline$;
+  canInstallPwa$;
   user: any = {};
   
   // Language selector properties
@@ -61,6 +62,7 @@ export class NavBarComponent implements OnInit {
     this.isDarkMode$ = this.themeService.isDarkMode$;
     this.updateAvailable$ = this.pwaService.updateAvailable;
     this.isOnline$ = this.pwaService.isOnline;
+    this.canInstallPwa$ = this.pwaService.canInstall;
     this.currentLanguage$ = this.languageService.currentLanguage$;
   }
 
@@ -125,5 +127,9 @@ export class NavBarComponent implements OnInit {
 
   toggleDarkMode() {
     this.themeService.toggleDarkMode();
+  }
+
+  async installPwa() {
+    await this.pwaService.promptInstall();
   }
 }

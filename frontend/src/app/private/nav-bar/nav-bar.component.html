@@ -70,6 +70,17 @@
                 <hr class="surface-border my-1">
 
                 <div class="flex flex-column">
+                    <!-- PWA Install Button -->
+                    <p-button 
+                        *ngIf="canInstallPwa$ | async"
+                        styleClass="justify-content-start"
+                        icon="pi pi-download"
+                        [label]="'pwa.install' | translate"
+                        severity="secondary"
+                        text="true"
+                        (click)="installPwa()"
+                        fluid="true"
+                        iconPos="left"/>
                     <!-- Update Available Button -->
                     <p-button 
                     *ngIf="updateAvailable$ | async"

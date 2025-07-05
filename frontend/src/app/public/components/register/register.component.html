@@ -41,8 +41,8 @@
           <p class="text-center uppercase text-color-secondary">{{ 'auth.register.or' | translate }}</p>
 
           <div class="flex flex-column sm:flex-row gap-2 w-full">
-            <p-button icon="pi pi-google" [label]="('auth.register.register-with' | translate) + ' Google'" outlined="true" styleClass="w-full" type="button" [disabled]="socialLoading" [loading]="socialLoading" fluid="true" class="w-full" (click)="registerWithGoogle($event)"/>
-            <p-button icon="pi pi-apple" [label]="('auth.register.register-with' | translate) + ' Apple'" outlined="true" styleClass="w-full" type="button" [disabled]="socialLoading" [loading]="socialLoading" fluid="true" class="w-full" (click)="registerWithApple($event)"/>
+            <p-button icon="pi pi-google" [label]="('auth.register.register-with' | translate) + ' Google'" outlined="true" styleClass="w-full white-space-nowrap" type="button" [disabled]="socialLoading" [loading]="socialLoading" fluid="true" class="w-full" (click)="registerWithGoogle($event)"/>
+            <p-button icon="pi pi-apple" [label]="('auth.register.register-with' | translate) + ' Apple'" outlined="true" styleClass="w-full white-space-nowrap" type="button" [disabled]="socialLoading" [loading]="socialLoading" fluid="true" class="w-full" (click)="registerWithApple($event)"/>
           </div>
         </div>
       </div>

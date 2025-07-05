@@ -12,6 +12,8 @@ import { NotificationService } from './notification.service';
 export class PwaService {
   private updateAvailable$ = new BehaviorSubject<boolean>(false);
   private isOnline$ = new BehaviorSubject<boolean>(navigator.onLine);
+  private canInstall$ = new BehaviorSubject<boolean>(false);
+  private deferredPrompt: any = null;
 
   constructor(
     private swUpdate: SwUpdate,
@@ -20,6 +22,16 @@ export class PwaService {
     private notification: NotificationService
   ) {
     this.initializePWA();
+    window.addEventListener('beforeinstallprompt', (event: any) => {
+      event.preventDefault();
+      this.deferredPrompt = event;
+      this.canInstall$.next(true);
+    });
+    window.addEventListener('appinstalled', () => {
+      this.canInstall$.next(false);
+      this.deferredPrompt = null;
+      this.notification.handleSuccess('PWA installata con successo!');
+    });
   }
 
   private initializePWA(): void {
@@ -66,6 +78,10 @@ export class PwaService {
     return this.isOnline$.asObservable();
   }
 
+  get canInstall() {
+    return this.canInstall$.asObservable();
+  }
+
   async activateUpdate(): Promise<void> {
     if (this.swUpdate.isEnabled) {
       await this.swUpdate.activateUpdate();
@@ -101,5 +117,19 @@ export class PwaService {
       isOnline: navigator.onLine,
       canWorkOffline: 'serviceWorker' in navigator && 'indexedDB' in window
     };
+  }
+
+  async promptInstall(): Promise<void> {
+    if (this.deferredPrompt) {
+      this.deferredPrompt.prompt();
+      const { outcome } = await this.deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        this.notification.handleSuccess('Installazione avviata!');
+      } else {
+        this.notification.handleInfo('Installazione annullata.');
+      }
+      this.deferredPrompt = null;
+      this.canInstall$.next(false);
+    }
   }
 } 

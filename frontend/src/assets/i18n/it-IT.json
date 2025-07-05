@@ -210,7 +210,7 @@
       "postgresql": "PostgreSQL",
       "minio": "Archiviazione MinIO",
       "smtp": "Server SMTP",
-      "refresh": "Aggiorna Stato",
+      "refresh": "Aggiorna",
       "healthy": "Operativo",
       "degraded": "Degradato",
       "down": "Non operativo",
@@ -362,12 +362,7 @@
     "update-available": "Aggiornamento disponibile",
     "offline-mode": "Sei attualmente offline. Alcune funzionalità potrebbero essere limitate.",
     "update-error": "Impossibile aggiornare l'applicazione",
-    "install": {
-      "title": "Installa PANDOM",
-      "description": "Installa questa app sul tuo dispositivo per un accesso rapido e facile quando sei in movimento.",
-      "install": "Installa",
-      "later": "Non ora"
-    }
+    "install": "Installa app"
   },
   "common": {
     "dark-mode": "Modalità Scura",

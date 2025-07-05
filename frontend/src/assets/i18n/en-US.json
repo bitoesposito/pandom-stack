@@ -258,7 +258,8 @@
         "available": "Available"
       },
       "loading-backups": "Loading backups...",
-      "no-backups": "No backups available."
+      "no-backups": "No backups available.",
+      "refresh": "Refresh"
     },
     "administration": {
       "loading": "Loading administration data...",
@@ -346,12 +347,7 @@
     "update-available": "Update available",
     "offline-mode": "You are currently offline. Some features may be limited.",
     "update-error": "Failed to update the application",
-    "install": {
-      "title": "Install PANDOM",
-      "description": "Install this app on your device for quick and easy access when you're on the go.",
-      "install": "Install",
-      "later": "Not now"
-    }
+    "install": "Install app"
   },
   "common": {
     "dark-mode": "Dark Mode",
