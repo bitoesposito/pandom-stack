@@ -1,12 +1,38 @@
 services:
-  # Single backend instance for development
+
+  # Nginx reverse proxy with load balancing
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - nginx_logs:/var/log/nginx
+    depends_on:
+      - backend
+      - frontend
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  # Multiple backend instances for load balancing
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
-      target: development
+    volumes:
+      - ./backend:/src/app
+      - /src/app/node_modules
+    command: npm run start:dev
+    env_file:
+      - .env
     environment:
-      - NODE_ENV=development
       - JWT_SECRET=${JWT_SECRET}
       - JWT_EXPIRATION=${JWT_EXPIRATION}
       - DATABASE_URL=${DATABASE_URL}
@@ -25,17 +51,6 @@ services:
       - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
       - MINIO_USE_SSL=${MINIO_USE_SSL}
       - MINIO_BUCKET_NAME=${MINIO_BUCKET_NAME}
-      # Configurazione SMTP
-      - SMTP_HOST=${SMTP_HOST}
-      - SMTP_PORT=${SMTP_PORT}
-      - SMTP_USER=${SMTP_USER}
-      - SMTP_PASS=${SMTP_PASS}
-      - SMTP_FROM=${SMTP_FROM}
-    ports:
-      - "3000:3000"
-    volumes:
-      - ./backend:/backend
-      - /backend/node_modules
     depends_on:
       postgres:
         condition: service_healthy
@@ -45,13 +60,37 @@ services:
       timeout: 10s
       retries: 3
     restart: unless-stopped
-  
+
+  frontend:
+    build:
+      dockerfile: Dockerfile
+      context: ./frontend
+      target: development
+    volumes:
+      - ./frontend:/frontend
+      - /frontend/node_modules
+    environment:
+      - NODE_ENV=development
+    depends_on:
+      - backend
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4200"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
   backend-seed:
     build:
       context: ./backend
       dockerfile: Dockerfile
-      target: development
-    command: sh -c "sleep 10 && npm run seed-admin"
+    volumes:
+      - ./backend:/src/app
+      - /src/app/node_modules
+    working_dir: /src/app
+    command: sh -c "sleep 10 && ls -la && ls -la src/utilis/ && npm run seed-admin"
+    env_file:
+      - .env
     environment:
       - DATABASE_URL=${DATABASE_URL}
       - POSTGRES_HOST=postgres
@@ -67,29 +106,6 @@ services:
         condition: service_started
     restart: "no"
 
-  # Single frontend instance for development
-  frontend:
-    build:
-      dockerfile: Dockerfile
-      context: ./frontend
-      target: development
-    environment:
-      - NODE_ENV=development
-    ports:
-      - "4200:4200"
-    volumes:
-      - ./frontend:/frontend
-      - /frontend/node_modules
-    depends_on:
-      - backend
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:4200"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    restart: unless-stopped
-
-  # Database
   postgres:
     image: postgres:17
     environment:
@@ -108,7 +124,6 @@ services:
       timeout: 5s
       retries: 5
 
-  # MinIO for file storage
   minio:
     image: minio/minio
     ports:
@@ -126,6 +141,38 @@ services:
       timeout: 5s
       retries: 5
 
+  # Backup automation services
+  backup-cron:
+    image: curlimages/curl:latest
+    volumes:
+      - ./backend/backups:/backups
+      - ./scripts:/scripts
+    entrypoint: ["/bin/sh", "-c", "while true; do /scripts/backup-cron.sh; sleep 21600; done"]
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  cleanup-backups:
+    image: alpine:latest
+    volumes:
+      - ./backend/backups:/backups
+      - ./scripts:/scripts
+    entrypoint: ["/bin/sh", "-c", "while true; do /scripts/cleanup-backups.sh; sleep 86400; done"]
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  verify-backups:
+    image: alpine:latest
+    volumes:
+      - ./backend/backups:/backups
+      - ./scripts:/scripts
+    entrypoint: ["/bin/sh", "-c", "while true; do /scripts/verify-backups.sh; sleep 43200; done"]
+    depends_on:
+      - backend
+    restart: unless-stopped
+
 volumes:
   postgres_data:
-  minio_data: 
+  minio_data:
+  nginx_logs:

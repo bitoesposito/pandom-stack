@@ -1,4 +1,4 @@
-import { Controller, Get, Delete, Param, HttpCode, HttpStatus, UseGuards, Req, Res } from '@nestjs/common';
+import { Controller, Get, Delete, Param, HttpCode, HttpStatus, UseGuards, Req, Res, Query } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ApiResponseDto } from '../common/common.interface';
 import { SecurityService } from './security.service';
@@ -29,8 +29,14 @@ export class SecurityController {
      */
     @Get('logs')
     @UseGuards(JwtAuthGuard)
-    async getSecurityLogs(@Req() req: AuthenticatedRequest): Promise<ApiResponseDto<any>> {
-        return this.securityService.getSecurityLogs(req.user.uuid, req);
+    async getSecurityLogs(
+        @Req() req: AuthenticatedRequest,
+        @Query('page') page: string = '1',
+        @Query('limit') limit: string = '10'
+    ): Promise<ApiResponseDto<any>> {
+        const pageNum = parseInt(page, 10) || 1;
+        const limitNum = parseInt(limit, 10) || 10;
+        return this.securityService.getSecurityLogs(req.user.uuid, pageNum, limitNum, req);
     }
 
     /**

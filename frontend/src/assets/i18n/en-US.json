@@ -112,83 +112,194 @@
   "profile": {
     "tabs": {
       "profile": "Profile",
-      "settings": "Settings",
-      "administration": "Administration"
+      "administration": "Administration",
+      "system-status": "System Status"
     },
     "dialogs": {
       "edit-profile": "Edit Profile",
-      "download-data": "Download your data",
-      "delete-account": "Delete account",
+      "download-data": "Download Data",
+      "delete-account": "Delete Account",
       "security-logs": "Security Logs",
-      "change-password": "Change Password"
+      "user-management": "User Management"
     },
     "security-logs": {
       "description": "View your recent security activities and access logs.",
       "loading": "Loading security logs...",
       "no-logs": "No security logs found.",
-      "error": "Failed to load security logs. Please try again later.",
+      "error": "Error loading security logs. Please try again later.",
       "table": {
         "action": "Action",
         "ip-address": "IP Address",
         "user-agent": "User Agent",
-        "timestamp": "Timestamp",
+        "timestamp": "Date and Time",
         "status": "Status",
         "details": "Details"
       },
       "actions": {
-        "login": "Login",
-        "logout": "Logout",
-        "password-change": "Password Change",
-        "password-reset": "Password Reset",
-        "account-deletion": "Account Deletion",
-        "session-creation": "Session Creation",
-        "session-termination": "Session Termination",
-        "failed-login": "Failed Login Attempt",
-        "suspicious-activity": "Suspicious Activity",
         "USER_LOGIN_SUCCESS": "Login",
+        "USER_LOGIN_FAILED": "Login failed",
         "USER_LOGOUT": "Logout",
-        "USER_RESET_PASSWORD": "Password Reset",
-        "USER_CHANGE_PASSWORD": "Password Change",
-        "USER_DELETE_ACCOUNT": "Account Deletion",
-        "SUSPICIOUS_ACTIVITY": "Suspicious Activity",
-        "DATA_EXPORT": "Data Export",
-        "SESSION_CREATION": "Session Creation",
-        "SESSION_TERMINATION": "Session Termination"
+        "USER_REGISTER": "Registration",
+        "USER_VERIFY_EMAIL": "Email verification",
+        "USER_RESET_PASSWORD": "Password reset",
+        "USER_CHANGE_PASSWORD": "Password change",
+        "ACCOUNT_LOCKED": "Account locked",
+        "ACCOUNT_UNLOCKED": "Account unlocked",
+        "SUSPICIOUS_ACTIVITY": "Suspicious activity",
+        "BRUTE_FORCE_ATTEMPT": "Brute force attempt",
+        "DATA_ACCESS": "Data access",
+        "DATA_DOWNLOAD": "Data download",
+        "DATA_EXPORT": "Data export",
+        "USER_ROLE_CHANGED": "User role changed",
+        "USER_STATUS_CHANGED": "User status changed",
+        "USER_DELETED": "User deleted",
+        "SESSION_CREATED": "Session created",
+        "SESSION_EXPIRED": "Session expired",
+        "SESSION_REVOKED": "Session revoked"
       },
       "status": {
-        "success": "Success",
-        "failed": "Failed",
-        "pending": "Pending"
-      }
+        "SUCCESS": "SUCCESS",
+        "FAILED": "FAILED",
+        "WARNING": "WARNING"
+      },
+      "details": {
+        "login_method": "Login method",
+        "reset_method": "Reset method",
+        "verification_method": "Verification method",
+        "logout_method": "Logout method",
+        "activity": "Activity",
+        "reason": "Reason",
+        "attempt_count": "Attempt count",
+        "timestamp": "Date and time"
+      },
+      "no-results-on-page": "No results on this page. Returning to the first page.",
+      "pagination-reset": "Page reset due to empty results."
+    },
+    "audit-logs": {
+      "loading": "Loading audit logs...",
+      "no-logs": "No audit logs found.",
+      "error": "Failed to load audit logs. Please try again later.",
+      "table": {
+        "action": "Action",
+        "user": "User",
+        "ip-address": "IP Address",
+        "user-agent": "User Agent",
+        "timestamp": "Date and Time",
+        "details": "Details"
+      },
+      "no-results-on-page": "No results on this page. Returning to the first page.",
+      "pagination-reset": "Page reset due to empty results."
     },
     "download": {
-      "description": "Download a copy of all your personal data stored in our system. This includes your profile information, account details, and activity logs.",
-      "info": "Your data will be exported in a secure format and includes all information we have about your account.",
-      "expires": "The download link will expire after 24 hours for security reasons.",
-      "confirm": "Download Data",
-      "success": "Your personal data download has started successfully!",
-      "error": "Failed to download your personal data. Please try again later."
+      "description": "You can download a copy of your personal data.",
+      "info": "The file will be available for a limited time.",
+      "expires": "The link will expire after 10 minutes.",
+      "confirm": "Download",
+      "success": "Data downloaded successfully.",
+      "error": "Error downloading data."
     },
     "change-password": {
       "description": "To change your password, we will send a verification code to your email address. You will then be redirected to the password reset page where you can set your new password.",
-      "info": "A verification code will be sent to your registered email address.",
+      "info": "You will receive an email with the verification code.",
       "warning": "You will be logged out after the verification code is sent and redirected to the password reset page.",
-      "confirm": "Send Verification Code",
-      "sending": "Sending verification code...",
+      "sending": "Sending...",
+      "confirm": "Change password",
+      "no-email": "User email not available.",
       "email-sent": "Verification code sent successfully! You will be redirected to the password reset page.",
-      "email-failed": "Failed to send verification code. Please try again later.",
-      "no-email": "No email address found for your account."
+      "email-failed": "Error sending password reset email."
     },
     "delete-account": {
-      "warning-title": "Delete Account",
-      "description": "This action will permanently delete your account and all associated data. This process cannot be undone.",
-      "info": "All your personal data, settings, and account information will be permanently removed.",
-      "irreversible": "This action is irreversible and cannot be undone.",
-      "data-retention": "Some data may be retained for legal or regulatory purposes as required by law.",
-      "deleting": "Deleting your account...",
-      "confirm": "Delete Account",
-      "success": "Your account has been successfully deleted. You will be redirected to the login page.",
-      "failed": "Failed to delete your account. Please try again later."
+      "warning-title": "Warning: this action is irreversible!",
+      "description": "Deleting your account will result in the loss of all associated data. This action cannot be undone.",
+      "info": "Your data will be permanently removed.",
+      "irreversible": "This action is irreversible!",
+      "data-retention": "Some data may be retained for legal reasons.",
+      "deleting": "Deleting...",
+      "confirm": "Confirm deletion",
+      "success": "Account deleted successfully.",
+      "failed": "Unable to delete account. Please try again later."
+    },
+    "system-status": {
+      "loading": "Loading system status...",
+      "error": "Failed to load system status. Please try again later.",
+      "overall-status": "Overall status",
+      "last-check": "Last check",
+      "system-info": "System info",
+      "version": "Version",
+      "uptime": "Uptime",
+      "services": "Services",
+      "database": "Database",
+      "storage": "Storage",
+      "email": "Email",
+      "backup-management": "Backup Management",
+      "backup-description": "Create and manage database backups. Backups include all user data, authentication information, user profiles, and system configuration. Backups are stored securely and can be used to restore the system to a previous state.",
+      "backup-list": "Backup List",
+      "create-backup": "Create Backup",
+      "restore-warning": "This action will restore the system to the state of the selected backup. All current data will be replaced. This action cannot be undone.",
+      "restoring": "Restoring...",
+      "restore-confirm": "Are you sure you want to restore this backup?",
+      "actions": {
+        "restore": "Restore"
+      },
+      "table": {
+        "backup-id": "Backup ID",
+        "file": "File",
+        "size": "Size",
+        "created": "Created",
+        "status": "Status",
+        "actions": "Actions"
+      },
+      "status": {
+        "healthy": "Healthy",
+        "degraded": "Degraded",
+        "down": "Down",
+        "completed": "Completed",
+        "restored": "Restored",
+        "available": "Available"
+      },
+      "loading-backups": "Loading backups...",
+      "no-backups": "No backups available."
+    },
+    "administration": {
+      "loading": "Loading administration data...",
+      "overview": "Overview",
+      "total-users": "Total users",
+      "active-users": "Active users",
+      "new-users-today": "New users today",
+      "error-rate": "Error rate",
+      "manage-users": "Manage users",
+      "view-audit-logs": "View audit logs",
+      "alerts": "Alerts",
+      "no-alerts": "No alerts present.",
+      "refresh": "Refresh",
+      "error": "Failed to load administration data. Please try again later.",
+      "detailed-metrics": "Detailed Metrics",
+      "total-requests": "Total Requests",
+      "successful-requests": "Successful Requests",
+      "failed-requests": "Failed Requests",
+      "avg-response-time": "Avg Response Time",
+      "top-endpoints": "Top Endpoints",
+      "error-breakdown": "Error Breakdown",
+      "status-code": "Status Code"
+    },
+    "user-management": {
+      "search-placeholder": "Search users by email...",
+      "loading": "Loading users...",
+      "no-users": "No users found.",
+      "table": {
+        "name": "Name",
+        "email": "Email",
+        "role": "Role",
+        "verified": "Verified",
+        "created": "Created",
+        "last-login": "Last login",
+        "actions": "Actions"
+      },
+      "actions": {
+        "delete": "Delete user"
+      },
+      "delete-success": "User deleted successfully.",
+      "delete-error": "Error deleting user."
     }
   },
   "dashboard": {

@@ -6,6 +6,7 @@ import { User } from '../auth/entities/user.entity';
 import { UserProfile } from '../users/entities/user-profile.entity';
 import { UserManagementResponseDto, SystemMetricsResponseDto, AuditLogsResponseDto } from './admin.dto';
 import { AuditService, AuditEventType } from '../common/services/audit.service';
+import { MetricsService } from '../common/services/metrics.service';
 import { UserRole } from '../auth/auth.interface';
 
 /**
@@ -22,40 +23,48 @@ export class AdminService {
     @InjectRepository(UserProfile)
     private readonly userProfileRepository: Repository<UserProfile>,
     private readonly auditService: AuditService,
+    private readonly metricsService: MetricsService,
   ) { }
 
   /**
    * Get users for management
    * @param page - Page number
    * @param limit - Items per page
+   * @param search - Search query
    * @returns Promise<ApiResponseDto<UserManagementResponseDto>>
    */
-  async getUsers(page: number = 1, limit: number = 10): Promise<ApiResponseDto<UserManagementResponseDto>> {
+  async getUsers(page: number = 1, limit: number = 10, search?: string): Promise<ApiResponseDto<UserManagementResponseDto>> {
     try {
-      this.logger.log('Getting users for admin management', { page, limit });
+      this.logger.log('Getting users for admin management', { page, limit, search });
 
       const skip = (page - 1) * limit;
 
-      // Get users with profiles
-      const [users, total] = await this.userRepository.findAndCount({
-        relations: ['profile'],
-        skip,
-        take: limit,
-        order: { created_at: 'DESC' }
-      });
+      // Build query
+      const query = this.userRepository.createQueryBuilder('user')
+        .leftJoinAndSelect('user.profile', 'profile')
+        .where('user.is_active = :active', { active: true });
+
+      if (search && search.trim() !== '') {
+        query.andWhere(
+          '(user.email ILIKE :search OR profile.metadata->>\'display_name\' ILIKE :search)',
+          { search: `%${search}%` }
+        );
+      }
+
+      query.skip(skip).take(limit).orderBy('user.created_at', 'DESC');
+
+      const [users, total] = await query.getManyAndCount();
 
       // Transform users for admin view
       const transformedUsers = users.map(user => ({
         uuid: user.uuid,
         email: user.email,
-        role: user.role as 'user' | 'admin',
-        status: user.is_active ? 'active' as const : 'suspended' as const,
+        role: user.role,
+        is_verified: user.is_verified,
         created_at: user.created_at.toISOString(),
-        last_login: user.last_login_at?.toISOString(),
+        last_login_at: user.last_login_at?.toISOString(),
         profile: user.profile ? {
-          first_name: '',
-          last_name: '',
-          phone: user.profile.metadata?.phone
+          display_name: user.profile.metadata?.display_name
         } : undefined
       }));
 
@@ -75,62 +84,6 @@ export class AdminService {
       return ApiResponseDto.success(response, 'Users retrieved successfully');
     } catch (error) {
       this.logger.error('Failed to get users', { error: error.message });
-      throw error;
-    }
-  }
-
-  /**
-   * Suspend user account
-   * @param uuid - User UUID
-   * @param adminId - Admin user ID
-   * @param adminEmail - Admin email
-   * @returns Promise<ApiResponseDto<null>>
-   */
-  async suspendUser(uuid: string, adminId: string, adminEmail: string): Promise<ApiResponseDto<null>> {
-    try {
-      this.logger.log('Suspending user account', { uuid, adminId });
-
-      // Verify user exists
-      const user = await this.userRepository.findOne({
-        where: { uuid }
-      });
-
-      if (!user) {
-        throw new NotFoundException('User not found');
-      }
-
-      // Prevent suspending admin users
-      if (user.role === UserRole.admin) {
-        throw new BadRequestException('Cannot suspend admin users');
-      }
-
-      // Prevent suspending self
-      if (user.uuid === adminId) {
-        throw new BadRequestException('Cannot suspend your own account');
-      }
-
-      // Update user status
-      user.is_active = false;
-      await this.userRepository.save(user);
-
-      // Log the suspension
-      await this.auditService.log({
-        event_type: AuditEventType.USER_STATUS_CHANGED,
-        user_id: adminId,
-        user_email: adminEmail,
-        status: 'SUCCESS',
-        details: {
-          action: 'suspend_user',
-          target_user_id: uuid,
-          target_user_email: user.email,
-          timestamp: new Date().toISOString()
-        }
-      });
-
-      this.logger.log('User suspended successfully', { uuid, adminId });
-      return ApiResponseDto.success(null, 'User suspended successfully');
-    } catch (error) {
-      this.logger.error('Failed to suspend user', { uuid, error: error.message });
       throw error;
     }
   }
@@ -225,107 +178,82 @@ export class AdminService {
     try {
       this.logger.log('Getting system metrics');
 
-      // Get user statistics
+      // Get real system metrics from MetricsService
+      const systemMetrics = await this.metricsService.getSystemMetrics();
+      const hourlyMetrics = await this.metricsService.getHourlyMetrics();
+      const alerts = await this.metricsService.getAlerts();
+      
+      // Get user activity metrics
+      const userActivity = await this.metricsService.getUserActivityMetrics();
+
+      // Get user statistics from database
       const totalUsers = await this.userRepository.count();
       
-      // Get active users (logged in last 24 hours)
-      const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
-      const activeUsers = await this.userRepository.count({
-        where: {
-          last_login_at: {
-            $gte: yesterday
-          } as any
-        }
-      });
-
       // Get new users today
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      const newUsersToday = await this.userRepository.count({
-        where: {
-          created_at: {
-            $gte: today
-          } as any
-        }
-      });
+      const newUsersToday = await this.userRepository
+        .createQueryBuilder('user')
+        .where('user.created_at >= :today', { today })
+        .getCount();
 
-      // Get recent audit logs for activity metrics
-      const recentLogs = await this.auditService.getAuditLogsByType(AuditEventType.USER_LOGIN_SUCCESS, 100);
-      const totalRequests = recentLogs.length * 10; // Simulated based on login activity
-      const errorRate = Math.random() * 0.05; // 0-5% error rate
-
-      // Generate chart data (last 7 days)
-      const userGrowth: Array<{date: string, count: number}> = [];
-      const requestVolume: Array<{hour: string, count: number}> = [];
-      const now = new Date();
-
-      for (let i = 6; i >= 0; i--) {
-        const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
-        const dayStart = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-        const dayEnd = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000);
-
-        // Count users created on this day using proper TypeORM query
-        const usersCreated = await this.userRepository
-          .createQueryBuilder('user')
-          .where('user.created_at >= :start', { start: dayStart })
-          .andWhere('user.created_at < :end', { end: dayEnd })
-          .getCount();
-
-        userGrowth.push({
-          date: dayStart.toISOString().split('T')[0],
-          count: usersCreated
-        });
-
-        // Simulate request volume (hourly)
-        for (let hour = 0; hour < 24; hour++) {
-          requestVolume.push({
-            hour: `${dayStart.toISOString().split('T')[0]}T${hour.toString().padStart(2, '0')}:00:00`,
-            count: Math.floor(Math.random() * 100) + 10
-          });
-        }
-      }
-
-      // Generate alerts
-      const alerts: Array<{id: string, type: 'error' | 'warning' | 'info', message: string, timestamp: string, resolved: boolean}> = [];
-      if (errorRate > 0.03) {
-        alerts.push({
-          id: `alert_${Date.now()}_1`,
-          type: 'warning',
-          message: 'High error rate detected',
-          timestamp: new Date().toISOString(),
-          resolved: false
-        });
-      }
-
-      if (activeUsers < totalUsers * 0.1) {
-        alerts.push({
-          id: `alert_${Date.now()}_2`,
-          type: 'info',
-          message: 'Low user activity detected',
-          timestamp: new Date().toISOString(),
-          resolved: false
-        });
-      }
+      // Transform hourly metrics to request volume format
+      const requestVolume = hourlyMetrics.map(metric => ({
+        hour: metric.hour,
+        count: metric.requests
+      }));
 
       const response: SystemMetricsResponseDto = {
         overview: {
           total_users: totalUsers,
-          active_users: activeUsers,
+          active_users: userActivity.activeUsers,
           new_users_today: newUsersToday,
-          total_requests: totalRequests,
-          error_rate: errorRate
+          total_requests: systemMetrics.totalRequests,
+          error_rate: systemMetrics.errorRate
         },
         charts: {
-          user_growth: userGrowth,
+          user_growth: userActivity.userGrowth,
           request_volume: requestVolume
         },
         alerts: alerts
       };
 
-      this.logger.log('System metrics retrieved successfully');
+      this.logger.log('System metrics retrieved successfully', {
+        totalRequests: systemMetrics.totalRequests,
+        errorRate: systemMetrics.errorRate,
+        activeUsers: userActivity.activeUsers
+      });
+      
       return ApiResponseDto.success(response, 'Metrics retrieved successfully');
     } catch (error) {
       this.logger.error('Failed to get system metrics', { error: error.message });
+      throw error;
+    }
+  }
+
+  /**
+   * Get detailed system metrics
+   * @returns Promise<ApiResponseDto<any>>
+   */
+  async getDetailedMetrics(): Promise<ApiResponseDto<any>> {
+    try {
+      this.logger.log('Getting detailed system metrics');
+
+      const systemMetrics = await this.metricsService.getSystemMetrics();
+      const hourlyMetrics = await this.metricsService.getHourlyMetrics();
+      const alerts = await this.metricsService.getAlerts();
+
+      const response = {
+        system: systemMetrics,
+        hourly: hourlyMetrics,
+        alerts: alerts,
+        timestamp: new Date().toISOString()
+      };
+
+      this.logger.log('Detailed metrics retrieved successfully');
+      return ApiResponseDto.success(response, 'Detailed metrics retrieved successfully');
+    } catch (error) {
+      this.logger.error('Failed to get detailed metrics', { error: error.message });
       throw error;
     }
   }

@@ -6,6 +6,8 @@ import { ImageOptimizerModule } from './image-optimizer.module';
 import { EmailController } from '../controllers/email.controller';
 import { AuditService } from '../services/audit.service';
 import { LoggerService } from '../services/logger.service';
+import { MetricsService } from '../services/metrics.service';
+import { MetricsInterceptor } from '../interceptors/metrics.interceptor';
 
 @Module({
   imports: [
@@ -15,7 +17,7 @@ import { LoggerService } from '../services/logger.service';
     ImageOptimizerModule,
   ],
   controllers: [EmailController],
-  providers: [AuditService, LoggerService],
+  providers: [AuditService, LoggerService, MetricsService, MetricsInterceptor],
   exports: [
     MailModule,
     // MinioModule,
@@ -23,6 +25,8 @@ import { LoggerService } from '../services/logger.service';
     ImageOptimizerModule,
     AuditService,
     LoggerService,
+    MetricsService,
+    MetricsInterceptor,
   ],
 })
 export class CommonModule {} 

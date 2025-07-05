@@ -1,5 +1,7 @@
-p-tabs {
-    ::ng-deep .p-tablist-tab-list, ::ng-deep .p-tabpanels {
-        background-color: transparent;
-    }
+p-tabview ::ng-deep .p-tablist-tab-list, p-tabview ::ng-deep .p-tabpanels {
+    background-color: transparent;
+}
+
+p-tabview ::ng-deep button {
+    font-size: 1rem;
 }

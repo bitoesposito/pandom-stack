@@ -35,22 +35,10 @@ export class AdminController {
     async getUsers(
         @Query('page') page: string = '1',
         @Query('limit') limit: string = '10',
+        @Query('search') search: string | undefined,
         @Req() req: AuthenticatedAdminRequest
     ): Promise<ApiResponseDto<any>> {
-        return this.adminService.getUsers(parseInt(page), parseInt(limit));
-    }
-
-    /**
-     * Suspend user account
-     * PUT /admin/users/:uuid/suspend
-     */
-    @Put('users/:uuid/suspend')
-    @HttpCode(HttpStatus.OK)
-    async suspendUser(
-        @Param('uuid') uuid: string,
-        @Req() req: AuthenticatedAdminRequest
-    ): Promise<ApiResponseDto<null>> {
-        return this.adminService.suspendUser(uuid, req.user.uuid, req.user.email);
+        return this.adminService.getUsers(parseInt(page), parseInt(limit), search);
     }
 
     /**
@@ -73,6 +61,15 @@ export class AdminController {
     @Get('metrics')
     async getMetrics(@Req() req: AuthenticatedAdminRequest): Promise<ApiResponseDto<any>> {
         return this.adminService.getMetrics();
+    }
+
+    /**
+     * Detailed system metrics
+     * GET /admin/metrics/detailed
+     */
+    @Get('metrics/detailed')
+    async getDetailedMetrics(@Req() req: AuthenticatedAdminRequest): Promise<ApiResponseDto<any>> {
+        return this.adminService.getDetailedMetrics();
     }
 
     /**

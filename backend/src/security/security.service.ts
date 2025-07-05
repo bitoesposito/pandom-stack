@@ -36,12 +36,14 @@ export class SecurityService {
   /**
    * Get user security logs
    * @param userId - User ID
+   * @param page - Page number (default: 1)
+   * @param limit - Items per page (default: 10)
    * @param req - Request object for IP and User Agent
    * @returns Promise<ApiResponseDto<SecurityLogsResponseDto>>
    */
-  async getSecurityLogs(userId: string, req?: Request): Promise<ApiResponseDto<SecurityLogsResponseDto>> {
+  async getSecurityLogs(userId: string, page: number = 1, limit: number = 10, req?: Request): Promise<ApiResponseDto<SecurityLogsResponseDto>> {
     try {
-      this.logger.log('Getting security logs for user', { userId });
+      this.logger.log('Getting security logs for user', { userId, page, limit });
 
       // Verify user exists
       const user = await this.userRepository.findOne({
@@ -52,11 +54,17 @@ export class SecurityService {
         throw new NotFoundException('User not found');
       }
 
-      // Get audit logs for this user
-      const auditLogs = await this.auditService.getUserAuditLogs(userId, 50);
+      // Get all audit logs for this user (no limit to get total count)
+      const allAuditLogs = await this.auditService.getUserAuditLogs(userId, 10000);
+
+      // Apply pagination
+      const skip = (page - 1) * limit;
+      const paginatedLogs = allAuditLogs.slice(skip, skip + limit);
+      const total = allAuditLogs.length;
+      const totalPages = Math.ceil(total / limit);
 
       // Transform audit logs to security logs format
-      const securityLogs = auditLogs.map(log => ({
+      const securityLogs = paginatedLogs.map(log => ({
         id: log.id || `log_${Date.now()}_${Math.random()}`,
         action: log.event_type,
         ip_address: log.ip_address || 'Unknown',
@@ -69,14 +77,14 @@ export class SecurityService {
       const response: SecurityLogsResponseDto = {
         logs: securityLogs,
         pagination: {
-          page: 1,
-          limit: 50,
-          total: securityLogs.length,
-          total_pages: 1
+          page,
+          limit,
+          total,
+          total_pages: totalPages
         }
       };
 
-      this.logger.log('Security logs retrieved successfully', { userId, logCount: securityLogs.length });
+      this.logger.log('Security logs retrieved successfully', { userId, logCount: securityLogs.length, total, page, totalPages });
       
       return ApiResponseDto.success(response, 'Security logs retrieved successfully');
     } catch (error) {

@@ -1,6 +1,6 @@
 import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { S3Client, PutObjectCommand, GetObjectCommand, CreateBucketCommand, HeadBucketCommand, PutBucketPolicyCommand, ListObjectsV2Command } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand, GetObjectCommand, CreateBucketCommand, HeadBucketCommand, PutBucketPolicyCommand, ListObjectsV2Command, ListBucketsCommand } from '@aws-sdk/client-s3';
 import * as https from 'https';
 
 @Injectable()
@@ -290,6 +290,16 @@ export class MinioService implements OnModuleInit {
         prefix
       });
       throw error;
+    }
+  }
+
+  async healthCheck(): Promise<boolean> {
+    try {
+      await this.s3Client.send(new ListBucketsCommand({}));
+      return true;
+    } catch (error) {
+      this.logger.error('MinIO health check failed', { error: error.message });
+      return false;
     }
   }
 }
