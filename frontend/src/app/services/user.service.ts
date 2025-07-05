@@ -2,8 +2,14 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { ApiResponse } from '../models/api.models';
-import { User, UserDetails, UserEmail } from '../models/user.models';
+import { ApiResponse } from '../models/api-base.models';
+import { 
+  User, 
+  UserWithProfile, 
+  UpdateProfileRequest,
+  GetProfileResponse,
+  UpdateProfileResponse
+} from '../models/user.models';
 import { map } from 'rxjs/operators';
 import { AuthService } from './auth.service';
 
@@ -33,14 +39,14 @@ export class UserService {
   //   return url;
   // }
 
-  getUsers(): Observable<ApiResponse<UserDetails[]>> {
-    return this.http.get<ApiResponse<UserDetails[]>>(`${this.API_URL}/users/list`, {
+  getUsers(): Observable<ApiResponse<UserWithProfile[]>> {
+    return this.http.get<ApiResponse<UserWithProfile[]>>(`${this.API_URL}/users/list`, {
       headers: this.getHeaders()
     });
   }
 
-  getUser(uuid: string): Observable<ApiResponse<UserDetails>> {
-    return this.http.get<ApiResponse<UserDetails>>(`${this.API_URL}/users/${uuid}`, {
+  getUser(uuid: string): Observable<ApiResponse<UserWithProfile>> {
+    return this.http.get<ApiResponse<UserWithProfile>>(`${this.API_URL}/users/${uuid}`, {
       headers: this.getHeaders()
     });
   }
@@ -52,14 +58,14 @@ export class UserService {
     });
   }
 
-  createUser(email: string): Observable<ApiResponse<UserEmail>> {
-    return this.http.post<ApiResponse<UserEmail>>(`${this.API_URL}/users/create`, {email}, {
+  createUser(email: string): Observable<ApiResponse<UserWithProfile>> {
+    return this.http.post<ApiResponse<UserWithProfile>>(`${this.API_URL}/users/create`, {email}, {
       headers: this.getHeaders()
     });
   }
 
-  updateUser(email: string, data: any): Observable<ApiResponse<UserEmail>> {
-    return this.http.put<ApiResponse<UserEmail>>(`${this.API_URL}/users/update`, {email, data}, {
+  updateUser(email: string, data: UpdateProfileRequest): Observable<ApiResponse<UserWithProfile>> {
+    return this.http.put<ApiResponse<UserWithProfile>>(`${this.API_URL}/users/update`, {email, data}, {
       headers: this.getHeaders()
     });
   }

@@ -2,8 +2,18 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { ApiResponse } from '../models/api.models';
-import { SystemStatusResponse, BackupResponse, BackupStatusResponse } from '../models/resilience.models';
+import { ApiResponse } from '../models/api-base.models';
+import { 
+  SystemStatusResponse, 
+  BackupResponse, 
+  BackupStatusResponse,
+  BackupListResponse,
+  GetSystemStatusResponse,
+  CreateBackupResponse,
+  ListBackupsResponse,
+  RestoreBackupResponse,
+  GetBackupStatusResponse
+} from '../models/resilience.models';
 import { AuthService } from './auth.service';
 
 @Injectable({
@@ -26,8 +36,8 @@ export class ResilienceService {
    * Get system status (healthcheck)
    * @returns Observable with system status
    */
-  getSystemStatus(): Observable<ApiResponse<SystemStatusResponse>> {
-    return this.http.get<ApiResponse<SystemStatusResponse>>(`${this.API_URL}/resilience/status`, {
+  getSystemStatus(): Observable<GetSystemStatusResponse> {
+    return this.http.get<GetSystemStatusResponse>(`${this.API_URL}/resilience/status`, {
       headers: this.getHeaders()
     });
   }
@@ -36,8 +46,8 @@ export class ResilienceService {
    * Create system backup
    * @returns Observable with backup response
    */
-  createBackup(): Observable<ApiResponse<BackupResponse>> {
-    return this.http.post<ApiResponse<BackupResponse>>(`${this.API_URL}/resilience/backup`, {}, {
+  createBackup(): Observable<CreateBackupResponse> {
+    return this.http.post<CreateBackupResponse>(`${this.API_URL}/resilience/backup`, {}, {
       headers: this.getHeaders()
     });
   }
@@ -48,8 +58,8 @@ export class ResilienceService {
    * @param limit - Number of items per page
    * @returns Observable with backup list and pagination
    */
-  listBackups(page: number = 1, limit: number = 10): Observable<ApiResponse<{backups: BackupResponse[], pagination: {page: number, limit: number, total: number}}>> {
-    return this.http.get<ApiResponse<{backups: BackupResponse[], pagination: {page: number, limit: number, total: number}}>>(`${this.API_URL}/resilience/backup?page=${page}&limit=${limit}`, {
+  listBackups(page: number = 1, limit: number = 10): Observable<ListBackupsResponse> {
+    return this.http.get<ListBackupsResponse>(`${this.API_URL}/resilience/backup?page=${page}&limit=${limit}`, {
       headers: this.getHeaders()
     });
   }
@@ -59,8 +69,8 @@ export class ResilienceService {
    * @param backupId - Backup ID to restore from
    * @returns Observable with restore response
    */
-  restoreBackup(backupId: string): Observable<ApiResponse<BackupResponse>> {
-    return this.http.post<ApiResponse<BackupResponse>>(`${this.API_URL}/resilience/backup/${backupId}/restore`, {}, {
+  restoreBackup(backupId: string): Observable<RestoreBackupResponse> {
+    return this.http.post<RestoreBackupResponse>(`${this.API_URL}/resilience/backup/${backupId}/restore`, {}, {
       headers: this.getHeaders()
     });
   }
@@ -69,8 +79,8 @@ export class ResilienceService {
    * Get backup automation status
    * @returns Observable with backup status
    */
-  getBackupStatus(): Observable<ApiResponse<BackupStatusResponse>> {
-    return this.http.get<ApiResponse<BackupStatusResponse>>(`${this.API_URL}/resilience/backup/status`, {
+  getBackupStatus(): Observable<GetBackupStatusResponse> {
+    return this.http.get<GetBackupStatusResponse>(`${this.API_URL}/resilience/backup/status`, {
       headers: this.getHeaders()
     });
   }

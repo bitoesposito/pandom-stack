@@ -2,8 +2,26 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { Observable } from 'rxjs';
-import { ApiResponse } from '../models/api.models';
-import { LoginRequestData, LoginResponseData, RecoverResponse, VerifyRequest, RegisterRequestData, VerifyEmailRequest, ResendVerificationRequest, ForgotPasswordRequest } from '../models/auth.models';
+import { ApiResponse } from '../models/api-base.models';
+import { 
+  LoginRequest, 
+  LoginResponseData, 
+  RegisterRequest, 
+  RefreshTokenRequest, 
+  ForgotPasswordRequest, 
+  ResetPasswordRequest, 
+  VerifyEmailRequest, 
+  ResendVerificationRequest,
+  UserData,
+  LoginApiResponse,
+  RegisterApiResponse,
+  RefreshTokenApiResponse,
+  ForgotPasswordApiResponse,
+  ResetPasswordApiResponse,
+  VerifyEmailApiResponse,
+  ResendVerificationApiResponse,
+  GetMeApiResponse
+} from '../models/auth.models';
 
 @Injectable({
   providedIn: 'root'
@@ -18,8 +36,8 @@ export class AuthService {
    * @param registrationData Registration data including email, password and optional display name
    * @returns Observable with registration response
    */
-  register(registrationData: RegisterRequestData): Observable<ApiResponse<any>> {
-    return this.http.post<ApiResponse<any>>(`${this.API_URL}/auth/register`, registrationData);
+  register(registrationData: RegisterRequest): Observable<RegisterApiResponse> {
+    return this.http.post<RegisterApiResponse>(`${this.API_URL}/auth/register`, registrationData);
   }
 
   /**
@@ -27,8 +45,8 @@ export class AuthService {
    * @param credentials Login credentials
    * @returns Observable with login response containing JWT token and user data
    */
-  login(credentials: LoginRequestData): Observable<ApiResponse<LoginResponseData>> {
-    return this.http.post<ApiResponse<LoginResponseData>>(`${this.API_URL}/auth/login`, credentials);
+  login(credentials: LoginRequest): Observable<LoginApiResponse> {
+    return this.http.post<LoginApiResponse>(`${this.API_URL}/auth/login`, credentials);
   }
 
   /**
@@ -36,8 +54,8 @@ export class AuthService {
    * @param data Verification token
    * @returns Observable with verification response
    */
-  verifyEmail(data: VerifyEmailRequest): Observable<ApiResponse<null>> {
-    return this.http.post<ApiResponse<null>>(`${this.API_URL}/auth/verify`, data);
+  verifyEmail(data: VerifyEmailRequest): Observable<VerifyEmailApiResponse> {
+    return this.http.post<VerifyEmailApiResponse>(`${this.API_URL}/auth/verify`, data);
   }
 
   /**
@@ -45,8 +63,8 @@ export class AuthService {
    * @param data Email address
    * @returns Observable with resend response
    */
-  resendVerification(data: ResendVerificationRequest): Observable<ApiResponse<null>> {
-    return this.http.post<ApiResponse<null>>(`${this.API_URL}/auth/resend-verification`, data);
+  resendVerification(data: ResendVerificationRequest): Observable<ResendVerificationApiResponse> {
+    return this.http.post<ResendVerificationApiResponse>(`${this.API_URL}/auth/resend-verification`, data);
   }
 
   /**
@@ -54,8 +72,8 @@ export class AuthService {
    * @param data Forgot password data containing email
    * @returns Observable with recovery response
    */
-  forgotPassword(data: ForgotPasswordRequest): Observable<ApiResponse<any>> {
-    return this.http.post<ApiResponse<any>>(`${this.API_URL}/auth/forgot-password`, data);
+  forgotPassword(data: ForgotPasswordRequest): Observable<ForgotPasswordApiResponse> {
+    return this.http.post<ForgotPasswordApiResponse>(`${this.API_URL}/auth/forgot-password`, data);
   }
 
   /**
@@ -63,8 +81,8 @@ export class AuthService {
    * @param data Reset password data containing OTP and new password
    * @returns Observable with reset response
    */
-  resetPassword(data: { otp: string; password: string }): Observable<ApiResponse<any>> {
-    return this.http.post<ApiResponse<any>>(`${this.API_URL}/auth/reset-password`, data);
+  resetPassword(data: ResetPasswordRequest): Observable<ResetPasswordApiResponse> {
+    return this.http.post<ResetPasswordApiResponse>(`${this.API_URL}/auth/reset-password`, data);
   }
 
   /**
@@ -152,19 +170,19 @@ export class AuthService {
    * Refreshes the access token using the refresh token
    * @returns Observable with new tokens
    */
-  refreshToken(): Observable<ApiResponse<LoginResponseData>> {
+  refreshToken(): Observable<RefreshTokenApiResponse> {
     const refreshToken = this.getRefreshToken();
     if (!refreshToken) {
       throw new Error('No refresh token available');
     }
-    return this.http.post<ApiResponse<LoginResponseData>>(`${this.API_URL}/auth/refresh`, { refresh_token: refreshToken });
+    return this.http.post<RefreshTokenApiResponse>(`${this.API_URL}/auth/refresh`, { refresh_token: refreshToken });
   }
 
   /**
    * Ottiene i dati del profilo utente corrente
    * @returns Observable con i dati del profilo
    */
-  getCurrentUser(): Observable<any> {
-    return this.http.get<any>(`${this.API_URL}/auth/me`);
+  getCurrentUser(): Observable<GetMeApiResponse> {
+    return this.http.get<GetMeApiResponse>(`${this.API_URL}/auth/me`);
   }
 } 

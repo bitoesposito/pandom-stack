@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { MessageService } from 'primeng/api';
-import { ApiResponse } from '../models/api.models';
+import { ApiResponse } from '../models/api-base.models';
 import { TranslateService } from '@ngx-translate/core';
 
 interface DebounceMap {

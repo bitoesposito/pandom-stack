@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 import { ApiResponseDto } from '../common/common.interface';
 import { User } from '../auth/entities/user.entity';
 import { SystemStatusResponseDto, BackupResponseDto, BackupStatusResponseDto } from './resilience.dto';
@@ -29,6 +29,7 @@ export class ResilienceService {
     private readonly userRepository: Repository<User>,
     private readonly auditService: AuditService,
     private readonly minioService: MinioService,
+    private readonly dataSource: DataSource,
   ) {
     // Ensure backup directory exists for temporary files
     if (!fs.existsSync(this.backupDir)) {
@@ -216,6 +217,11 @@ export class ResilienceService {
       if (!dbName || !dbHost || !dbUser || !dbPassword) {
         throw new Error('Database configuration incomplete. Please check POSTGRES_DB, POSTGRES_HOST, POSTGRES_USER, and POSTGRES_PASSWORD environment variables.');
       }
+
+      // SVUOTA IL DATABASE PRIMA DEL RESTORE
+      this.logger.log('Dropping and recreating public schema before restore');
+      await this.dataSource.query('DROP SCHEMA public CASCADE;');
+      await this.dataSource.query('CREATE SCHEMA public;');
 
       // Create restore command with proper escaping
       const restoreCommand = `PGPASSWORD='${dbPassword}' psql -h '${dbHost}' -p '${dbPort}' -U '${dbUser}' -d '${dbName}' -f '${localBackupPath}'`;

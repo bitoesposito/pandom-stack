@@ -13,6 +13,7 @@ import { MinioModule } from '../common/modules/minio.module';
 @Module({
   imports: [
     TypeOrmModule.forFeature([User]),
+    TypeOrmModule,
     CommonModule,
     MinioModule,
   ],

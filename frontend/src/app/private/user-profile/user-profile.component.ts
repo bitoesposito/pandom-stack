@@ -4,7 +4,8 @@ import { CommonModule } from '@angular/common';
 import { TabViewModule } from 'primeng/tabview';
 import { ButtonModule } from 'primeng/button';
 import { AuthService } from '../../services/auth.service';
-import { SecurityService, SecuritySession, SecurityLog } from '../../services/security.service';
+import { SecurityService } from '../../services/security.service';
+import { SecuritySession, SecurityLog } from '../../models/security.models';
 import { ResilienceService } from '../../services/resilience.service';
 import { AdminService } from '../../services/admin.service';
 import { DialogModule } from 'primeng/dialog';
@@ -133,10 +134,11 @@ export class UserProfileComponent implements OnInit {
   private loadUserProfile() {
     this.authService.getCurrentUser().subscribe({
       next: (data) => {
-        this.user = data.data.user;
-        this.userProfile = data.data.profile;
-        console.log('Dati profilo auth:', this.user);
-        console.log('Dati profilo utente:', this.userProfile);
+        if (data.data) {
+          this.user = data.data.user;
+          this.userProfile = data.data.profile;
+          console.log('[DEBUG] user:', this.user);
+        }
       },
       error: (err) => {
         console.error('Errore nel recupero del profilo:', err);
@@ -147,8 +149,10 @@ export class UserProfileComponent implements OnInit {
   private loadSessions() {
     this.securityService.getSessions().subscribe({
       next: (data: any) => {
-        this.sessions = data.data.sessions || [];
-        console.log('Sessions loaded:', this.sessions);
+        if (data.data) {
+          this.sessions = data.data.sessions || [];
+          console.log('Sessions loaded:', this.sessions);
+        }
       },
       error: (err: any) => {
         console.error('Errore nel recupero delle sessioni:', err);
@@ -160,11 +164,13 @@ export class UserProfileComponent implements OnInit {
     this.isLoadingSecurityLogs = true;
     this.securityService.getSecurityLogs(page, rows).subscribe({
       next: (data: any) => {
-        this.securityLogs = data.data.logs || [];
-        this.securityLogsTotal = data.data.pagination?.total || 0;
-        this.securityLogsPage = data.data.pagination?.page || page;
-        this.securityLogsRows = data.data.pagination?.limit || rows;
-        console.log('Security logs loaded:', this.securityLogs);
+        if (data.data) {
+          this.securityLogs = data.data.logs || [];
+          this.securityLogsTotal = data.data.pagination?.total || 0;
+          this.securityLogsPage = data.data.pagination?.page || page;
+          this.securityLogsRows = data.data.pagination?.limit || rows;
+          console.log('Security logs loaded:', this.securityLogs);
+        }
         this.isLoadingSecurityLogs = false;
       },
       error: (err: any) => {
@@ -181,7 +187,9 @@ export class UserProfileComponent implements OnInit {
     this.resilienceService.getSystemStatus().subscribe({
       next: (data: any) => {
         console.log('[DEBUG] Risposta system status:', data);
-        this.systemStatus = data.data;
+        if (data.data) {
+          this.systemStatus = data.data;
+        }
         this.isLoadingSystemStatus = false;
       },
       error: (err: any) => {
@@ -201,7 +209,9 @@ export class UserProfileComponent implements OnInit {
     this.adminService.getMetrics().subscribe({
       next: (data: any) => {
         console.log('[DEBUG] Risposta admin metrics:', data);
-        this.adminMetrics = data.data;
+        if (data.data) {
+          this.adminMetrics = data.data;
+        }
         this.isLoadingAdminMetrics = false;
       },
       error: (err: any) => {
@@ -215,7 +225,9 @@ export class UserProfileComponent implements OnInit {
     this.adminService.getDetailedMetrics().subscribe({
       next: (data: any) => {
         console.log('[DEBUG] Risposta detailed metrics:', data);
-        this.detailedMetrics = data.data;
+        if (data.data) {
+          this.detailedMetrics = data.data;
+        }
         this.isLoadingDetailedMetrics = false;
       },
       error: (err: any) => {
@@ -624,11 +636,13 @@ export class UserProfileComponent implements OnInit {
     this.isLoadingUsers = true;
     this.adminService.getUsers(page, rows, this.userSearchQuery).subscribe({
       next: (data: any) => {
-        this.users = data.data.users || [];
-        this.usersTotal = data.data.pagination?.total || 0;
-        this.usersPage = data.data.pagination?.page || page;
-        this.usersRows = data.data.pagination?.limit || rows;
-        console.log('Users loaded:', this.users);
+        if (data.data) {
+          this.users = data.data.users || [];
+          this.usersTotal = data.data.pagination?.total || 0;
+          this.usersPage = data.data.pagination?.page || page;
+          this.usersRows = data.data.pagination?.limit || rows;
+          console.log('Users loaded:', this.users);
+        }
         this.isLoadingUsers = false;
       },
       error: (err: any) => {
@@ -702,11 +716,13 @@ export class UserProfileComponent implements OnInit {
     this.isLoadingBackups = true;
     this.resilienceService.listBackups(page, rows).subscribe({
       next: (data: any) => {
-        this.backups = data.data.backups || [];
-        this.backupsTotal = data.data.pagination?.total || 0;
-        this.backupsPage = data.data.pagination?.page || page;
-        this.backupsRows = data.data.pagination?.limit || rows;
-        console.log('Backups loaded:', this.backups);
+        if (data.data) {
+          this.backups = data.data.backups || [];
+          this.backupsTotal = data.data.pagination?.total || 0;
+          this.backupsPage = data.data.pagination?.page || page;
+          this.backupsRows = data.data.pagination?.limit || rows;
+          console.log('Backups loaded:', this.backups);
+        }
         this.isLoadingBackups = false;
       },
       error: (err: any) => {
