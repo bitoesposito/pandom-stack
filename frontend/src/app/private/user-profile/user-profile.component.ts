@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { NavBarComponent } from '../nav-bar/nav-bar.component';
 import { CommonModule } from '@angular/common';
-import { TabsModule } from 'primeng/tabs';
+import { TabViewModule } from 'primeng/tabview';
 import { ButtonModule } from 'primeng/button';
 import { AuthService } from '../../services/auth.service';
 import { SecurityService, SecuritySession, SecurityLog } from '../../services/security.service';
@@ -26,7 +26,7 @@ import { SystemMetricsResponse } from '../../models/admin.models';
   imports: [
     NavBarComponent,
     CommonModule,
-    TabsModule,
+    TabViewModule,
     ButtonModule,
     DialogModule,
     RouterModule,
@@ -109,11 +109,23 @@ export class UserProfileComponent implements OnInit {
   ngOnInit(): void {
     this.loadUserProfile();
     this.loadSessions();
-    
-    // Test notification - remove this after testing
-    // setTimeout(() => {
-    //   this.notificationService.handleSuccess('profile.download.success');
-    // }, 2000);
+  }
+
+  /**
+   * Handle tab change events
+   * @param event - Tab change event
+   */
+  onTabChange(event: any): void {
+    // event.index contiene l'indice del tab attivo
+    console.log('[DEBUG] Tab changed, event:', event);
+    if (event.index === 1 && this.user?.role === 'admin' && !this.adminMetrics) {
+      console.log('[DEBUG] Trigger loadAdminMetrics (tab 1, admin)');
+      this.loadAdminMetrics();
+    }
+    if (event.index === 2 && this.user?.role === 'admin' && !this.systemStatus) {
+      console.log('[DEBUG] Trigger loadSystemStatus (tab 2, admin)');
+      this.loadSystemStatus();
+    }
   }
 
   private loadUserProfile() {
@@ -123,12 +135,6 @@ export class UserProfileComponent implements OnInit {
         this.userProfile = data.data.profile;
         console.log('Dati profilo auth:', this.user);
         console.log('Dati profilo utente:', this.userProfile);
-        
-        // Load admin data if user is admin
-        if (this.user?.role === 'admin') {
-          this.loadSystemStatus();
-          this.loadAdminMetrics();
-        }
       },
       error: (err) => {
         console.error('Errore nel recupero del profilo:', err);
@@ -168,15 +174,16 @@ export class UserProfileComponent implements OnInit {
   }
 
   loadSystemStatus() {
+    console.log('[DEBUG] Chiamo loadSystemStatus');
     this.isLoadingSystemStatus = true;
     this.resilienceService.getSystemStatus().subscribe({
       next: (data: any) => {
+        console.log('[DEBUG] Risposta system status:', data);
         this.systemStatus = data.data;
-        console.log('System status loaded:', this.systemStatus);
         this.isLoadingSystemStatus = false;
       },
       error: (err: any) => {
-        console.error('Errore nel recupero dello stato del sistema:', err);
+        console.error('[DEBUG] Errore nel recupero dello stato del sistema:', err);
         this.notificationService.handleError(err, 'profile.system-status.error');
         this.isLoadingSystemStatus = false;
       }
@@ -184,15 +191,16 @@ export class UserProfileComponent implements OnInit {
   }
 
   loadAdminMetrics() {
+    console.log('[DEBUG] Chiamo loadAdminMetrics');
     this.isLoadingAdminMetrics = true;
     this.adminService.getMetrics().subscribe({
       next: (data: any) => {
+        console.log('[DEBUG] Risposta admin metrics:', data);
         this.adminMetrics = data.data;
-        console.log('Admin metrics loaded:', this.adminMetrics);
         this.isLoadingAdminMetrics = false;
       },
       error: (err: any) => {
-        console.error('Errore nel recupero delle metriche admin:', err);
+        console.error('[DEBUG] Errore nel recupero delle metriche admin:', err);
         this.notificationService.handleError(err, 'profile.administration.error');
         this.isLoadingAdminMetrics = false;
       }
@@ -367,7 +375,8 @@ export class UserProfileComponent implements OnInit {
       'SUSPICIOUS_ACTIVITY': 'profile.security-logs.actions.SUSPICIOUS_ACTIVITY',
       'DATA_EXPORT': 'profile.security-logs.actions.DATA_EXPORT',
       'SESSION_CREATION': 'profile.security-logs.actions.SESSION_CREATION',
-      'SESSION_TERMINATION': 'profile.security-logs.actions.SESSION_TERMINATION'
+      'SESSION_TERMINATION': 'profile.security-logs.actions.SESSION_TERMINATION',
+      'USER_VERIFY_EMAIL': 'profile.security-logs.actions.USER_VERIFY_EMAIL',
     };
     
     return actionMap[action] || action;
@@ -384,7 +393,7 @@ export class UserProfileComponent implements OnInit {
    * Get the translated status text
    */
   getStatusText(success: boolean): string {
-    return success ? 'profile.security-logs.status.success' : 'profile.security-logs.status.failed';
+    return 'profile.security-logs.status.' + (success ? 'SUCCESS' : 'FAILED');
   }
 
   /**

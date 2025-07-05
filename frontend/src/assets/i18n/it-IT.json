@@ -100,36 +100,33 @@
     "profile": "Il tuo profilo",
     "logged-in-as": "Connesso come",
     "verified": "profilo verificato",
-    "last-login": "Ultimo accesso:",
-    "created-at": "Creato il:",
-    "active-sessions": "Sessioni Attive",
-    "show-security-logs": "Mostra Log di Sicurezza",
+    "last-login": "Ultimo accesso",
+    "created-at": "Creato il",
+    "active-sessions": "Sessioni attive",
+    "show-security-logs": "Mostra log di sicurezza",
     "edit-profile": "Modifica profilo",
-    "download-data": "Scarica i tuoi dati",
+    "download-data": "Scarica dati personali",
     "change-password": "Cambia password",
     "delete-account": "Elimina account"
   },
   "profile": {
     "tabs": {
       "profile": "Profilo",
-      "settings": "Impostazioni",
       "administration": "Amministrazione",
-      "system-status": "Stato del Sistema"
+      "system-status": "Stato Sistema"
     },
     "dialogs": {
       "edit-profile": "Modifica Profilo",
-      "download-data": "Scarica i tuoi dati",
-      "delete-account": "Elimina account",
+      "download-data": "Scarica Dati",
+      "delete-account": "Elimina Account",
       "security-logs": "Log di Sicurezza",
-      "change-password": "Cambia Password",
-      "audit-logs": "Log di Audit",
       "user-management": "Gestione Utenti"
     },
     "security-logs": {
       "description": "Visualizza le tue recenti attività di sicurezza e log di accesso.",
       "loading": "Caricamento log di sicurezza...",
       "no-logs": "Nessun log di sicurezza trovato.",
-      "error": "Impossibile caricare i log di sicurezza. Riprova più tardi.",
+      "error": "Errore nel caricamento dei log di sicurezza. Riprova più tardi.",
       "table": {
         "action": "Azione",
         "ip-address": "Indirizzo IP",
@@ -139,82 +136,84 @@
         "details": "Dettagli"
       },
       "actions": {
-        "login": "Accesso",
-        "logout": "Disconnessione",
-        "password-change": "Cambio Password",
-        "password-reset": "Reset Password",
-        "account-deletion": "Eliminazione Account",
-        "session-creation": "Creazione Sessione",
-        "session-termination": "Terminazione Sessione",
-        "failed-login": "Tentativo di Accesso Fallito",
-        "suspicious-activity": "Attività Sospetta",
         "USER_LOGIN_SUCCESS": "Accesso",
-        "USER_LOGOUT": "Disconnessione",
-        "USER_RESET_PASSWORD": "Reset Password",
-        "USER_CHANGE_PASSWORD": "Cambio Password",
-        "USER_DELETE_ACCOUNT": "Eliminazione Account",
-        "SUSPICIOUS_ACTIVITY": "Attività Sospetta",
-        "DATA_EXPORT": "Esportazione Dati",
-        "SESSION_CREATION": "Creazione Sessione",
-        "SESSION_TERMINATION": "Terminazione Sessione"
+        "USER_LOGIN_FAILED": "Accesso fallito",
+        "USER_LOGOUT": "Logout",
+        "USER_REGISTER": "Registrazione",
+        "USER_VERIFY_EMAIL": "Verifica email",
+        "USER_RESET_PASSWORD": "Reset password",
+        "USER_CHANGE_PASSWORD": "Cambio password",
+        "ACCOUNT_LOCKED": "Account bloccato",
+        "ACCOUNT_UNLOCKED": "Account sbloccato",
+        "SUSPICIOUS_ACTIVITY": "Attività sospetta",
+        "BRUTE_FORCE_ATTEMPT": "Tentativo brute force",
+        "DATA_ACCESS": "Accesso dati",
+        "DATA_DOWNLOAD": "Download dati",
+        "DATA_EXPORT": "Esportazione dati",
+        "USER_ROLE_CHANGED": "Ruolo utente cambiato",
+        "USER_STATUS_CHANGED": "Stato utente cambiato",
+        "USER_DELETED": "Utente eliminato",
+        "SESSION_CREATED": "Sessione creata",
+        "SESSION_EXPIRED": "Sessione scaduta",
+        "SESSION_REVOKED": "Sessione revocata"
       },
       "status": {
-        "success": "Successo",
-        "failed": "Fallito",
-        "pending": "In Attesa"
+        "SUCCESS": "SUCCESSO",
+        "FAILED": "FALLITO",
+        "WARNING": "ATTENZIONE"
       },
       "no-results-on-page": "Nessun risultato in questa pagina. Torno alla prima pagina.",
       "pagination-reset": "Pagina reimpostata per risultati vuoti.",
       "no-alerts": "Nessun problema rilevato. Tutto funziona correttamente!"
     },
     "download": {
-      "description": "Scarica una copia di tutti i tuoi dati personali memorizzati nel nostro sistema. Questo include le informazioni del tuo profilo, i dettagli dell'account e i log delle attività.",
-      "info": "I tuoi dati saranno esportati in un formato sicuro e includono tutte le informazioni che abbiamo sul tuo account.",
-      "expires": "Il link di download scadrà dopo 24 ore per motivi di sicurezza.",
-      "confirm": "Scarica Dati",
-      "success": "Il download dei tuoi dati personali è iniziato con successo!",
-      "error": "Impossibile scaricare i tuoi dati personali. Riprova più tardi."
+      "description": "Puoi scaricare una copia dei tuoi dati personali.",
+      "info": "Il file sarà disponibile per un tempo limitato.",
+      "expires": "Il link scadrà dopo 10 minuti.",
+      "confirm": "Scarica",
+      "success": "Dati scaricati con successo.",
+      "error": "Errore durante il download dei dati."
     },
     "change-password": {
       "description": "Per cambiare la tua password, invieremo un codice di verifica al tuo indirizzo email. Sarai poi reindirizzato alla pagina di reset password dove potrai impostare la tua nuova password.",
-      "info": "Un codice di verifica sarà inviato al tuo indirizzo email registrato.",
+      "info": "Riceverai una mail con il codice di verifica.",
       "warning": "Sarai disconnesso dopo l'invio del codice di verifica e reindirizzato alla pagina di reset password.",
-      "confirm": "Invia Codice di Verifica",
-      "sending": "Invio codice di verifica in corso...",
+      "sending": "Invio in corso...",
+      "confirm": "Cambia password",
+      "no-email": "Email utente non disponibile.",
       "email-sent": "Codice di verifica inviato con successo! Sarai reindirizzato alla pagina di reset password.",
-      "email-failed": "Impossibile inviare il codice di verifica. Riprova più tardi.",
-      "no-email": "Nessun indirizzo email trovato per il tuo account."
+      "email-failed": "Errore durante l'invio dell'email di reset password."
     },
     "delete-account": {
-      "warning-title": "Elimina Account",
-      "description": "Questa azione eliminerà definitivamente il tuo account e tutti i dati associati. Questo processo non può essere annullato.",
-      "info": "Tutti i tuoi dati personali, impostazioni e informazioni dell'account saranno rimossi definitivamente.",
-      "irreversible": "Questa azione è irreversibile e non può essere annullata.",
-      "data-retention": "Alcuni dati potrebbero essere conservati per scopi legali o normativi come richiesto dalla legge.",
-      "deleting": "Eliminazione del tuo account in corso...",
-      "confirm": "Elimina Account",
-      "success": "Il tuo account è stato eliminato con successo. Sarai reindirizzato alla pagina di login.",
-      "failed": "Impossibile eliminare il tuo account. Riprova più tardi."
+      "warning-title": "Attenzione: questa azione è irreversibile!",
+      "description": "Eliminando il tuo account perderai tutti i dati associati. Questa azione non può essere annullata.",
+      "info": "I tuoi dati saranno rimossi in modo permanente.",
+      "irreversible": "Questa azione è irreversibile!",
+      "data-retention": "Alcuni dati potrebbero essere trattenuti per motivi legali.",
+      "deleting": "Eliminazione in corso...",
+      "confirm": "Conferma eliminazione",
+      "success": "Account eliminato con successo.",
+      "failed": "Impossibile eliminare l'account. Riprova più tardi."
     },
     "system-status": {
-      "loading": "Caricamento stato del sistema...",
+      "loading": "Caricamento stato sistema...",
       "error": "Impossibile caricare lo stato del sistema. Riprova più tardi.",
-      "overall-status": "Stato Generale del Sistema",
+      "overall-status": "Stato generale",
       "last-check": "Ultimo controllo",
-      "system-info": "Informazioni di Sistema",
+      "system-info": "Informazioni sistema",
       "version": "Versione",
-      "uptime": "Tempo di Attività",
+      "uptime": "Uptime",
       "services": "Servizi",
       "database": "Database",
-      "storage": "Archiviazione",
-      "email": "Servizio Email",
+      "storage": "Storage",
+      "email": "Email",
       "postgresql": "PostgreSQL",
       "minio": "Archiviazione MinIO",
       "smtp": "Server SMTP",
       "refresh": "Aggiorna Stato",
-      "healthy": "Sano",
+      "healthy": "Operativo",
       "degraded": "Degradato",
-      "down": "Non Disponibile",
+      "down": "Non operativo",
       "backup-management": "Gestione Backup",
       "backup-overview": "Panoramica Backup",
       "create-backup": "Crea Backup",
@@ -239,8 +238,8 @@
       "backup-status-failed": "Impossibile caricare lo stato dei backup",
       "confirm-restore": "Conferma Ripristino",
       "restore-warning": "Questa azione ripristinerà il sistema allo stato del backup selezionato. Tutti i dati attuali saranno sostituiti. Questa azione non può essere annullata.",
-      "restore-confirm": "Sei sicuro di voler ripristinare da questo backup?",
-      "restoring": "Ripristinando...",
+      "restore-confirm": "Sei sicuro di voler ripristinare questo backup?",
+      "restoring": "Ripristino in corso...",
       "creating": "Creando backup...",
       "loading-backups": "Caricamento backup...",
       "loading-status": "Caricamento stato backup...",
@@ -248,7 +247,7 @@
         "backup-id": "ID Backup",
         "file": "File",
         "size": "Dimensione",
-        "created": "Creato",
+        "created": "Creato il",
         "status": "Stato",
         "actions": "Azioni"
       },
@@ -258,49 +257,41 @@
         "available": "Disponibile"
       },
       "actions": {
-        "restore": "Ripristina",
-        "download": "Scarica"
+        "restore": "Ripristina"
       }
     },
     "administration": {
       "loading": "Caricamento dati amministrazione...",
       "error": "Impossibile caricare i dati di amministrazione. Riprova più tardi.",
-      "overview": "Panoramica Sistema",
-      "total-users": "Utenti Totali",
-      "active-users": "Utenti Attivi",
-      "new-users-today": "Nuovi Utenti Oggi",
-      "error-rate": "Tasso di Errore",
-      "alerts": "Avvisi di Sistema",
-      "refresh": "Aggiorna Dati",
-      "view-audit-logs": "Visualizza Log di Audit",
-      "manage-users": "Gestisci Utenti",
-      "no-alerts": "Nessun problema rilevato. Tutto funziona correttamente!"
+      "overview": "Panoramica",
+      "total-users": "Utenti totali",
+      "active-users": "Utenti attivi",
+      "new-users-today": "Nuovi utenti oggi",
+      "error-rate": "Tasso di errore",
+      "alerts": "Avvisi",
+      "refresh": "Aggiorna",
+      "view-audit-logs": "Visualizza log di audit",
+      "manage-users": "Gestisci utenti",
+      "no-alerts": "Nessun avviso presente."
     },
     "user-management": {
-      "loading": "Caricamento utenti...",
-      "error": "Impossibile caricare gli utenti. Riprova più tardi.",
-      "no-users": "Nessun utente trovato.",
       "search-placeholder": "Cerca utenti per email...",
-      "suspend-success": "Utente sospeso con successo.",
-      "suspend-error": "Impossibile sospendere l'utente. Riprova più tardi.",
-      "delete-success": "Utente eliminato con successo.",
-      "delete-error": "Impossibile eliminare l'utente. Riprova più tardi.",
+      "loading": "Caricamento utenti...",
+      "no-users": "Nessun utente trovato.",
       "table": {
         "name": "Nome",
         "email": "Email",
         "role": "Ruolo",
         "verified": "Verificato",
-        "created": "Creato",
-        "last-login": "Ultimo Accesso",
+        "created": "Creato il",
+        "last-login": "Ultimo accesso",
         "actions": "Azioni"
       },
-      "status": {
-        "verified": "Verificato",
-        "unverified": "Non Verificato"
-      },
       "actions": {
-        "delete": "Elimina Utente"
-      }
+        "delete": "Elimina utente"
+      },
+      "delete-success": "Utente eliminato con successo.",
+      "delete-error": "Errore durante l'eliminazione dell'utente."
     },
     "audit-logs": {
       "loading": "Caricamento log di audit...",
@@ -443,5 +434,14 @@
     "error": "Errore",
     "info": "Informazione",
     "warning": "Avviso"
-  }
+  },
+  "profile.security-logs.details.login_method": "Metodo login",
+  "profile.security-logs.details.reset_method": "Metodo reset",
+  "profile.security-logs.details.verification_method": "Metodo verifica",
+  "profile.security-logs.details.logout_method": "Metodo logout",
+  "profile.security-logs.details.activity": "Attività",
+  "profile.security-logs.details.reason": "Motivo",
+  "profile.security-logs.details.attempt_count": "Numero tentativi",
+  "profile.security-logs.details.timestamp": "Data e ora",
+  "profile.security-logs.actions.USER_VERIFY_EMAIL": "Verifica email"
 } 
