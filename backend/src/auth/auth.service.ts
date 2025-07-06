@@ -113,9 +113,10 @@ export class AuthService {
   /**
    * Authenticates a user and generates a JWT token
    * @param loginDto - Login credentials
+   * @param req - Express request object for IP and User Agent
    * @returns Promise<ApiResponseDto<LoginResponse>>
    */
-  async login(loginDto: LoginDto): Promise<ApiResponseDto<LoginResponse>> {
+  async login(loginDto: LoginDto, req?: any): Promise<ApiResponseDto<LoginResponse>> {
     try {
       // Find user by email
       const user = await this.userRepository.findOne({
@@ -125,14 +126,18 @@ export class AuthService {
 
       if (!user) {
         // Log failed login attempt
-        await this.auditService.logLoginFailed(loginDto.email, undefined, undefined, 'User not found');
+        const clientIp = this.getClientIp(req);
+        const userAgent = req?.headers?.['user-agent'] || 'Unknown';
+        await this.auditService.logLoginFailed(loginDto.email, clientIp, userAgent, 'User not found');
         throw new UnauthorizedException('Invalid credentials');
       }
 
       // Check if user is active
       if (!user.is_active) {
         // Log failed login attempt
-        await this.auditService.logLoginFailed(loginDto.email, undefined, undefined, 'Account deactivated');
+        const clientIp = this.getClientIp(req);
+        const userAgent = req?.headers?.['user-agent'] || 'Unknown';
+        await this.auditService.logLoginFailed(loginDto.email, clientIp, userAgent, 'Account deactivated');
         throw new UnauthorizedException('Account is deactivated');
       }
 
@@ -140,7 +145,9 @@ export class AuthService {
       const isPasswordValid = await bcrypt.compare(loginDto.password, user.password_hash);
       if (!isPasswordValid) {
         // Log failed login attempt
-        await this.auditService.logLoginFailed(loginDto.email, undefined, undefined, 'Invalid password');
+        const clientIp = this.getClientIp(req);
+        const userAgent = req?.headers?.['user-agent'] || 'Unknown';
+        await this.auditService.logLoginFailed(loginDto.email, clientIp, userAgent, 'Invalid password');
         throw new UnauthorizedException('Invalid credentials');
       }
 
@@ -167,8 +174,12 @@ export class AuthService {
       user.refresh_token_expires = new Date(Date.now() + (loginDto.rememberMe ? 90 : 7) * 24 * 60 * 60 * 1000);
       await this.userRepository.save(user);
 
+      // Extract IP and User Agent from request
+      const clientIp = this.getClientIp(req);
+      const userAgent = req?.headers?.['user-agent'] || 'Unknown';
+
       // Log successful login
-      await this.auditService.logLoginSuccess(user.uuid, user.email);
+      await this.auditService.logLoginSuccess(user.uuid, user.email, clientIp, userAgent);
 
       // Prepare response
       const response: LoginResponse = {
@@ -439,9 +450,10 @@ export class AuthService {
   /**
    * Reset password via OTP
    * @param resetPasswordDto - Reset password data
+   * @param req - Express request object for IP and User Agent
    * @returns Promise<ApiResponseDto<null>>
    */
-  async resetPassword(resetPasswordDto: ResetPasswordDto): Promise<ApiResponseDto<null>> {
+  async resetPassword(resetPasswordDto: ResetPasswordDto, req?: any): Promise<ApiResponseDto<null>> {
     try {
       // Find user by reset token (OTP)
       const user = await this.userRepository.findOne({
@@ -468,7 +480,8 @@ export class AuthService {
       await this.userRepository.save(user);
 
       // Log password reset
-      await this.auditService.logPasswordReset(user.uuid, user.email);
+      const clientIp = this.getClientIp(req);
+      await this.auditService.logPasswordReset(user.uuid, user.email, clientIp);
 
       this.logger.log('Password reset successfully', { email: user.email });
       
@@ -530,6 +543,39 @@ export class AuthService {
       this.logger.error('Resend verification email failed', error);
       throw error;
     }
+  }
+
+  /**
+   * Get client IP address from request
+   * @param req - Express request object
+   * @returns string - Client IP address
+   */
+  private getClientIp(req?: any): string {
+    if (!req) return 'Unknown';
+    
+    // Get IP from various headers and sources
+    const forwardedFor = req.headers?.['x-forwarded-for'] as string;
+    const realIp = req.headers?.['x-real-ip'] as string;
+    const remoteAddr = req.connection?.remoteAddress || req.socket?.remoteAddress;
+    
+    // If we have X-Forwarded-For, take the first IP (original client)
+    if (forwardedFor) {
+      const ips = forwardedFor.split(',').map(ip => ip.trim());
+      return ips[0];
+    }
+    
+    // If we have X-Real-IP, use it
+    if (realIp) {
+      return realIp;
+    }
+    
+    // If we have remote address, clean it up
+    if (remoteAddr) {
+      // Remove IPv6 prefix if present (::ffff:)
+      return remoteAddr.replace(/^::ffff:/, '');
+    }
+    
+    return 'Unknown';
   }
 
   /**

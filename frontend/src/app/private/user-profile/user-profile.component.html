@@ -178,7 +178,7 @@
                             <h6 class="m-0 mb-2">{{ 'profile.administration.top-endpoints' | translate }}</h6>
                             <div class="flex flex-column gap-1">
                                 <div *ngFor="let endpoint of detailedMetrics.system.topEndpoints.slice(0, 5)" 
-                                     class="flex justify-content-between align-items-center p-2 surface-50 border-round">
+                                     class="flex justify-content-between align-items-center p-2 border-1 surface-border border-round">
                                     <span class="text-sm font-medium">{{ endpoint.path }}</span>
                                     <p-tag [value]="endpoint.count.toString()" severity="info" [rounded]="true"></p-tag>
                                 </div>

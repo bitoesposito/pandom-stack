@@ -113,7 +113,7 @@ export class SecurityService {
       }
 
       // Extract IP and User Agent from request
-      const clientIp = req?.ip || req?.connection?.remoteAddress || req?.headers['x-forwarded-for'] || 'Unknown';
+      const clientIp = this.getClientIp(req);
       const userAgent = req?.headers['user-agent'] || 'Unknown';
 
       // Get current active sessions (refresh tokens)
@@ -308,6 +308,39 @@ export class SecurityService {
         statusCode: 500
       });
     }
+  }
+
+  /**
+   * Get client IP address from request
+   * @param req - Express request object
+   * @returns string - Client IP address
+   */
+  private getClientIp(req?: Request): string {
+    if (!req) return 'Unknown';
+    
+    // Get IP from various headers and sources
+    const forwardedFor = req.headers['x-forwarded-for'] as string;
+    const realIp = req.headers['x-real-ip'] as string;
+    const remoteAddr = req.connection?.remoteAddress || req.socket?.remoteAddress;
+    
+    // If we have X-Forwarded-For, take the first IP (original client)
+    if (forwardedFor) {
+      const ips = forwardedFor.split(',').map(ip => ip.trim());
+      return ips[0];
+    }
+    
+    // If we have X-Real-IP, use it
+    if (realIp) {
+      return realIp;
+    }
+    
+    // If we have remote address, clean it up
+    if (remoteAddr) {
+      // Remove IPv6 prefix if present (::ffff:)
+      return remoteAddr.replace(/^::ffff:/, '');
+    }
+    
+    return 'Unknown';
   }
 
   /**

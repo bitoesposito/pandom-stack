@@ -41,12 +41,28 @@ export class MetricsInterceptor implements NestInterceptor {
   }
 
   private getClientIp(request: Request): string {
-    return (
-      request.headers['x-forwarded-for'] as string ||
-      request.headers['x-real-ip'] as string ||
-      request.connection.remoteAddress ||
-      request.socket.remoteAddress ||
-      'unknown'
-    );
+    // Get IP from various headers and sources
+    const forwardedFor = request.headers['x-forwarded-for'] as string;
+    const realIp = request.headers['x-real-ip'] as string;
+    const remoteAddr = request.connection.remoteAddress || request.socket.remoteAddress;
+    
+    // If we have X-Forwarded-For, take the first IP (original client)
+    if (forwardedFor) {
+      const ips = forwardedFor.split(',').map(ip => ip.trim());
+      return ips[0];
+    }
+    
+    // If we have X-Real-IP, use it
+    if (realIp) {
+      return realIp;
+    }
+    
+    // If we have remote address, clean it up
+    if (remoteAddr) {
+      // Remove IPv6 prefix if present (::ffff:)
+      return remoteAddr.replace(/^::ffff:/, '');
+    }
+    
+    return 'unknown';
   }
 } 
