@@ -1,15 +1,25 @@
+<!-- Main navigation bar -->
 <nav class="px-3 mt-3 text-color w-full flex justify-content-between align-items-center m-auto"
     style="max-width: 1200px;">
+    
+    <!-- Logo section -->
     <div>
-        <img [src]="(isDarkMode$ | async) ? './logo-full.svg' : '../logo-full.svg'" alt="logo" height="44" routerLink="/" class="cursor-pointer"/>
+        <img [src]="(isDarkMode$ | async) ? './logo-full.svg' : '../logo-full.svg'" 
+             alt="logo" 
+             height="44" 
+             routerLink="/" 
+             class="cursor-pointer"/>
     </div>
+    
+    <!-- Right side controls -->
     <div class="flex gap-2 align-items-center">
         
-        <!-- Online/Offline Status -->
+        <!-- Online/Offline Status Indicator -->
         <div class="flex align-items-center gap-1 p-2" *ngIf="!(isOnline$ | async)">
             <i class="pi pi-wifi text-red-500"></i>
         </div>
 
+        <!-- Language Selector -->
         <p-select
             id="language-selector"
             [options]="languages" 
@@ -30,22 +40,26 @@
             </ng-template>
         </p-select>
         
-        <!-- <p-avatar icon="pi pi-user" class="cursor-pointer" (click)="menu.toggle($event)" pTooltip="User" tooltipPosition="bottom"/> -->
-
-        <div class="flex gap-2 cursor-pointer p-2 border-1 surface-border border-round-md text-color-secondary" (click)="menu.toggle($event)" pTooltip="{{ 'navigation.toggle-dark-mode' | translate }}" tooltipPosition="bottom">
+        <!-- User Menu Toggle Button -->
+        <div class="flex gap-2 cursor-pointer p-2 border-1 surface-border border-round-md text-color-secondary" 
+             (click)="menu.toggle($event)" 
+             pTooltip="{{ 'navigation.toggle-dark-mode' | translate }}" 
+             tooltipPosition="bottom">
             <i class="pi pi-bars"></i>
         </div>
         
+        <!-- User Menu Popover -->
         <p-popover #menu>
             <div class="flex flex-column gap-2">
 
+                <!-- User Info Section -->
                 <div class="flex flex-column gap-2">
                     <div class="flex flex-column">
                         <p class="text-xs text-color-secondary">{{ 'user.logged-in-as' | translate }}</p>
                         <small 
                         class="text-sm font-semibold text-color-secondary  max-w-11rem" 
                         style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
-                        {{ user.email }}</small>
+                        {{ user?.email }}</small>
                         <span class=" text-green-500 text-xs">
                             <i class="pi pi-check text-xs"></i>
                             {{ 'user.verified' | translate }}
@@ -54,6 +68,7 @@
 
                     <hr class="surface-border my-1">
     
+                    <!-- Profile Link -->
                     <div class="flex flex-column">
                         <p-button
                             [routerLink]="['/user-profile']"
@@ -69,6 +84,7 @@
 
                 <hr class="surface-border my-1">
 
+                <!-- Action Buttons Section -->
                 <div class="flex flex-column">
                     <!-- PWA Install Button -->
                     <p-button 
@@ -81,6 +97,7 @@
                         (click)="installPwa()"
                         fluid="true"
                         iconPos="left"/>
+                        
                     <!-- Update Available Button -->
                     <p-button 
                     *ngIf="updateAvailable$ | async"
@@ -92,6 +109,7 @@
                     fluid="true"
                     iconPos="left"/>
         
+                    <!-- Theme Toggle Button -->
                     <p-button
                     [icon]="(isDarkMode$ | async) ? 'pi pi-moon' : 'pi pi-sun'"
                     styleClass="justify-content-start"
@@ -102,6 +120,7 @@
                     fluid="true"
                     iconPos="left"/>
                 
+                    <!-- Logout Button -->
                     <p-button 
                     icon="pi pi-sign-out text-sm" 
                     styleClass="hover:text-red-500 justify-content-start" 

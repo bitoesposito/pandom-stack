@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
@@ -16,7 +16,15 @@ import { SelectModule } from 'primeng/select';
 import { FormsModule } from '@angular/forms';
 import { LanguageService } from '../../services/language.service';
 import { Language } from '../../models/language.models';
+import { UserData } from '../../models/auth.models';
+import { Subject, takeUntil } from 'rxjs';
 
+/**
+ * NavBar Component
+ * 
+ * Main navigation bar component with user menu, language selector,
+ * theme toggle, and PWA functionality.
+ */
 @Component({
   selector: 'app-nav-bar',
   imports: [
@@ -36,18 +44,24 @@ import { Language } from '../../models/language.models';
   templateUrl: './nav-bar.component.html',
   styleUrl: './nav-bar.component.scss'
 })
-export class NavBarComponent implements OnInit {
+export class NavBarComponent implements OnInit, OnDestroy {
 
+  // Observable streams for reactive UI updates
   isDarkMode$;
   updateAvailable$;
   isOnline$;
   canInstallPwa$;
-  user: any = {};
+  currentLanguage$;
+  
+  // User data from JWT token
+  user: UserData | null = null;
   
   // Language selector properties
   languages: Language[] = [];
   selectedLanguage: string = 'en';
-  currentLanguage$;
+
+  // Destroy subject for proper cleanup
+  private destroy$ = new Subject<void>();
 
   constructor(
     private notificationService: NotificationService,
@@ -59,6 +73,7 @@ export class NavBarComponent implements OnInit {
     private languageService: LanguageService,
     private cdr: ChangeDetectorRef
   ) {
+    // Initialize observable streams
     this.isDarkMode$ = this.themeService.isDarkMode$;
     this.updateAvailable$ = this.pwaService.updateAvailable;
     this.isOnline$ = this.pwaService.isOnline;
@@ -66,70 +81,126 @@ export class NavBarComponent implements OnInit {
     this.currentLanguage$ = this.languageService.currentLanguage$;
   }
 
-  ngOnInit() {
+  ngOnInit(): void {
     this.loadUserData();
     this.initializeLanguages();
     this.syncSelectedLanguage();
   }
 
-  private loadUserData() {
+  ngOnDestroy(): void {
+    // Cleanup subscriptions to prevent memory leaks
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  /**
+   * Load and decode user data from JWT token
+   */
+  private loadUserData(): void {
     const token = this.authService.getToken();
-    if (token) {
-      try {
-        const decoded: any = jwtDecode(token);
-        this.user = {
-          email: decoded.email,
-          role: decoded.role,
-          uuid: decoded.sub
-        };
-      } catch (error) {
-        console.error('Error decoding token:', error);
-        this.authService.logout();
-        this.router.navigate(['/login']);
-      }
+    if (!token) {
+      this.handleAuthError();
+      return;
     }
-  }
 
-  private initializeLanguages() {
-    this.languages = this.languageService.getAvailableLanguages();
-    this.selectedLanguage = this.languageService.getCurrentLanguage();
-  }
-
-  private syncSelectedLanguage() {
-    this.currentLanguage$.subscribe(languageCode => {
-      this.selectedLanguage = languageCode;
-    });
-  }
-
-  changeLanguage(event: any) {
-    const languageCode = event.value;
-    this.languageService.changeLanguage(languageCode);
-    this.selectedLanguage = languageCode;
-    
-    // Force change detection
-    setTimeout(() => {
-      this.cdr.detectChanges();
-    }, 100);
-  }
-
-  async updateApp(): Promise<void> {
     try {
-      await this.pwaService.activateUpdate();
+      const decoded = jwtDecode(token) as UserData;
+      this.user = {
+        uuid: decoded.uuid,
+        email: decoded.email,
+        role: decoded.role,
+        is_active: decoded.is_active,
+        is_verified: decoded.is_verified,
+        is_configured: decoded.is_configured,
+        created_at: decoded.created_at,
+        updated_at: decoded.updated_at
+      };
     } catch (error) {
-      this.notificationService.handleError(error, this.translate.instant('pwa.update-error'));
+      console.error('Error decoding JWT token:', error);
+      this.handleAuthError();
     }
   }
 
-  disconnect() {
+  /**
+   * Handle authentication errors by logging out user
+   */
+  private handleAuthError(): void {
     this.authService.logout();
     this.router.navigate(['/login']);
   }
 
-  toggleDarkMode() {
+  /**
+   * Initialize available languages for selector
+   */
+  private initializeLanguages(): void {
+    this.languages = this.languageService.getAvailableLanguages();
+    this.selectedLanguage = this.languageService.getCurrentLanguage();
+  }
+
+  /**
+   * Sync selected language with language service
+   */
+  private syncSelectedLanguage(): void {
+    this.currentLanguage$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((languageCode: string) => {
+        this.selectedLanguage = languageCode;
+        this.cdr.detectChanges();
+      });
+  }
+
+  /**
+   * Handle language change from selector
+   */
+  changeLanguage(event: { value: string }): void {
+    const languageCode = event.value;
+    this.languageService.changeLanguage(languageCode);
+    this.selectedLanguage = languageCode;
+  }
+
+  /**
+   * Update PWA application
+   */
+  async updateApp(): Promise<void> {
+    try {
+      await this.pwaService.activateUpdate();
+      this.notificationService.handleSuccess(
+        this.translate.instant('pwa.update-success')
+      );
+    } catch (error) {
+      this.notificationService.handleError(
+        error, 
+        this.translate.instant('pwa.update-error')
+      );
+    }
+  }
+
+  /**
+   * Logout user and redirect to login
+   */
+  disconnect(): void {
+    this.authService.logout();
+    this.router.navigate(['/login']);
+  }
+
+  /**
+   * Toggle between light and dark theme
+   */
+  toggleDarkMode(): void {
     this.themeService.toggleDarkMode();
   }
 
-  async installPwa() {
-    await this.pwaService.promptInstall();
+  /**
+   * Install PWA application
+   */
+  async installPwa(): Promise<void> {
+    try {
+      await this.pwaService.promptInstall();
+    } catch (error) {
+      this.notificationService.handleError(
+        error,
+        this.translate.instant('pwa.install-error')
+      );
+    }
   }
 }

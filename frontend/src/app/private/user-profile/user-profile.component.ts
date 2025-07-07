@@ -37,7 +37,7 @@ import { SystemMetricsResponse, DetailedSystemMetricsResponse } from '../../mode
     TagModule,
     TooltipModule,
     InputTextModule,
-    FormsModule
+    FormsModule,
   ],
   providers: [MessageService, NotificationService],
   templateUrl: './user-profile.component.html',

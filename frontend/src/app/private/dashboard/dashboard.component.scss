@@ -1,9 +1,0 @@
-p-avatar {
-    width: 2.5rem;
-    height: 2.5rem;
-    aspect-ratio: 1/1;
-}
-
-::ng-deep .p-popover:after, ::ng-deep .p-popover:before {
-    display: none !important;
-}
