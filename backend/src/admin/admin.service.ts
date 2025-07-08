@@ -193,8 +193,8 @@ export class AdminService {
         status: 'SUCCESS',
         details: {
           action: 'admin_delete_user',
-          target_user_id: uuid,
-          target_user_email: user.email,
+          targetUser: { uuid },
+          targetUserEmail: user.email,
           timestamp: new Date().toISOString()
         }
       });
@@ -440,11 +440,11 @@ export class AdminService {
       // Transform logs for admin view
       const transformedLogs = paginatedLogs.map(log => ({
         id: log.id || `log_${Date.now()}_${Math.random()}`,
-        action: log.event_type,
-        user_uuid: log.user_id,
-        user_email: log.user_email,
-        ip_address: log.ip_address || 'Unknown',
-        user_agent: log.user_agent || 'Unknown',
+        action: log.eventType,
+        user_uuid: log.user?.uuid,
+        user_email: log.userEmail,
+        ip_address: log.ipAddress || 'Unknown',
+        user_agent: log.userAgent || 'Unknown',
         timestamp: typeof log.timestamp === 'string' ? log.timestamp : log.timestamp.toISOString(),
         details: log.details
       }));

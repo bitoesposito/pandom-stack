@@ -13,6 +13,7 @@ import { RolesGuard } from './guards/roles.guard';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { MailModule } from '../common/modules/mail.module';
 import { CommonModule } from '../common/modules/common.module';
+import { SessionModule } from '../common/modules/session.module';
 
 /**
  * Auth Module
@@ -73,6 +74,9 @@ import { CommonModule } from '../common/modules/common.module';
     
     // Common module for shared services (audit, etc.)
     CommonModule,
+    
+    // Session module for session management
+    SessionModule,
   ],
   
   // Controllers that handle HTTP requests

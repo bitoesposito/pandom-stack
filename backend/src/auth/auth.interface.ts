@@ -70,6 +70,7 @@ export const Roles = (...roles: UserRole[]) => SetMetadata(ROLES_KEY, roles);
  * - Contains minimal necessary user information
  * - Uses UUID for user identification
  * - Includes role for authorization decisions
+ * - Includes sessionId for session management
  */
 export interface JwtPayload {
   /** User UUID - unique identifier for the user */
@@ -78,6 +79,10 @@ export interface JwtPayload {
   email: string;
   /** User role for authorization decisions */
   role: UserRole;
+  /** Session ID for session management */
+  sessionId?: string;
+  /** Token type (access or refresh) */
+  type?: string;
   /** Token issued at timestamp (optional, added by JWT library) */
   iat?: number;
 }
@@ -99,6 +104,8 @@ export interface LoginResponse {
   access_token: string;
   /** JWT refresh token for token renewal */
   refresh_token: string;
+  /** Session ID for session management */
+  session_id: string;
   /** Token expiration time in seconds */
   expires_in: number;
   /** Complete user information */

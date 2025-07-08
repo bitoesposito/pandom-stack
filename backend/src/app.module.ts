@@ -9,6 +9,9 @@ import { ResilienceModule } from './resilience/resilience.module';
 import { AdminModule } from './admin/admin.module';
 import { User } from './auth/entities/user.entity';
 import { UserProfile } from './users/entities/user-profile.entity';
+import { AuditLog } from './common/entities/audit-log.entity';
+import { SecurityLog } from './common/entities/security-log.entity';
+import { SessionLog } from './common/entities/session-log.entity';
 import { CommonModule } from './common/modules/common.module';
 import { MinioModule } from './common/modules/minio.module';
 
@@ -26,7 +29,7 @@ import { MinioModule } from './common/modules/minio.module';
         username: configService.get('POSTGRES_USER') || 'user',
         password: configService.get('POSTGRES_PASSWORD') || 'password',
         database: configService.get('POSTGRES_DB') || 'postgres',
-        entities: [User, UserProfile],
+        entities: [User, UserProfile, AuditLog, SecurityLog, SessionLog],
         synchronize: true, // Solo per sviluppo! In produzione usa migration
         logging: true, // Abilita logging per debug
         ssl: false,

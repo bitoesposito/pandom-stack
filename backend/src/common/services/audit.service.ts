@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import * as fs from 'fs';
-import * as path from 'path';
+import { AuditLog } from '../entities/audit-log.entity';
+import { User } from '../../auth/entities/user.entity';
 
 /**
  * Audit event types for system activity tracking
@@ -83,125 +83,71 @@ export interface AuditLogEntry {
 
 /**
  * Audit Service
- * 
+ *
  * Provides comprehensive audit logging functionality for security,
- * compliance, and system monitoring purposes.
- * 
+ * compliance, and system monitoring purposes. All logs are persisted
+ * in the database (AuditLog entity).
+ *
  * Features:
- * - Comprehensive event logging
+ * - Comprehensive event logging (login, logout, data access, etc.)
  * - Security incident tracking
  * - User activity monitoring
  * - Administrative action logging
  * - Compliance reporting support
- * - File-based audit storage
- * 
- * Audit Categories:
- * - Authentication events (login, logout, registration)
- * - Security events (suspicious activity, brute force)
- * - Data access events (file access, exports)
- * - Administrative events (user management)
- * - Session events (creation, expiration)
- * - Backup events (creation, restoration)
- * 
- * Security Features:
- * - IP address tracking
- * - User agent logging
- * - Session monitoring
- * - Suspicious activity detection
- * - Brute force attempt tracking
- * 
- * Compliance Support:
- * - Detailed audit trails
- * - Timestamp preservation
- * - User identification
- * - Action categorization
- * - Status tracking
- * 
+ *
  * Usage:
  * - Injected into services that need audit logging
  * - Provides security monitoring capabilities
  * - Supports compliance requirements
  * - Enables incident investigation
- * 
- * @example
- * // Log successful login
- * await this.auditService.logLoginSuccess('user123', 'user@example.com', '192.168.1.1');
- * 
- * @example
- * // Log suspicious activity
- * await this.auditService.logSuspiciousActivity('user123', 'user@example.com', 'Multiple failed logins', '192.168.1.1');
- * 
- * @example
- * // Log data access
- * await this.auditService.logDataAccess('user123', 'user@example.com', '/api/users', 'GET', '192.168.1.1');
  */
 @Injectable()
 export class AuditService {
+  /**
+   * Logger for development/debug output
+   */
   private readonly logger = new Logger(AuditService.name);
-  private readonly auditLogPath = path.join(process.cwd(), 'logs', 'audit.log');
-
-  constructor() {
-    // Create logs directory if it doesn't exist
-    const logsDir = path.dirname(this.auditLogPath);
-    if (!fs.existsSync(logsDir)) {
-      fs.mkdirSync(logsDir, { recursive: true });
-    }
-  }
-
-  // ============================================================================
-  // CORE AUDIT LOGGING
-  // ============================================================================
 
   /**
-   * Log an audit event
-   * 
-   * Core method for logging audit events with automatic timestamp.
-   * Writes to both file and console for development visibility.
-   * 
-   * @param event - Audit event data (timestamp will be added automatically)
-   * @returns Promise that resolves when logging is complete
-   * 
-   * @example
-   * await this.log({
-   *   event_type: AuditEventType.DATA_ACCESS,
-   *   user_id: 'user123',
-   *   user_email: 'user@example.com',
-   *   resource: '/api/data',
-   *   action: 'GET',
-   *   status: 'SUCCESS'
-   * });
+   * Constructor with injected repositories
+   * @param auditLogRepository Repository for AuditLog entity
+   * @param userRepository Repository for User entity
+   */
+  constructor(
+    @InjectRepository(AuditLog)
+    private readonly auditLogRepository: Repository<AuditLog>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+  ) {}
+
+  // ==========================================================================
+  // CORE AUDIT LOGGING
+  // ==========================================================================
+
+  /**
+   * Log an audit event (writes only to database)
+   * @param event Audit event data (timestamp will be added automatically)
    */
   async log(event: Omit<AuditLogEntry, 'timestamp'>): Promise<void> {
-    const auditEntry: AuditLogEntry = {
-      ...event,
-      timestamp: new Date(),
-    };
-
-    // Log to file for persistence
-    this.writeToFile(auditEntry);
-    
-    // Log to console for development visibility
+    const auditLog = this.auditLogRepository.create({
+      eventType: event.event_type,
+      status: event.status,
+      user: event.user_id ? { uuid: event.user_id } : undefined,
+      userEmail: event.user_email,
+      sessionId: event.session_id,
+      ipAddress: event.ip_address,
+      userAgent: event.user_agent,
+      resource: event.resource,
+      action: event.action,
+      details: event.details || {},
+      metadata: event.metadata || {},
+    });
+    await this.auditLogRepository.save(auditLog);
     this.logger.log(`AUDIT: ${event.event_type} - User: ${event.user_email || 'anonymous'} - Status: ${event.status}`);
   }
 
-  // ============================================================================
-  // AUTHENTICATION EVENTS
-  // ============================================================================
-
   /**
-   * Log successful login
-   * 
-   * Records successful user authentication with session information.
-   * 
-   * @param userId - Unique identifier of the user
-   * @param userEmail - Email address of the user
-   * @param ipAddress - Client IP address
-   * @param userAgent - User agent string
-   * @param sessionId - Session identifier
-   * @returns Promise that resolves when logging is complete
-   * 
-   * @example
-   * await this.logLoginSuccess('user123', 'user@example.com', '192.168.1.1', 'Chrome/91.0', 'session456');
+   * Log a successful login event
    */
   async logLoginSuccess(userId: string, userEmail: string, ipAddress?: string, userAgent?: string, sessionId?: string): Promise<void> {
     await this.log({
@@ -212,10 +158,6 @@ export class AuditService {
       user_agent: userAgent,
       session_id: sessionId,
       status: 'SUCCESS',
-      details: {
-        login_method: 'password',
-        timestamp: new Date().toISOString(),
-      },
     });
   }
 
@@ -664,94 +606,44 @@ export class AuditService {
     });
   }
 
-  // ============================================================================
-  // FILE OPERATIONS
-  // ============================================================================
-
-  /**
-   * Write audit entry to file
-   * 
-   * Writes an audit entry to the audit log file in JSON format.
-   * Each entry is written on a new line for easy parsing.
-   * 
-   * @param entry - Audit log entry to write
-   */
-  private writeToFile(entry: AuditLogEntry): void {
-    const line = JSON.stringify(entry) + '\n';
-    fs.appendFileSync(this.auditLogPath, line, { encoding: 'utf8' });
-  }
-
-  // ============================================================================
-  // AUDIT LOG RETRIEVAL
-  // ============================================================================
+  // ==========================================================================
+  // AUDIT LOG RETRIEVAL (from database)
+  // ==========================================================================
 
   /**
    * Get audit logs for a specific user
-   * 
-   * Retrieves audit logs for a specific user, sorted by timestamp.
-   * 
-   * @param userId - Unique identifier of the user
-   * @param limit - Maximum number of logs to return (default: 100)
-   * @returns Promise with array of audit log entries
-   * 
-   * @example
-   * const userLogs = await this.getUserAuditLogs('user123', 50);
+   * @param userId User UUID
+   * @param limit Max number of logs to return (default 100)
    */
-  async getUserAuditLogs(userId: string, limit: number = 100): Promise<AuditLogEntry[]> {
-    const logs = fs.readFileSync(this.auditLogPath, 'utf8')
-      .split('\n')
-      .filter(line => line.trim())
-      .map(line => JSON.parse(line))
-      .filter((entry: AuditLogEntry) => entry.user_id === userId)
-      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-      .slice(0, limit);
-
-    return logs;
+  async getUserAuditLogs(userId: string, limit: number = 100): Promise<AuditLog[]> {
+    return this.auditLogRepository.find({
+      where: { user: { uuid: userId } },
+      order: { timestamp: 'DESC' },
+      take: limit,
+    });
   }
 
   /**
    * Get audit logs by event type
-   * 
-   * Retrieves audit logs filtered by event type, sorted by timestamp.
-   * 
-   * @param eventType - Type of audit event to filter by
-   * @param limit - Maximum number of logs to return (default: 100)
-   * @returns Promise with array of audit log entries
-   * 
-   * @example
-   * const loginLogs = await this.getAuditLogsByType(AuditEventType.USER_LOGIN_SUCCESS, 200);
+   * @param eventType Audit event type
+   * @param limit Max number of logs to return (default 100)
    */
-  async getAuditLogsByType(eventType: AuditEventType, limit: number = 100): Promise<AuditLogEntry[]> {
-    const logs = fs.readFileSync(this.auditLogPath, 'utf8')
-      .split('\n')
-      .filter(line => line.trim())
-      .map(line => JSON.parse(line))
-      .filter((entry: AuditLogEntry) => entry.event_type === eventType)
-      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-      .slice(0, limit);
-
-    return logs;
+  async getAuditLogsByType(eventType: AuditEventType, limit: number = 100): Promise<AuditLog[]> {
+    return this.auditLogRepository.find({
+      where: { eventType },
+      order: { timestamp: 'DESC' },
+      take: limit,
+    });
   }
 
   /**
-   * Get all audit logs
-   * 
-   * Retrieves all audit logs, sorted by timestamp (most recent first).
-   * 
-   * @param limit - Maximum number of logs to return (default: 1000)
-   * @returns Promise with array of audit log entries
-   * 
-   * @example
-   * const allLogs = await this.getAllAuditLogs(500);
+   * Get all audit logs (paginated)
+   * @param limit Max number of logs to return (default 1000)
    */
-  async getAllAuditLogs(limit: number = 1000): Promise<AuditLogEntry[]> {
-    const logs = fs.readFileSync(this.auditLogPath, 'utf8')
-      .split('\n')
-      .filter(line => line.trim())
-      .map(line => JSON.parse(line))
-      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-      .slice(0, limit);
-
-    return logs;
+  async getAllAuditLogs(limit: number = 1000): Promise<AuditLog[]> {
+    return this.auditLogRepository.find({
+      order: { timestamp: 'DESC' },
+      take: limit,
+    });
   }
 } 

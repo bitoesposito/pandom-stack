@@ -104,9 +104,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     // Transform JWT payload into user object
     // This object will be available as req.user in route handlers
     return {
-      uuid: payload.sub,        // User UUID from JWT subject
+      sub: payload.sub,         // User UUID from JWT subject
       email: payload.email,     // User email from JWT payload
       role: payload.role,       // User role from JWT payload
+      sessionId: payload.sessionId, // Session ID from JWT payload
       iat: payload.iat,         // Token issued at timestamp
     };
   }

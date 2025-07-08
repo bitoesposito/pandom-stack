@@ -6,6 +6,8 @@ import { ConfigService } from '@nestjs/config';
 // Local imports
 import { SessionService } from '../services/session.service';
 import { User } from '../../auth/entities/user.entity';
+import { SessionLog } from '../entities/session-log.entity';
+import { SecurityLog } from '../entities/security-log.entity';
 import { LoggerService } from '../services/logger.service';
 
 /**
@@ -47,8 +49,8 @@ import { LoggerService } from '../services/logger.service';
 @Module({
   // Import required modules for functionality
   imports: [
-    // Database configuration for User entity
-    TypeOrmModule.forFeature([User]),
+    // Database configuration for User, SessionLog, and SecurityLog entities
+    TypeOrmModule.forFeature([User, SessionLog, SecurityLog]),
     
     // JWT configuration with async options
     JwtModule.registerAsync({

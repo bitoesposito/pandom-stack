@@ -248,18 +248,16 @@ export class ResilienceService {
       fs.unlinkSync(localBackupPath);
 
       // Log the successful backup creation for audit
-      await this.auditService.logBackupCreated(
-        userId,
-        userEmail,
-        ipAddress,
-        userAgent,
-        {
+      await this.auditService.log({
+        event_type: AuditEventType.DATA_EXPORT,
+        status: 'SUCCESS',
+        details: {
           action: 'create_backup',
           backup_file: backupFileName,
           backup_size: backupStats.size,
           minio_key: minioKey
         }
-      );
+      });
 
       const response: BackupResponseDto = {
         backup_id: timestamp,

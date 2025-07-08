@@ -24,6 +24,7 @@ import {
 } from './auth.dto';
 import { MailService } from '../common/services/mail.service';
 import { AuditService } from '../common/services/audit.service';
+import { SessionService } from '../common/services/session.service';
 
 /**
  * Auth Service
@@ -65,6 +66,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly mailService: MailService,
     private readonly auditService: AuditService,
+    private readonly sessionService: SessionService,
   ) {}
 
   // ============================================================================
@@ -252,38 +254,29 @@ export class AuthService {
       user.last_login_at = new Date();
       await this.userRepository.save(user);
 
-      // Generate JWT payload
-      const payload = {
-        sub: user.uuid,
-        email: user.email,
-        role: user.role
-      };
-
-      // Set token expiration based on rememberMe flag
-      const accessTokenExpiry = loginDto.rememberMe ? '30d' : '1h'; // 30 days if remember me, 1 hour otherwise
-      const refreshTokenExpiry = loginDto.rememberMe ? '90d' : '7d'; // 90 days if remember me, 7 days otherwise
-
-      // Generate JWT tokens
-      const accessToken = this.jwtService.sign(payload, { expiresIn: accessTokenExpiry });
-      const refreshToken = this.jwtService.sign(payload, { expiresIn: refreshTokenExpiry });
-
-      // Store refresh token in database for security
-      user.refresh_token = refreshToken;
-      user.refresh_token_expires = new Date(Date.now() + (loginDto.rememberMe ? 90 : 7) * 24 * 60 * 60 * 1000);
-      await this.userRepository.save(user);
-
-      // Extract IP and User Agent from request for audit logging
+      // Extract IP and User Agent from request
       const clientIp = this.getClientIp(req);
       const userAgent = req?.headers?.['user-agent'] || 'Unknown';
+      const deviceInfo = this.getDeviceInfo(req);
+
+      // Create session using SessionService
+      const session = await this.sessionService.createSession({
+        userId: user.uuid,
+        deviceInfo,
+        ipAddress: clientIp,
+        userAgent,
+        rememberMe: loginDto.rememberMe || false
+      });
 
       // Log successful login for audit purposes
-      await this.auditService.logLoginSuccess(user.uuid, user.email, clientIp, userAgent);
+      await this.auditService.logLoginSuccess(user.uuid, user.email, clientIp, userAgent, session.id);
 
-      // Prepare response with user data and tokens
+      // Prepare response with user data and session tokens
       const response: LoginResponse = {
-        access_token: accessToken,
-        refresh_token: refreshToken,
-        expires_in: loginDto.rememberMe ? 30 * 24 * 3600 : 3600, // 30 days or 1 hour in seconds
+        access_token: session.token,
+        refresh_token: session.refreshToken,
+        session_id: session.id,
+        expires_in: loginDto.rememberMe ? 30 * 24 * 3600 : 7 * 24 * 3600, // 30 days or 7 days in seconds
         user: {
           uuid: user.uuid,
           email: user.email,
@@ -303,7 +296,11 @@ export class AuthService {
         };
       }
 
-      this.logger.log('User logged in successfully', { email: user.email });
+      this.logger.log('User logged in successfully', { 
+        email: user.email, 
+        sessionId: session.id,
+        rememberMe: loginDto.rememberMe 
+      });
       
       return ApiResponseDto.success(response, 'Login successful');
     } catch (error) {
@@ -343,6 +340,18 @@ export class AuthService {
       // Verify the refresh token signature and expiration
       const payload = this.jwtService.verify(refreshToken);
       
+      // Extract session ID from token
+      const sessionId = payload.sessionId;
+      if (!sessionId) {
+        throw new UnauthorizedException('Invalid refresh token');
+      }
+
+      // Refresh session using SessionService
+      const session = await this.sessionService.refreshSession(sessionId, refreshToken);
+      if (!session) {
+        throw new UnauthorizedException('Invalid or expired refresh token');
+      }
+
       // Find user by UUID from token
       const user = await this.userRepository.findOne({
         where: { uuid: payload.sub },
@@ -358,43 +367,12 @@ export class AuthService {
         throw new UnauthorizedException('Account is deactivated');
       }
 
-      // Verify that the stored refresh token matches (security check)
-      if (user.refresh_token !== refreshToken) {
-        throw new UnauthorizedException('Invalid refresh token');
-      }
-
-      // Check if refresh token is expired in database
-      if (user.refresh_token_expires && user.refresh_token_expires < new Date()) {
-        // Clear expired refresh token
-        user.refresh_token = null;
-        user.refresh_token_expires = null;
-        await this.userRepository.save(user);
-        throw new UnauthorizedException('Refresh token expired');
-      }
-
-      // Generate new JWT payload
-      const newPayload = {
-        sub: user.uuid,
-        email: user.email,
-        role: user.role
-      };
-
-      // Generate new access token (1 hour expiration)
-      const newAccessToken = this.jwtService.sign(newPayload);
-
-      // Generate new refresh token for rotation (7 days expiration)
-      const newRefreshToken = this.jwtService.sign(newPayload, { expiresIn: '7d' });
-
-      // Update stored refresh token with new one
-      user.refresh_token = newRefreshToken;
-      user.refresh_token_expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
-      await this.userRepository.save(user);
-
       // Prepare response with new tokens
       const response: any = {
-        access_token: newAccessToken,
-        refresh_token: newRefreshToken,
-        expires_in: 3600, // 1 hour
+        access_token: session.token,
+        refresh_token: session.refreshToken,
+        session_id: session.id,
+        expires_in: 7 * 24 * 3600, // 7 days in seconds
         user: {
           uuid: user.uuid,
           email: user.email,
@@ -414,8 +392,11 @@ export class AuthService {
         };
       }
 
-      this.logger.log('Token refreshed successfully', { email: user.email });
-      
+      this.logger.log('Token refreshed successfully', { 
+        userId: user.uuid, 
+        sessionId: session.id 
+      });
+
       return ApiResponseDto.success(response, 'Token refreshed successfully');
     } catch (error) {
       this.logger.error('Token refresh failed', error);
@@ -539,6 +520,89 @@ export class AuthService {
   private getUserAgent(req?: any): string {
     if (!req) return 'Unknown';
     return req.headers?.['user-agent'] || 'Unknown';
+  }
+
+  /**
+   * Extract device information from request object
+   * 
+   * @param req - Express request object
+   * @returns Device information string
+   */
+  private getDeviceInfo(req?: any): string {
+    if (!req) return 'Unknown';
+
+    const userAgent = req.headers?.['user-agent'] || 'Unknown';
+    const device = this.detectDevice(userAgent);
+    const os = this.detectOS(userAgent);
+    const browser = this.detectBrowser(userAgent);
+
+    return `${device} - ${os} - ${browser}`;
+  }
+
+  /**
+   * Detect device type (mobile, tablet, desktop)
+   * 
+   * @param userAgent - User agent string
+   * @returns Device type string
+   */
+  private detectDevice(userAgent: string): string {
+    if (userAgent.includes('Mobile') || userAgent.includes('Android') || userAgent.includes('iPhone')) {
+      return 'Mobile';
+    }
+    if (userAgent.includes('Tablet') || userAgent.includes('iPad')) {
+      return 'Tablet';
+    }
+    return 'Desktop';
+  }
+
+  /**
+   * Detect operating system
+   * 
+   * @param userAgent - User agent string
+   * @returns Operating system string
+   */
+  private detectOS(userAgent: string): string {
+    if (userAgent.includes('Windows')) {
+      return 'Windows';
+    }
+    if (userAgent.includes('Mac OS X')) {
+      return 'Mac OS X';
+    }
+    if (userAgent.includes('Linux')) {
+      return 'Linux';
+    }
+    if (userAgent.includes('Android')) {
+      return 'Android';
+    }
+    if (userAgent.includes('iOS')) {
+      return 'iOS';
+    }
+    return 'Unknown';
+  }
+
+  /**
+   * Detect browser
+   * 
+   * @param userAgent - User agent string
+   * @returns Browser string
+   */
+  private detectBrowser(userAgent: string): string {
+    if (userAgent.includes('Chrome')) {
+      return 'Chrome';
+    }
+    if (userAgent.includes('Firefox')) {
+      return 'Firefox';
+    }
+    if (userAgent.includes('Safari')) {
+      return 'Safari';
+    }
+    if (userAgent.includes('Opera')) {
+      return 'Opera';
+    }
+    if (userAgent.includes('Edge')) {
+      return 'Edge';
+    }
+    return 'Unknown';
   }
 
   // ============================================================================

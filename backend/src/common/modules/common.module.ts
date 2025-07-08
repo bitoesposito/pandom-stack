@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
 
 // Local imports
 import { MailModule } from './mail.module';
@@ -10,6 +11,10 @@ import { AuditService } from '../services/audit.service';
 import { LoggerService } from '../services/logger.service';
 import { MetricsService } from '../services/metrics.service';
 import { MetricsInterceptor } from '../interceptors/metrics.interceptor';
+import { AuditLog } from '../entities/audit-log.entity';
+import { SecurityLog } from '../entities/security-log.entity';
+import { SessionLog } from '../entities/session-log.entity';
+import { User } from '../../auth/entities/user.entity';
 
 /**
  * Common Module
@@ -52,6 +57,7 @@ import { MetricsInterceptor } from '../interceptors/metrics.interceptor';
 @Module({
   // Import sub-modules for functionality
   imports: [
+    TypeOrmModule.forFeature([AuditLog, SecurityLog, SessionLog, User]),
     MailModule,              // Email functionality
     // MinioModule,          // Object storage (disabled)
     SessionModule,           // Session management

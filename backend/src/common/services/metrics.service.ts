@@ -443,7 +443,7 @@ export class MetricsService {
       const activeUsers = new Set(
         loginLogs
           .filter(log => new Date(log.timestamp) >= yesterday)
-          .map(log => log.user_id)
+          .map(log => log.user?.uuid)
           .filter(Boolean)
       ).size;
 
@@ -463,7 +463,7 @@ export class MetricsService {
               const logDate = new Date(log.timestamp);
               return logDate >= dayStart && logDate < dayEnd;
             })
-            .map(log => log.user_id)
+            .map(log => log.user?.uuid)
             .filter(Boolean)
         ).size;
 

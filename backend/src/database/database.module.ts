@@ -2,6 +2,9 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from '../auth/entities/user.entity';
 import { UserProfile } from '../users/entities/user-profile.entity';
+import { AuditLog } from '../common/entities/audit-log.entity';
+import { SecurityLog } from '../common/entities/security-log.entity';
+import { SessionLog } from '../common/entities/session-log.entity';
 import { DatabaseService } from './database.service';
 import { DatabaseController } from './database.controller';
 
@@ -21,6 +24,9 @@ import { DatabaseController } from './database.controller';
  * Entities:
  * - User: Authentication and user management
  * - UserProfile: Extended user profile information
+ * - AuditLog: Audit trail for security and compliance
+ * - SecurityLog: Security event tracking
+ * - SessionLog: User session lifecycle tracking
  * 
  * Services:
  * - DatabaseService: Core database operations
@@ -53,6 +59,9 @@ import { DatabaseController } from './database.controller';
     TypeOrmModule.forFeature([
       User,
       UserProfile,
+      AuditLog,
+      SecurityLog,
+      SessionLog,
     ]),
   ],
   controllers: [DatabaseController],

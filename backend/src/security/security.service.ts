@@ -142,9 +142,9 @@ export class SecurityService {
       // Transform audit logs to security logs format for consistency
       const securityLogs = paginatedLogs.map(log => ({
         id: log.id || `log_${Date.now()}_${Math.random()}`,
-        action: log.event_type,
-        ip_address: log.ip_address || 'Unknown',
-        user_agent: log.user_agent || 'Unknown',
+        action: log.eventType,
+        ip_address: log.ipAddress || 'Unknown',
+        user_agent: log.userAgent || 'Unknown',
         timestamp: typeof log.timestamp === 'string' ? log.timestamp : log.timestamp.toISOString(),
         success: log.status === 'SUCCESS',
         details: log.details || {}
@@ -239,12 +239,12 @@ export class SecurityService {
 
       // Add recent login sessions (excluding current session)
       loginLogs.forEach((log, index) => {
-        if (log.user_id === userId && index > 0) { // Skip current session
+        if (log.user?.uuid === userId && index > 0) { // Skip current session
           sessions.push({
             id: `session_${log.id || index}`,
             device: log.details?.device || 'Unknown Device',
-            ip_address: log.ip_address || 'Unknown',
-            user_agent: log.user_agent || 'Unknown',
+            ip_address: log.ipAddress || 'Unknown',
+            user_agent: log.userAgent || 'Unknown',
             created_at: typeof log.timestamp === 'string' ? log.timestamp : log.timestamp.toISOString(),
             expires_at: new Date((typeof log.timestamp === 'string' ? new Date(log.timestamp) : log.timestamp).getTime() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days
             is_active: false
@@ -550,6 +550,8 @@ export class SecurityService {
             event_type: AuditEventType.SUSPICIOUS_ACTIVITY,
             user_id: userId,
             user_email: user.email,
+            ip_address: this.getClientIp(undefined), // Assuming req is not available here
+            user_agent: this.getUserAgent(undefined), // Assuming req is not available here
             status: 'WARNING',
             details: {
               activity: 'Attempted to delete last admin user',
@@ -706,11 +708,11 @@ export class SecurityService {
       // Format logs for GDPR export
       return auditLogs.map(log => ({
         id: log.id,
-        event_type: log.event_type,
+        eventType: log.eventType,
         timestamp: typeof log.timestamp === 'string' ? log.timestamp : log.timestamp.toISOString(),
         status: log.status,
-        ip_address: log.ip_address,
-        user_agent: log.user_agent,
+        ipAddress: log.ipAddress,
+        userAgent: log.userAgent,
         details: log.details
       }));
     } catch (error) {

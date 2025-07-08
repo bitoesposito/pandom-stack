@@ -5,6 +5,7 @@ import { SecurityService } from './security.service';
 import { User } from '../auth/entities/user.entity';
 import { UserProfile } from '../users/entities/user-profile.entity';
 import { CommonModule } from '../common/modules/common.module';
+import { SessionModule } from '../common/modules/session.module';
 
 /**
  * Security Module
@@ -76,6 +77,7 @@ import { CommonModule } from '../common/modules/common.module';
   imports: [
     TypeOrmModule.forFeature([User, UserProfile]),
     CommonModule, // For AuditService
+    SessionModule, // For SessionService
   ],
   controllers: [SecurityController],
   providers: [SecurityService],
