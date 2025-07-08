@@ -1,17 +1,31 @@
 import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+
+// Local imports
 import { ApiResponseDto } from '../common/common.interface';
 import { User } from '../auth/entities/user.entity';
 import { UserProfile } from '../users/entities/user-profile.entity';
-import { UserManagementResponseDto, SystemMetricsResponseDto, AuditLogsResponseDto } from './admin.dto';
+import { 
+  UserManagementResponseDto, 
+  SystemMetricsResponseDto, 
+  AuditLogsResponseDto 
+} from './admin.dto';
 import { AuditService, AuditEventType } from '../common/services/audit.service';
 import { MetricsService } from '../common/services/metrics.service';
 import { UserRole } from '../auth/auth.interface';
 
 /**
- * Service handling admin-related business logic
- * Manages user administration, system metrics, and audit logs
+ * Admin Service
+ * 
+ * Core business logic for administrative operations including:
+ * - User management (listing, searching, deletion)
+ * - System metrics collection and aggregation
+ * - Audit log retrieval and formatting
+ * - Security validation and access control
+ * 
+ * This service handles all administrative tasks and ensures proper
+ * logging, validation, and security measures are in place.
  */
 @Injectable()
 export class AdminService {
@@ -24,27 +38,49 @@ export class AdminService {
     private readonly userProfileRepository: Repository<UserProfile>,
     private readonly auditService: AuditService,
     private readonly metricsService: MetricsService,
-  ) { }
+  ) {}
+
+  // ============================================================================
+  // USER MANAGEMENT METHODS
+  // ============================================================================
 
   /**
-   * Get users for management
-   * @param page - Page number
-   * @param limit - Items per page
-   * @param search - Search query
-   * @param req - Request object
-   * @returns Promise<ApiResponseDto<UserManagementResponseDto>>
+   * Get users for administrative management
+   * 
+   * Retrieves a paginated list of users with optional search functionality.
+   * Returns user information formatted for admin interface consumption.
+   * 
+   * Features:
+   * - Pagination support
+   * - Search by email or display name
+   * - Only returns active users
+   * - Includes profile information when available
+   * 
+   * @param page - Page number for pagination (default: 1)
+   * @param limit - Number of users per page (default: 10)
+   * @param search - Optional search term for filtering users
+   * @param req - Request object for logging purposes
+   * @returns Promise with user list and pagination information
+   * 
+   * @throws Error if database query fails
    */
-  async getUsers(page: number = 1, limit: number = 10, search?: string, req?: any): Promise<ApiResponseDto<UserManagementResponseDto>> {
+  async getUsers(
+    page: number = 1, 
+    limit: number = 10, 
+    search?: string, 
+    req?: any
+  ): Promise<ApiResponseDto<UserManagementResponseDto>> {
     try {
       this.logger.log('Getting users for admin management', { page, limit, search });
 
       const skip = (page - 1) * limit;
 
-      // Build query
+      // Build query with TypeORM QueryBuilder for flexibility
       const query = this.userRepository.createQueryBuilder('user')
         .leftJoinAndSelect('user.profile', 'profile')
         .where('user.is_active = :active', { active: true });
 
+      // Add search filter if provided
       if (search && search.trim() !== '') {
         query.andWhere(
           '(user.email ILIKE :search OR profile.metadata->>\'display_name\' ILIKE :search)',
@@ -52,11 +88,12 @@ export class AdminService {
         );
       }
 
+      // Apply pagination and ordering
       query.skip(skip).take(limit).orderBy('user.created_at', 'DESC');
 
       const [users, total] = await query.getManyAndCount();
 
-      // Transform users for admin view
+      // Transform users for admin view - only include necessary fields
       const transformedUsers = users.map(user => ({
         uuid: user.uuid,
         email: user.email,
@@ -90,18 +127,42 @@ export class AdminService {
   }
 
   /**
-   * Delete user account
-   * @param uuid - User UUID
-   * @param adminId - Admin user ID
-   * @param adminEmail - Admin email
-   * @param req - Request object
-   * @returns Promise<ApiResponseDto<null>>
+   * Delete a user account and associated data
+   * 
+   * Permanently removes a user account and all associated profile data.
+   * Includes comprehensive safety checks and audit logging.
+   * 
+   * Safety Checks:
+   * - Prevents deletion of admin users
+   * - Prevents self-deletion
+   * - Validates user existence
+   * 
+   * Process:
+   * 1. Validate user exists and can be deleted
+   * 2. Log the deletion attempt for audit purposes
+   * 3. Use transaction to ensure data consistency
+   * 4. Remove profile reference, delete profile, then delete user
+   * 
+   * @param uuid - UUID of the user to delete
+   * @param adminId - UUID of the admin performing the deletion
+   * @param adminEmail - Email of the admin performing the deletion
+   * @param req - Request object for IP and user agent extraction
+   * @returns Promise with success confirmation
+   * 
+   * @throws NotFoundException if user doesn't exist
+   * @throws BadRequestException if trying to delete admin or self
+   * @throws Error if database operation fails
    */
-  async deleteUser(uuid: string, adminId: string, adminEmail: string, req?: any): Promise<ApiResponseDto<null>> {
+  async deleteUser(
+    uuid: string, 
+    adminId: string, 
+    adminEmail: string, 
+    req?: any
+  ): Promise<ApiResponseDto<null>> {
     try {
       this.logger.log('Deleting user account', { uuid, adminId });
 
-      // Verify user exists
+      // Step 1: Verify user exists and get profile information
       const user = await this.userRepository.findOne({
         where: { uuid },
         relations: ['profile']
@@ -111,23 +172,24 @@ export class AdminService {
         throw new NotFoundException('User not found');
       }
 
-      // Prevent deleting admin users
+      // Step 2: Safety checks
       if (user.role === UserRole.admin) {
         throw new BadRequestException('Cannot delete admin users through admin interface');
       }
 
-      // Prevent deleting self
       if (user.uuid === adminId) {
         throw new BadRequestException('Cannot delete your own account');
       }
 
-      // Log the deletion attempt
+      // Step 3: Log the deletion attempt for audit purposes
       const clientIp = this.getClientIp(req);
+      const userAgent = this.getUserAgent(req);
       await this.auditService.log({
         event_type: AuditEventType.USER_DELETED,
         user_id: adminId,
         user_email: adminEmail,
         ip_address: clientIp,
+        user_agent: userAgent,
         status: 'SUCCESS',
         details: {
           action: 'admin_delete_user',
@@ -137,9 +199,9 @@ export class AdminService {
         }
       });
 
-      // Use a transaction to handle foreign key constraints properly
+      // Step 4: Execute deletion in transaction for data consistency
       await this.userRepository.manager.transaction(async (transactionalEntityManager) => {
-        // First, update the user to remove the profile reference
+        // First, remove the profile reference from the user
         await transactionalEntityManager
           .createQueryBuilder()
           .update('auth_users')
@@ -174,50 +236,93 @@ export class AdminService {
     }
   }
 
+  // ============================================================================
+  // UTILITY METHODS
+  // ============================================================================
+
   /**
-   * Get client IP address from request
+   * Extract client IP address from request object
+   * 
+   * Handles various proxy configurations and headers to determine
+   * the actual client IP address for audit logging purposes.
+   * 
+   * Priority order:
+   * 1. X-Forwarded-For header (first IP in list)
+   * 2. X-Real-IP header
+   * 3. Connection remote address
+   * 4. Socket remote address
+   * 
    * @param req - Express request object
-   * @returns string - Client IP address
+   * @returns Client IP address or 'Unknown' if not available
    */
   private getClientIp(req?: any): string {
     if (!req) return 'Unknown';
+    
     const forwardedFor = req.headers?.['x-forwarded-for'] as string;
     const realIp = req.headers?.['x-real-ip'] as string;
     const remoteAddr = req.connection?.remoteAddress || req.socket?.remoteAddress;
+    
     if (forwardedFor) {
       const ips = forwardedFor.split(',').map(ip => ip.trim());
       return ips[0];
     }
+    
     if (realIp) {
       return realIp;
     }
+    
     if (remoteAddr) {
       return remoteAddr.replace(/^::ffff:/, '');
     }
+    
     return 'Unknown';
   }
 
   /**
-   * Get system metrics
-   * @param req - Request object
-   * @returns Promise<ApiResponseDto<SystemMetricsResponseDto>>
+   * Extract user agent string from request object
+   * 
+   * @param req - Express request object
+   * @returns User agent string or 'Unknown' if not available
+   */
+  private getUserAgent(req?: any): string {
+    if (!req) return 'Unknown';
+    return req.headers?.['user-agent'] || 'Unknown';
+  }
+
+  // ============================================================================
+  // SYSTEM METRICS METHODS
+  // ============================================================================
+
+  /**
+   * Get comprehensive system metrics overview
+   * 
+   * Aggregates data from multiple sources to provide a complete
+   * system overview for administrative monitoring.
+   * 
+   * Data Sources:
+   * - MetricsService for system performance metrics
+   * - Database for user statistics
+   * - Real-time calculations for current day metrics
+   * 
+   * @param req - Request object for logging purposes
+   * @returns Promise with system metrics data
+   * 
+   * @throws Error if metrics collection fails
    */
   async getMetrics(req?: any): Promise<ApiResponseDto<SystemMetricsResponseDto>> {
     try {
       this.logger.log('Getting system metrics');
 
-      // Get real system metrics from MetricsService
+      // Collect metrics from various services
       const systemMetrics = await this.metricsService.getSystemMetrics();
       const hourlyMetrics = await this.metricsService.getHourlyMetrics();
       const alerts = await this.metricsService.getAlerts();
-      
-      // Get user activity metrics
       const userActivity = await this.metricsService.getUserActivityMetrics();
 
       // Get user statistics from database
       const totalUsers = await this.userRepository.count();
       
-      // Get new users today
+      // Calculate new users for today
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       const newUsersToday = await this.userRepository
@@ -260,9 +365,15 @@ export class AdminService {
   }
 
   /**
-   * Get detailed system metrics
-   * @param req - Request object
-   * @returns Promise<ApiResponseDto<any>>
+   * Get detailed system metrics for advanced monitoring
+   * 
+   * Provides comprehensive system metrics with additional details
+   * for debugging and advanced system monitoring purposes.
+   * 
+   * @param req - Request object for logging purposes
+   * @returns Promise with detailed metrics data
+   * 
+   * @throws Error if metrics collection fails
    */
   async getDetailedMetrics(req?: any): Promise<ApiResponseDto<any>> {
     try {
@@ -287,14 +398,33 @@ export class AdminService {
     }
   }
 
+  // ============================================================================
+  // AUDIT LOGS METHODS
+  // ============================================================================
+
   /**
-   * Get audit logs
-   * @param page - Page number
-   * @param limit - Items per page
-   * @param req - Request object
-   * @returns Promise<ApiResponseDto<AuditLogsResponseDto>>
+   * Get paginated audit logs for security monitoring
+   * 
+   * Retrieves audit logs with pagination support for security
+   * monitoring and compliance purposes.
+   * 
+   * Features:
+   * - Pagination support for large log datasets
+   * - Comprehensive log information including user details
+   * - Formatted for admin interface consumption
+   * 
+   * @param page - Page number for pagination (default: 1)
+   * @param limit - Number of logs per page (default: 50)
+   * @param req - Request object for logging purposes
+   * @returns Promise with audit logs and pagination information
+   * 
+   * @throws Error if log retrieval fails
    */
-  async getAuditLogs(page: number = 1, limit: number = 50, req?: any): Promise<ApiResponseDto<AuditLogsResponseDto>> {
+  async getAuditLogs(
+    page: number = 1, 
+    limit: number = 50, 
+    req?: any
+  ): Promise<ApiResponseDto<AuditLogsResponseDto>> {
     try {
       this.logger.log('Getting audit logs', { page, limit });
 

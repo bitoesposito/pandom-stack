@@ -1,18 +1,60 @@
-import { Controller, Get, Post, Body, HttpCode, HttpStatus, UseGuards } from '@nestjs/common';
+import { 
+  Controller, 
+  Get, 
+  Post, 
+  Body, 
+  HttpCode, 
+  HttpStatus, 
+  UseGuards 
+} from '@nestjs/common';
+
+// Local imports
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { MailService } from '../services/mail.service';
 import { TemplateService, EmailTemplateData } from '../services/template.service';
 import { ApiResponseDto } from '../common.interface';
 
+/**
+ * Data Transfer Object for email testing
+ * 
+ * Used for testing email templates with custom data.
+ * Allows developers to test email functionality with different templates.
+ */
 interface TestEmailDto {
+  /** Recipient email address */
   to: string;
+  /** Type of email template to test */
   templateType: 'verification' | 'reset';
+  /** Template data for email personalization */
   data: EmailTemplateData;
 }
 
 /**
- * Controller for email template management and testing
- * Only accessible to authenticated users
+ * Email Controller
+ * 
+ * Handles email template management and testing functionality.
+ * Provides endpoints for template management and email testing.
+ * 
+ * Features:
+ * - Email template listing
+ * - Template testing with custom data
+ * - Template cache management
+ * - Email functionality validation
+ * 
+ * Security:
+ * - Requires JWT authentication
+ * - Accessible only to authenticated users
+ * - Template testing for development purposes
+ * 
+ * Endpoints:
+ * - GET /email/templates - List available templates
+ * - POST /email/test - Test email template
+ * - POST /email/clear-cache - Clear template cache
+ * 
+ * Usage:
+ * - Development and testing of email templates
+ * - Template cache management
+ * - Email functionality validation
  */
 @Controller('email')
 @UseGuards(JwtAuthGuard)
@@ -24,7 +66,15 @@ export class EmailController {
 
   /**
    * Get available email templates
+   * 
+   * Retrieves a list of all available email templates in the system.
+   * Useful for frontend template selection and development purposes.
+   * 
+   * @returns Promise with array of template names
+   * 
+   * @example
    * GET /email/templates
+   * Response: ["verification", "reset", "welcome"]
    */
   @Get('templates')
   async getAvailableTemplates(): Promise<ApiResponseDto<string[]>> {
@@ -38,7 +88,29 @@ export class EmailController {
 
   /**
    * Test email template
+   * 
+   * Sends a test email using the specified template and data.
+   * Allows developers to test email templates with custom data.
+   * 
+   * Process:
+   * 1. Validates template type and data
+   * 2. Renders email template with provided data
+   * 3. Sends test email to specified recipient
+   * 4. Returns success confirmation
+   * 
+   * @param testEmailDto - Email testing data including recipient, template type, and data
+   * @returns Promise with test email confirmation
+   * 
+   * @example
    * POST /email/test
+   * {
+   *   "to": "test@example.com",
+   *   "templateType": "verification",
+   *   "data": {
+   *     "userName": "John Doe",
+   *     "verificationCode": "123456"
+   *   }
+   * }
    */
   @Post('test')
   @HttpCode(HttpStatus.OK)
@@ -58,7 +130,20 @@ export class EmailController {
 
   /**
    * Clear template cache
+   * 
+   * Clears the email template cache to force reload of templates.
+   * Useful when templates are updated and need to be refreshed.
+   * 
+   * Process:
+   * 1. Clears cached template data
+   * 2. Forces template reload on next request
+   * 3. Returns cache clearing confirmation
+   * 
+   * @returns Promise with cache clearing confirmation
+   * 
+   * @example
    * POST /email/clear-cache
+   * Response: "Template cache cleared successfully"
    */
   @Post('clear-cache')
   @HttpCode(HttpStatus.OK)

@@ -1,4 +1,6 @@
 import { Module } from '@nestjs/common';
+
+// Local imports
 import { MailModule } from './mail.module';
 // import { MinioModule } from './minio.module';
 import { SessionModule } from './session.module';
@@ -9,24 +11,79 @@ import { LoggerService } from '../services/logger.service';
 import { MetricsService } from '../services/metrics.service';
 import { MetricsInterceptor } from '../interceptors/metrics.interceptor';
 
+/**
+ * Common Module
+ * 
+ * Central module that provides shared services and functionality across the application.
+ * Aggregates common services, interceptors, and modules for reuse throughout the system.
+ * 
+ * Features:
+ * - Email functionality (MailModule)
+ * - Session management (SessionModule)
+ * - Image optimization (ImageOptimizerModule)
+ * - File storage (MinioModule - currently disabled)
+ * - Audit logging (AuditService)
+ * - Application logging (LoggerService)
+ * - Metrics collection (MetricsService, MetricsInterceptor)
+ * - Email template testing (EmailController)
+ * 
+ * Services Provided:
+ * - AuditService: Security event logging and tracking
+ * - LoggerService: Application logging and error tracking
+ * - MetricsService: Request metrics and analytics
+ * - MetricsInterceptor: Automatic metrics collection
+ * 
+ * Modules Imported:
+ * - MailModule: Email sending and template management
+ * - SessionModule: User session management
+ * - ImageOptimizerModule: Image processing and optimization
+ * - MinioModule: Object storage (currently disabled)
+ * 
+ * Exports:
+ * - All imported modules for use in other parts of the application
+ * - Core services for dependency injection
+ * - Interceptors for global application use
+ * 
+ * Usage:
+ * - Imported by other modules to access shared functionality
+ * - Provides centralized service management
+ * - Enables consistent logging and metrics across the application
+ */
 @Module({
+  // Import sub-modules for functionality
   imports: [
-    MailModule,
-    // MinioModule,
-    SessionModule,
-    ImageOptimizerModule,
+    MailModule,              // Email functionality
+    // MinioModule,          // Object storage (disabled)
+    SessionModule,           // Session management
+    ImageOptimizerModule,    // Image optimization
   ],
-  controllers: [EmailController],
-  providers: [AuditService, LoggerService, MetricsService, MetricsInterceptor],
+  
+  // Controllers for this module
+  controllers: [
+    EmailController,         // Email template testing and management
+  ],
+  
+  // Service providers for dependency injection
+  providers: [
+    AuditService,            // Security audit logging
+    LoggerService,           // Application logging
+    MetricsService,          // Request metrics collection
+    MetricsInterceptor,      // Automatic metrics interceptor
+  ],
+  
+  // Exports for use in other modules
   exports: [
-    MailModule,
-    // MinioModule,
-    SessionModule,
-    ImageOptimizerModule,
-    AuditService,
-    LoggerService,
-    MetricsService,
-    MetricsInterceptor,
+    // Export all imported modules
+    MailModule,              // Email functionality
+    // MinioModule,          // Object storage (disabled)
+    SessionModule,           // Session management
+    ImageOptimizerModule,    // Image optimization
+    
+    // Export core services
+    AuditService,            // Security audit logging
+    LoggerService,           // Application logging
+    MetricsService,          // Request metrics collection
+    MetricsInterceptor,      // Automatic metrics interceptor
   ],
 })
 export class CommonModule {} 

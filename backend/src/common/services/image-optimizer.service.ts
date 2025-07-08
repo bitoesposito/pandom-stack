@@ -1,25 +1,115 @@
 import { Injectable, Logger } from '@nestjs/common';
 import * as sharp from 'sharp';
 
+/**
+ * Supported image formats for optimization
+ * 
+ * Defines the image formats that can be processed and optimized.
+ * Each format has specific optimization settings for best results.
+ */
+export type ImageFormat = 'jpeg' | 'png' | 'webp' | 'gif' | 'avif' | 'tiff' | 'svg';
+
+/**
+ * Interface for image optimization options
+ * 
+ * Defines the parameters for image optimization including
+ * dimensions, quality, and output format.
+ */
+export interface ImageOptimizationOptions {
+  /** Maximum width in pixels */
+  maxWidth?: number;
+  /** Maximum height in pixels */
+  maxHeight?: number;
+  /** Quality setting (1-100) */
+  quality?: number;
+  /** Output format for the optimized image */
+  format?: ImageFormat;
+}
+
+/**
+ * Image Optimizer Service
+ * 
+ * Provides image optimization and format conversion functionality.
+ * Uses Sharp library for high-performance image processing.
+ * 
+ * Features:
+ * - Image resizing with aspect ratio preservation
+ * - Format conversion and optimization
+ * - Quality and compression settings
+ * - Automatic format detection
+ * - Support for multiple image formats
+ * - HEIC/HEIF and BMP conversion
+ * 
+ * Supported Formats:
+ * - JPEG: Photos and complex images with lossy compression
+ * - PNG: Images with transparency or sharp edges
+ * - WebP: Modern format with excellent compression
+ * - GIF: Animated images and simple graphics
+ * - AVIF: Next-generation format with superior compression
+ * - TIFF: High-quality images with lossless compression
+ * - SVG: Vector graphics (no optimization needed)
+ * 
+ * Optimization Features:
+ * - Automatic aspect ratio preservation
+ * - Format-specific compression settings
+ * - Quality control for file size optimization
+ * - Metadata preservation where possible
+ * - Error handling and logging
+ * 
+ * Usage:
+ * - Injected into services that handle image uploads
+ * - Provides optimized images for web delivery
+ * - Supports format conversion for compatibility
+ * - Handles various input formats automatically
+ * 
+ * @example
+ * // Optimize image with default settings
+ * const optimized = await this.imageOptimizer.optimizeImage(imageBuffer);
+ * 
+ * @example
+ * // Optimize with custom settings
+ * const optimized = await this.imageOptimizer.optimizeImage(imageBuffer, {
+ *   maxWidth: 1200,
+ *   maxHeight: 800,
+ *   quality: 85,
+ *   format: 'webp'
+ * });
+ * 
+ * @example
+ * // Determine best format automatically
+ * const bestFormat = await this.imageOptimizer.determineBestFormat(imageBuffer);
+ */
 @Injectable()
 export class ImageOptimizerService {
   private readonly logger = new Logger(ImageOptimizerService.name);
 
+  // ============================================================================
+  // MAIN OPTIMIZATION METHODS
+  // ============================================================================
+
   /**
    * Optimizes an image buffer according to the specified parameters
    * 
+   * Processes an image buffer to optimize file size and dimensions
+   * while maintaining visual quality. Supports multiple output formats
+   * with format-specific optimization settings.
+   * 
    * @param buffer - The image buffer to optimize
-   * @param options - Optimization options
-   * @returns Promise<Buffer> - The optimized image buffer
+   * @param options - Optimization options including dimensions, quality, and format
+   * @returns Promise with optimized image buffer
+   * @throws Error if image processing fails
+   * 
+   * @example
+   * const optimized = await this.optimizeImage(imageBuffer, {
+   *   maxWidth: 800,
+   *   maxHeight: 600,
+   *   quality: 85,
+   *   format: 'webp'
+   * });
    */
   async optimizeImage(
     buffer: Buffer,
-    options: {
-      maxWidth?: number;
-      maxHeight?: number;
-      quality?: number;
-      format?: 'jpeg' | 'png' | 'webp' | 'gif' | 'avif' | 'tiff' | 'svg';
-    } = {}
+    options: ImageOptimizationOptions = {}
   ): Promise<Buffer> {
     try {
       const {
@@ -29,7 +119,7 @@ export class ImageOptimizerService {
         format = 'jpeg'
       } = options;
 
-      // Get image metadata
+      // Get image metadata for dimension calculations
       const metadata = await sharp(buffer).metadata();
       
       // Calculate new dimensions maintaining aspect ratio
@@ -42,7 +132,7 @@ export class ImageOptimizerService {
         height = Math.round(height * ratio);
       }
 
-      // Process image
+      // Initialize image processing pipeline
       const processedImage = sharp(buffer)
         .resize(width, height, {
           fit: 'inside',
@@ -119,10 +209,17 @@ export class ImageOptimizerService {
   /**
    * Determines the best format for an image based on its content
    * 
+   * Analyzes image metadata to recommend the optimal output format
+   * based on image characteristics like transparency, animation, and complexity.
+   * 
    * @param buffer - The image buffer to analyze
-   * @returns Promise<'jpeg' | 'png' | 'webp' | 'gif' | 'avif' | 'tiff' | 'svg'> - The recommended format
+   * @returns Promise with recommended format
+   * 
+   * @example
+   * const bestFormat = await this.determineBestFormat(imageBuffer);
+   * // Returns: 'png' for images with transparency, 'webp' for photos, etc.
    */
-  async determineBestFormat(buffer: Buffer): Promise<'jpeg' | 'png' | 'webp' | 'gif' | 'avif' | 'tiff' | 'svg'> {
+  async determineBestFormat(buffer: Buffer): Promise<ImageFormat> {
     try {
       const metadata = await sharp(buffer).metadata();
       
@@ -154,9 +251,22 @@ export class ImageOptimizerService {
     }
   }
 
+  // ============================================================================
+  // FORMAT CONVERSION METHODS
+  // ============================================================================
+
   /**
    * Converts HEIC/HEIF images to JPEG
-   * This is a fallback for when the native HEIC support is not available
+   * 
+   * Provides fallback conversion for HEIC/HEIF images when native
+   * support is not available. HEIC is Apple's image format.
+   * 
+   * @param buffer - HEIC/HEIF image buffer
+   * @returns Promise with JPEG buffer
+   * @throws Error if conversion fails
+   * 
+   * @example
+   * const jpegBuffer = await this.convertHeicToJpeg(heicBuffer);
    */
   private async convertHeicToJpeg(buffer: Buffer): Promise<Buffer> {
     try {
@@ -174,7 +284,16 @@ export class ImageOptimizerService {
 
   /**
    * Converts BMP images to PNG
-   * This is a fallback for when the native BMP support is not available
+   * 
+   * Provides fallback conversion for BMP images when native
+   * support is not available. BMP is an uncompressed format.
+   * 
+   * @param buffer - BMP image buffer
+   * @returns Promise with PNG buffer
+   * @throws Error if conversion fails
+   * 
+   * @example
+   * const pngBuffer = await this.convertBmpToPng(bmpBuffer);
    */
   private async convertBmpToPng(buffer: Buffer): Promise<Buffer> {
     try {
