@@ -83,9 +83,9 @@ export class SyncQueueService {
 
   async processCriticalOperations(): Promise<void> {
     if (!navigator.onLine) return;
-    
+
     const highPriorityOps = await this.getOperationsByPriority('high');
-    
+
     for (const operation of highPriorityOps) {
       try {
         await this.processOperation(operation);
@@ -100,11 +100,11 @@ export class SyncQueueService {
   async retryOperation(operationId: string): Promise<void> {
     const operations = await this.offlineStorage.getPendingOperations();
     const operation = operations.find(op => op.id === operationId);
-    
+
     if (!operation) {
       throw new Error('Operation not found in queue');
     }
-    
+
     try {
       await this.processOperation(operation);
       await this.offlineStorage.removePendingOperation(operationId);
@@ -118,10 +118,10 @@ export class SyncQueueService {
   private async processOperation(operation: OfflineOperation): Promise<void> {
     const { type, endpoint, data } = operation;
     const url = `${environment.apiUrl}${endpoint}`;
-    
+
     // Aggiungi headers di autenticazione se necessario
     const headers = this.getAuthHeaders();
-    
+
     switch (type) {
       case 'CREATE':
         await this.http.post(url, data, { headers }).toPromise();
@@ -144,12 +144,12 @@ export class SyncQueueService {
 
   private sortOperationsByPriority(operations: OfflineOperation[]): OfflineOperation[] {
     const priorityOrder = { high: 0, normal: 1, low: 2 };
-    
+
     return operations.sort((a, b) => {
       // Prima per priorità
       const priorityDiff = priorityOrder[a.priority] - priorityOrder[b.priority];
       if (priorityDiff !== 0) return priorityDiff;
-      
+
       // Poi per timestamp (FIFO)
       return new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime();
     });
@@ -164,13 +164,13 @@ export class SyncQueueService {
     const operations = await this.offlineStorage.getPendingOperations();
     const completed = this.syncResults.filter(r => r.success).length;
     const failed = this.syncResults.filter(r => !r.success).length;
-    
+
     const highPriority = operations.filter(op => op.priority === 'high').length;
     const normalPriority = operations.filter(op => op.priority === 'normal').length;
     const lowPriority = operations.filter(op => op.priority === 'low').length;
-    
+
     const avgProcessingTime = this.calculateAverageProcessingTime();
-    
+
     return {
       total_operations: operations.length + completed + failed,
       pending_operations: operations.length,
@@ -186,13 +186,13 @@ export class SyncQueueService {
 
   private calculateAverageProcessingTime(): number {
     if (this.syncResults.length === 0) return 0;
-    
+
     const processingTimes = this.syncResults
       .filter(r => r.success)
       .map(r => new Date(r.timestamp).getTime());
-    
+
     if (processingTimes.length === 0) return 0;
-    
+
     const avg = processingTimes.reduce((sum, time) => sum + time, 0) / processingTimes.length;
     return avg;
   }

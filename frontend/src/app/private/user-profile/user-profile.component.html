@@ -461,12 +461,9 @@
         </div>
 
         <!-- Security Logs Table -->
-        <p-table *ngIf="!isLoadingSecurityLogs && securityLogs.length > 0" [value]="securityLogs" [paginator]="true"
-            [rows]="securityLogsRows" [totalRecords]="securityLogsTotal" (onPage)="onSecurityLogsPageChange($event)"
-            [showCurrentPageReport]="true" [tableStyle]="{ 'min-width': '50rem' }" [scrollable]="true"
-            responsiveLayout="scroll"
-            currentPageReportTemplate="{{ 'common.showing' | translate }} {first} {{ 'common.to' | translate }} {last} {{ 'common.of' | translate }} {totalRecords} {{ 'common.entries' | translate }}"
-            [rowsPerPageOptions]="[10, 25, 50, 100]" [paginatorDropdownAppendTo]="'body'">
+        <p-table *ngIf="!isLoadingSecurityLogs && securityLogs.length > 0" [value]="securityLogs" [rows]="securityLogsRows"
+            [tableStyle]="{ 'min-width': '50rem' }" [scrollable]="true"
+            responsiveLayout="scroll">
 
             <ng-template pTemplate="header">
                 <tr>
@@ -522,6 +519,13 @@
                 </tr>
             </ng-template>
         </p-table>
+        <p-paginator
+            [rows]="securityLogsRows"
+            [totalRecords]="securityLogsTotal"
+            [first]="(securityLogsPage - 1) * securityLogsRows"
+            [rowsPerPageOptions]="[10, 25, 50, 100]"
+            (onPageChange)="onSecurityLogsPaginatorChange($event)">
+        </p-paginator>
     </div>
 </p-dialog>
 
@@ -545,11 +549,8 @@
         </div>
 
         <!-- Users Table -->
-        <p-table *ngIf="!isLoadingUsers" [value]="users" [paginator]="true" [rows]="usersRows"
-            [totalRecords]="usersTotal" (onPage)="onUsersPageChange($event)" [showCurrentPageReport]="true"
-            [tableStyle]="{ 'min-width': '50rem' }" [scrollable]="true" responsiveLayout="scroll"
-            currentPageReportTemplate="{{ 'common.showing' | translate }} {first} {{ 'common.to' | translate }} {last} {{ 'common.of' | translate }} {totalRecords} {{ 'common.entries' | translate }}"
-            [rowsPerPageOptions]="[10, 25, 50, 100]" [paginatorDropdownAppendTo]="'body'">
+        <p-table *ngIf="!isLoadingUsers" [value]="users" [rows]="usersRows"
+            [tableStyle]="{ 'min-width': '50rem' }" [scrollable]="true" responsiveLayout="scroll">
 
             <ng-template pTemplate="header">
                 <tr>
@@ -613,6 +614,13 @@
                 </tr>
             </ng-template>
         </p-table>
+        <p-paginator
+            [rows]="usersRows"
+            [totalRecords]="usersTotal"
+            [first]="(usersPage - 1) * usersRows"
+            [rowsPerPageOptions]="[10, 25, 50, 100]"
+            (onPageChange)="onUsersPaginatorChange($event)">
+        </p-paginator>
     </div>
 </p-dialog>
 
@@ -662,12 +670,8 @@
         </div>
 
         <!-- Audit Logs Table -->
-        <p-table *ngIf="!isLoadingAuditLogs && auditLogs.length > 0" [value]="auditLogs" [paginator]="true"
-            [rows]="auditLogsRows" [totalRecords]="auditLogsTotal" (onPage)="onAuditLogsPageChange($event)"
-            [showCurrentPageReport]="true" [tableStyle]="{ 'min-width': '50rem' }" [scrollable]="true"
-            responsiveLayout="scroll"
-            currentPageReportTemplate="{{ 'common.showing' | translate }} {first} {{ 'common.to' | translate }} {last} {{ 'common.of' | translate }} {totalRecords} {{ 'common.entries' | translate }}"
-            [rowsPerPageOptions]="[10, 25, 50, 100]" [paginatorDropdownAppendTo]="'body'">
+        <p-table *ngIf="!isLoadingAuditLogs && auditLogs.length > 0" [value]="auditLogs" [rows]="auditLogsRows"
+            [tableStyle]="{ 'min-width': '50rem' }" [scrollable]="true" responsiveLayout="scroll">
 
             <ng-template pTemplate="header">
                 <tr>
@@ -723,6 +727,13 @@
                 </tr>
             </ng-template>
         </p-table>
+        <p-paginator
+            [rows]="auditLogsRows"
+            [totalRecords]="auditLogsTotal"
+            [first]="(auditLogsPage - 1) * auditLogsRows"
+            [rowsPerPageOptions]="[10, 25, 50, 100]"
+            (onPageChange)="onAuditLogsPaginatorChange($event)">
+        </p-paginator>
     </div>
 </p-dialog>
 
@@ -806,12 +817,9 @@
         </div>
 
         <!-- Backup Table -->
-        <p-table *ngIf="!isLoadingBackups && backups.length > 0" [value]="backups" [paginator]="true"
-            [rows]="backupsRows" [totalRecords]="backupsTotal" (onPage)="onBackupsPageChange($event)"
-            [showCurrentPageReport]="true" [tableStyle]="{ 'min-width': '50rem' }" [scrollable]="true"
-            responsiveLayout="scroll"
-            currentPageReportTemplate="{{ 'common.showing' | translate }} {first} {{ 'common.to' | translate }} {last} {{ 'common.of' | translate }} {totalRecords} {{ 'common.entries' | translate }}"
-            [rowsPerPageOptions]="[10, 25, 50, 100]" [paginatorDropdownAppendTo]="'body'">
+        <p-table *ngIf="!isLoadingBackups && backups.length > 0" [value]="backups" [rows]="backupsRows"
+            [tableStyle]="{ 'min-width': '50rem' }" [scrollable]="true"
+            responsiveLayout="scroll">
 
             <ng-template pTemplate="header">
                 <tr>
@@ -863,5 +871,12 @@
                 </tr>
             </ng-template>
         </p-table>
+        <p-paginator
+            [rows]="backupsRows"
+            [totalRecords]="backupsTotal"
+            [first]="(backupsPage - 1) * backupsRows"
+            [rowsPerPageOptions]="[10, 25, 50, 100]"
+            (onPageChange)="onBackupsPaginatorChange($event)">
+        </p-paginator>
     </div>
 </p-dialog>

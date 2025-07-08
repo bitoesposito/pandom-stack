@@ -1,38 +1,140 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { AuditService, AuditEventType } from './audit.service';
 
+/**
+ * Interface for individual request metrics
+ * 
+ * Defines the structure of metrics collected for each HTTP request.
+ * Used for tracking performance, errors, and user activity.
+ */
 export interface RequestMetric {
+  /** Timestamp when the request was processed */
   timestamp: Date;
+  /** HTTP method (GET, POST, PUT, DELETE, etc.) */
   method: string;
+  /** Request path/endpoint */
   path: string;
+  /** HTTP status code returned */
   statusCode: number;
+  /** Response time in milliseconds */
   responseTime: number;
+  /** User agent string from request headers */
   userAgent?: string;
+  /** Client IP address */
   ipAddress?: string;
+  /** User ID if authenticated */
   userId?: string;
+  /** User email if authenticated */
   userEmail?: string;
 }
 
+/**
+ * Interface for system-wide metrics
+ * 
+ * Defines aggregated metrics for system monitoring and performance analysis.
+ * Provides insights into system health, usage patterns, and error rates.
+ */
 export interface SystemMetrics {
+  /** Total number of requests in the time period */
   totalRequests: number;
+  /** Number of successful requests (status < 400) */
   successfulRequests: number;
+  /** Number of failed requests (status >= 400) */
   failedRequests: number;
+  /** Average response time in milliseconds */
   averageResponseTime: number;
+  /** Error rate as a percentage */
   errorRate: number;
+  /** Requests per minute (calculated from last hour) */
   requestsPerMinute: number;
+  /** Number of unique users in the time period */
   uniqueUsers: number;
+  /** Top 10 most accessed endpoints */
   topEndpoints: Array<{path: string, count: number}>;
+  /** Breakdown of errors by status code */
   errorBreakdown: Array<{statusCode: number, count: number}>;
 }
 
+/**
+ * Interface for hourly metrics data
+ * 
+ * Defines metrics aggregated by hour for trend analysis.
+ * Used for historical performance tracking and capacity planning.
+ */
 export interface HourlyMetrics {
+  /** Hour timestamp in ISO format */
   hour: string;
+  /** Number of requests in this hour */
   requests: number;
+  /** Number of errors in this hour */
   errors: number;
+  /** Average response time in milliseconds */
   avgResponseTime: number;
+  /** Number of unique users in this hour */
   uniqueUsers: number;
 }
 
+/**
+ * Metrics Service
+ * 
+ * Provides comprehensive metrics collection and analysis for the application.
+ * Tracks request performance, system health, and user activity patterns.
+ * 
+ * Features:
+ * - Real-time request metrics collection
+ * - System performance monitoring
+ * - Error rate tracking and alerting
+ * - User activity analysis
+ * - Historical metrics aggregation
+ * - Automated alert generation
+ * 
+ * Metrics Collection:
+ * - Request/response timing
+ * - HTTP status codes and error tracking
+ * - User identification and activity
+ * - Endpoint usage patterns
+ * - System load monitoring
+ * 
+ * Analysis Capabilities:
+ * - 24-hour system metrics
+ * - 7-day hourly trends
+ * - Real-time alerts
+ * - User activity patterns
+ * - Performance bottleneck identification
+ * 
+ * Alert System:
+ * - High error rate detection
+ * - Performance degradation alerts
+ * - System load monitoring
+ * - Low activity notifications
+ * 
+ * Usage:
+ * - Injected into interceptors for automatic metrics collection
+ * - Provides dashboard data for system monitoring
+ * - Enables proactive system maintenance
+ * - Supports capacity planning and optimization
+ * 
+ * @example
+ * // Record a request metric
+ * this.metricsService.recordRequest({
+ *   timestamp: new Date(),
+ *   method: 'GET',
+ *   path: '/api/users',
+ *   statusCode: 200,
+ *   responseTime: 150,
+ *   userId: 'user123'
+ * });
+ * 
+ * @example
+ * // Get system metrics
+ * const metrics = await this.metricsService.getSystemMetrics();
+ * console.log(`Error rate: ${metrics.errorRate}%`);
+ * 
+ * @example
+ * // Get real-time alerts
+ * const alerts = await this.metricsService.getAlerts();
+ * alerts.forEach(alert => console.log(alert.message));
+ */
 @Injectable()
 export class MetricsService {
   private readonly logger = new Logger(MetricsService.name);
@@ -41,8 +143,28 @@ export class MetricsService {
 
   constructor(private readonly auditService: AuditService) {}
 
+  // ============================================================================
+  // METRICS COLLECTION
+  // ============================================================================
+
   /**
    * Record a new request metric
+   * 
+   * Adds a request metric to the collection and maintains
+   * the maximum history limit for memory management.
+   * 
+   * @param metric - Request metric data to record
+   * 
+   * @example
+   * this.recordRequest({
+   *   timestamp: new Date(),
+   *   method: 'POST',
+   *   path: '/api/auth/login',
+   *   statusCode: 200,
+   *   responseTime: 250,
+   *   userId: 'user123',
+   *   userEmail: 'user@example.com'
+   * });
    */
   recordRequest(metric: RequestMetric): void {
     this.requestMetrics.push(metric);
@@ -53,8 +175,23 @@ export class MetricsService {
     }
   }
 
+  // ============================================================================
+  // METRICS ANALYSIS
+  // ============================================================================
+
   /**
    * Get system metrics for the last 24 hours
+   * 
+   * Calculates comprehensive system metrics including performance,
+   * error rates, and usage patterns for the last 24 hours.
+   * 
+   * @returns Promise with system metrics data
+   * 
+   * @example
+   * const metrics = await this.getSystemMetrics();
+   * console.log(`Total requests: ${metrics.totalRequests}`);
+   * console.log(`Error rate: ${metrics.errorRate}%`);
+   * console.log(`Avg response time: ${metrics.averageResponseTime}ms`);
    */
   async getSystemMetrics(): Promise<SystemMetrics> {
     const now = new Date();
@@ -119,6 +256,17 @@ export class MetricsService {
 
   /**
    * Get hourly metrics for the last 7 days
+   * 
+   * Provides hourly breakdown of metrics for trend analysis.
+   * Useful for identifying patterns and capacity planning.
+   * 
+   * @returns Promise with array of hourly metrics
+   * 
+   * @example
+   * const hourlyMetrics = await this.getHourlyMetrics();
+   * hourlyMetrics.forEach(hour => {
+   *   console.log(`${hour.hour}: ${hour.requests} requests, ${hour.errors} errors`);
+   * });
    */
   async getHourlyMetrics(): Promise<HourlyMetrics[]> {
     const now = new Date();
@@ -176,8 +324,30 @@ export class MetricsService {
       .sort((a, b) => new Date(a.hour).getTime() - new Date(b.hour).getTime());
   }
 
+  // ============================================================================
+  // ALERTING SYSTEM
+  // ============================================================================
+
   /**
    * Get real-time alerts based on current metrics
+   * 
+   * Analyzes current system metrics and generates alerts for
+   * potential issues or anomalies that require attention.
+   * 
+   * Alert Types:
+   * - Error: Critical issues requiring immediate attention
+   * - Warning: Issues that should be monitored
+   * - Info: Informational alerts for awareness
+   * 
+   * @returns Promise with array of active alerts
+   * 
+   * @example
+   * const alerts = await this.getAlerts();
+   * alerts.forEach(alert => {
+   *   if (alert.type === 'error') {
+   *     // Send immediate notification
+   *   }
+   * });
    */
   async getAlerts(): Promise<Array<{id: string, type: 'error' | 'warning' | 'info', message: string, timestamp: string, resolved: boolean}>> {
     const metrics = await this.getSystemMetrics();
@@ -238,8 +408,22 @@ export class MetricsService {
     return alerts;
   }
 
+  // ============================================================================
+  // USER ACTIVITY ANALYSIS
+  // ============================================================================
+
   /**
    * Get user activity metrics from audit logs
+   * 
+   * Analyzes user activity patterns using audit logs to provide
+   * insights into user engagement and growth trends.
+   * 
+   * @returns Promise with user activity metrics
+   * 
+   * @example
+   * const userMetrics = await this.getUserActivityMetrics();
+   * console.log(`Active users: ${userMetrics.activeUsers}`);
+   * console.log(`New users today: ${userMetrics.newUsersToday}`);
    */
   async getUserActivityMetrics(): Promise<{
     totalUsers: number;
@@ -259,7 +443,7 @@ export class MetricsService {
       const activeUsers = new Set(
         loginLogs
           .filter(log => new Date(log.timestamp) >= yesterday)
-          .map(log => log.user_id)
+          .map(log => log.user?.uuid)
           .filter(Boolean)
       ).size;
 
@@ -279,7 +463,7 @@ export class MetricsService {
               const logDate = new Date(log.timestamp);
               return logDate >= dayStart && logDate < dayEnd;
             })
-            .map(log => log.user_id)
+            .map(log => log.user?.uuid)
             .filter(Boolean)
         ).size;
 
@@ -306,6 +490,18 @@ export class MetricsService {
     }
   }
 
+  // ============================================================================
+  // UTILITY METHODS
+  // ============================================================================
+
+  /**
+   * Get empty metrics structure
+   * 
+   * Returns a default metrics object when no data is available.
+   * Used to provide consistent response structure.
+   * 
+   * @returns Empty system metrics object
+   */
   private getEmptyMetrics(): SystemMetrics {
     return {
       totalRequests: 0,

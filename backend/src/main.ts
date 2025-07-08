@@ -4,6 +4,7 @@ import { LoggerService } from './common/services/logger.service';
 import { MetricsInterceptor } from './common/interceptors/metrics.interceptor';
 import * as fs from 'fs';
 import * as path from 'path';
+import { Logger } from '@nestjs/common';
 
 // Reindirizza console.log, console.error, ecc. verso il file
 const logFilePath = path.join(process.cwd(), 'logs', 'log.txt');
@@ -60,10 +61,10 @@ console.debug = function(...args: any[]) {
 };
 
 async function bootstrap() {
-  const logger = new LoggerService();
+  const logger = new Logger('AppLogger');
   
   try {
-    logger.info('Starting application...', 'Bootstrap');
+    logger.log('Starting application...', 'Bootstrap');
     const app = await NestFactory.create(AppModule, {
       logger: ['error', 'warn', 'log', 'debug', 'verbose'],
     });
@@ -89,7 +90,7 @@ async function bootstrap() {
     
     const port = process.env.PORT ?? 3000;
     await app.listen(port);
-    logger.info(`Application is running on port ${port}`, 'Bootstrap');
+    logger.log(`Application is running on port ${port}`, 'Bootstrap');
   } catch (error) {
     logger.error('Failed to start application:', 'Bootstrap', { error: error.message, stack: error.stack });
     process.exit(1);

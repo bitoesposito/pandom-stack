@@ -1,7 +1,15 @@
 import { Injectable, Logger } from '@nestjs/common';
-import * as fs from 'fs';
-import * as path from 'path';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { SecurityLog } from '../entities/security-log.entity';
+import { User } from '../../auth/entities/user.entity';
 
+/**
+ * Log levels for application logging
+ *
+ * Defines the available log levels for structured logging.
+ * Each level represents a different severity of log message.
+ */
 export enum LogLevel {
   INFO = 'INFO',
   WARN = 'WARN',
@@ -9,63 +17,147 @@ export enum LogLevel {
   DEBUG = 'DEBUG',
 }
 
+/**
+ * Interface for structured log entries
+ *
+ * Defines the structure of log entries written to the database.
+ * Provides consistent formatting for all log messages.
+ */
 export interface LogEntry {
-  timestamp: string;
+  timestamp?: string;
   level: LogLevel;
   message: string;
   context?: string;
   metadata?: Record<string, any>;
 }
 
+/**
+ * Logger Service
+ *
+ * Provides centralized logging functionality for the application.
+ * Implements database-based logging for security and system events.
+ *
+ * Features:
+ * - Multiple log levels (INFO, WARN, ERROR, DEBUG)
+ * - Structured JSON logging
+ * - Database-based log persistence (SecurityLog entity)
+ * - Context and metadata support
+ *
+ * Usage:
+ * - Injected into other services for logging
+ * - Provides consistent logging across the application
+ * - Supports structured logging for better analysis
+ */
 @Injectable()
 export class LoggerService {
+  /**
+   * Logger for development/debug output
+   */
   private readonly logger = new Logger('AppLogger');
-  private readonly logFilePath = path.join(process.cwd(), 'logs', 'log.txt');
 
-  constructor() {
-    // Crea la directory logs se non esiste
-    const logsDir = path.dirname(this.logFilePath);
-    if (!fs.existsSync(logsDir)) {
-      fs.mkdirSync(logsDir, { recursive: true });
-    }
+  /**
+   * Constructor with injected repositories
+   * @param securityLogRepository Repository for SecurityLog entity
+   * @param userRepository Repository for User entity
+   */
+  constructor(
+    @InjectRepository(SecurityLog)
+    private readonly securityLogRepository: Repository<SecurityLog>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+  ) {}
+
+  // ==========================================================================
+  // PRIVATE UTILITY METHODS
+  // ==========================================================================
+
+  /**
+   * Write a log entry to the database (SecurityLog)
+   * @param entry Log entry data
+   * @param userId Optional user UUID
+   * @param userEmail Optional user email
+   * @param ipAddress Optional client IP address
+   * @param userAgent Optional user agent string
+   */
+  private async writeToDatabase(entry: LogEntry, userId?: string, userEmail?: string, ipAddress?: string, userAgent?: string) {
+    const securityLog = this.securityLogRepository.create({
+      eventType: entry.context || entry.level,
+      severity: entry.level,
+      user: userId ? { uuid: userId } : undefined,
+      userEmail: userEmail,
+      ipAddress: ipAddress,
+      userAgent: userAgent,
+      details: entry.metadata || {},
+      metadata: {},
+    });
+    await this.securityLogRepository.save(securityLog);
   }
 
-  private formatLogEntry(level: LogLevel, message: string, context?: string, metadata?: Record<string, any>): LogEntry {
-    return {
-      timestamp: new Date().toISOString(),
-      level,
-      message,
-      context,
-      metadata,
-    };
-  }
+  // ==========================================================================
+  // PUBLIC LOGGING METHODS
+  // ==========================================================================
 
-  private writeToFile(entry: LogEntry) {
-    const line = JSON.stringify(entry) + '\n';
-    fs.appendFileSync(this.logFilePath, line, { encoding: 'utf8' });
-  }
-
-  info(message: string, context?: string, metadata?: Record<string, any>): void {
-    const entry = this.formatLogEntry(LogLevel.INFO, message, context, metadata);
+  /**
+   * Log informational message
+   * @param message Informational message to log
+   * @param context Optional context for categorizing the log
+   * @param metadata Optional additional data for the log entry
+   * @param userId Optional user UUID
+   * @param userEmail Optional user email
+   * @param ipAddress Optional client IP address
+   * @param userAgent Optional user agent string
+   */
+  info(message: string, context?: string, metadata?: Record<string, any>, userId?: string, userEmail?: string, ipAddress?: string, userAgent?: string): void {
+    const entry: LogEntry = { level: LogLevel.INFO, message, context, metadata };
     this.logger.log(JSON.stringify(entry));
-    this.writeToFile(entry);
+    this.writeToDatabase(entry, userId, userEmail, ipAddress, userAgent);
   }
 
-  warn(message: string, context?: string, metadata?: Record<string, any>): void {
-    const entry = this.formatLogEntry(LogLevel.WARN, message, context, metadata);
+  /**
+   * Log warning message
+   * @param message Warning message to log
+   * @param context Optional context for categorizing the log
+   * @param metadata Optional additional data for the log entry
+   * @param userId Optional user UUID
+   * @param userEmail Optional user email
+   * @param ipAddress Optional client IP address
+   * @param userAgent Optional user agent string
+   */
+  warn(message: string, context?: string, metadata?: Record<string, any>, userId?: string, userEmail?: string, ipAddress?: string, userAgent?: string): void {
+    const entry: LogEntry = { level: LogLevel.WARN, message, context, metadata };
     this.logger.warn(JSON.stringify(entry));
-    this.writeToFile(entry);
+    this.writeToDatabase(entry, userId, userEmail, ipAddress, userAgent);
   }
 
-  error(message: string, context?: string, metadata?: Record<string, any>): void {
-    const entry = this.formatLogEntry(LogLevel.ERROR, message, context, metadata);
+  /**
+   * Log error message
+   * @param message Error message to log
+   * @param context Optional context for categorizing the log
+   * @param metadata Optional additional data for the log entry
+   * @param userId Optional user UUID
+   * @param userEmail Optional user email
+   * @param ipAddress Optional client IP address
+   * @param userAgent Optional user agent string
+   */
+  error(message: string, context?: string, metadata?: Record<string, any>, userId?: string, userEmail?: string, ipAddress?: string, userAgent?: string): void {
+    const entry: LogEntry = { level: LogLevel.ERROR, message, context, metadata };
     this.logger.error(JSON.stringify(entry));
-    this.writeToFile(entry);
+    this.writeToDatabase(entry, userId, userEmail, ipAddress, userAgent);
   }
 
-  debug(message: string, context?: string, metadata?: Record<string, any>): void {
-    const entry = this.formatLogEntry(LogLevel.DEBUG, message, context, metadata);
+  /**
+   * Log debug message
+   * @param message Debug message to log
+   * @param context Optional context for categorizing the log
+   * @param metadata Optional additional data for the log entry
+   * @param userId Optional user UUID
+   * @param userEmail Optional user email
+   * @param ipAddress Optional client IP address
+   * @param userAgent Optional user agent string
+   */
+  debug(message: string, context?: string, metadata?: Record<string, any>, userId?: string, userEmail?: string, ipAddress?: string, userAgent?: string): void {
+    const entry: LogEntry = { level: LogLevel.DEBUG, message, context, metadata };
     this.logger.debug(JSON.stringify(entry));
-    this.writeToFile(entry);
+    this.writeToDatabase(entry, userId, userEmail, ipAddress, userAgent);
   }
 } 

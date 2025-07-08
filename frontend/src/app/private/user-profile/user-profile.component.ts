@@ -22,6 +22,7 @@ import { FormsModule } from '@angular/forms';
 import { SystemStatusResponse, BackupResponse } from '../../models/resilience.models';
 import { SystemMetricsResponse, DetailedSystemMetricsResponse } from '../../models/admin.models';
 import { Subject, takeUntil } from 'rxjs';
+import { PaginatorModule } from 'primeng/paginator';
 
 /**
  * UserProfile Component
@@ -44,6 +45,7 @@ import { Subject, takeUntil } from 'rxjs';
     TooltipModule,
     InputTextModule,
     FormsModule,
+    PaginatorModule
   ],
   providers: [MessageService, NotificationService],
   templateUrl: './user-profile.component.html',
@@ -193,6 +195,7 @@ export class UserProfileComponent implements OnInit, OnDestroy {
       .subscribe({
       next: (data: any) => {
         if (data.data) {
+          console.log('🔍 [DEBUG] Dati ricevuti:', data.data);
           this.securityLogs = data.data.logs || [];
           this.securityLogsTotal = data.data.pagination?.total || 0;
           this.securityLogsPage = data.data.pagination?.page || page;
@@ -500,68 +503,18 @@ export class UserProfileComponent implements OnInit, OnDestroy {
   }
 
   loadAuditLogs(page: number = 1, rows: number = 10) {
-    console.log('🔍 [DEBUG] loadAuditLogs chiamata con:', { page, rows });
     this.isLoadingAuditLogs = true;
-    
     this.adminService.getAuditLogs(page, rows).subscribe({
       next: (data: any) => {
-        console.log('✅ [DEBUG] Risposta API audit logs:', data);
-        console.log('📊 [DEBUG] Dati ricevuti:', {
-          logs: data.data?.logs,
-          logsLength: data.data?.logs?.length,
-          pagination: data.data?.pagination,
-          total: data.data?.pagination?.total,
-          page: data.data?.pagination?.page,
-          limit: data.data?.pagination?.limit
-        });
-        
-        const logs = data.data?.logs || [];
-        const total = data.data?.pagination?.total || 0;
-        const currentPage = data.data?.pagination?.page || page;
-        
-        console.log('🔢 [DEBUG] Valori estratti:', {
-          logs,
-          logsLength: logs.length,
-          total,
-          currentPage,
-          requestedPage: page
-        });
-        
-        // Se la pagina corrente è > 1, non ci sono risultati ma il totale è > 0, torno alla prima pagina
-        if (page > 1 && logs.length === 0 && total > 0) {
-          console.log('⚠️ [DEBUG] Pagina vuota ma totale > 0, torno alla prima pagina');
-          this.notificationService.handleInfo('profile.audit-logs.no-results-on-page');
-          this.loadAuditLogs(1, rows);
-          return;
+        if (data.data) {
+          this.auditLogs = data.data.logs || [];
+          this.auditLogsTotal = data.data.pagination?.total || 0;
+          this.auditLogsPage = data.data.pagination?.page || page;
+          this.auditLogsRows = data.data.pagination?.limit || rows;
         }
-        
-        console.log('✅ [DEBUG] Aggiornamento stato con:', {
-          logsLength: logs.length,
-          total,
-          page: currentPage,
-          rows
-        });
-        
-        this.auditLogs = logs;
-        this.auditLogsTotal = total;
-        this.auditLogsPage = currentPage;
-        this.auditLogsRows = rows;
         this.isLoadingAuditLogs = false;
-        
-        console.log('🎯 [DEBUG] Stato finale:', {
-          auditLogsLength: this.auditLogs.length,
-          auditLogsTotal: this.auditLogsTotal,
-          auditLogsPage: this.auditLogsPage,
-          auditLogsRows: this.auditLogsRows
-        });
       },
       error: (err: any) => {
-        console.error('❌ [DEBUG] Errore nel caricamento audit logs:', err);
-        console.error('❌ [DEBUG] Dettagli errore:', {
-          status: err.status,
-          message: err.message,
-          error: err.error
-        });
         this.isLoadingAuditLogs = false;
         this.notificationService.handleError(err, 'profile.audit-logs.error');
       }
@@ -614,9 +567,13 @@ export class UserProfileComponent implements OnInit, OnDestroy {
     this.loadSecurityLogs(newPage, event.rows);
   }
 
+  onSecurityLogsPaginatorChange(event: any) {
+    const newPage = Math.floor(event.first / event.rows) + 1;
+    this.loadSecurityLogs(newPage, event.rows);
+  }
+
   // User Management Methods
   loadUsers(page: number = 1, rows: number = 10) {
-    console.log('Loading users with page:', page, 'rows:', rows, 'search:', this.userSearchQuery);
     this.isLoadingUsers = true;
     this.adminService.getUsers(page, rows, this.userSearchQuery).subscribe({
       next: (data: any) => {
@@ -625,14 +582,12 @@ export class UserProfileComponent implements OnInit, OnDestroy {
           this.usersTotal = data.data.pagination?.total || 0;
           this.usersPage = data.data.pagination?.page || page;
           this.usersRows = data.data.pagination?.limit || rows;
-          console.log('Users loaded:', this.users);
         }
         this.isLoadingUsers = false;
       },
       error: (err: any) => {
-        console.error('Errore nel caricamento degli utenti:', err);
-        this.notificationService.handleError(err, 'profile.user-management.error');
         this.isLoadingUsers = false;
+        this.notificationService.handleError(err, 'profile.user-management.error');
       }
     });
   }
@@ -642,6 +597,11 @@ export class UserProfileComponent implements OnInit, OnDestroy {
     if (isNaN(newPage) || newPage < 1) {
       return;
     }
+    this.loadUsers(newPage, event.rows);
+  }
+
+  onUsersPaginatorChange(event: any) {
+    const newPage = Math.floor(event.first / event.rows) + 1;
     this.loadUsers(newPage, event.rows);
   }
 
@@ -799,5 +759,15 @@ export class UserProfileComponent implements OnInit, OnDestroy {
   // Method to track sessions by their ID
   trackBySessionId(index: number, session: any): any {
     return session.id;
+  }
+
+  onAuditLogsPaginatorChange(event: any) {
+    const newPage = Math.floor(event.first / event.rows) + 1;
+    this.loadAuditLogs(newPage, event.rows);
+  }
+
+  onBackupsPaginatorChange(event: any) {
+    const newPage = Math.floor(event.first / event.rows) + 1;
+    this.loadBackups(newPage, event.rows);
   }
 }
