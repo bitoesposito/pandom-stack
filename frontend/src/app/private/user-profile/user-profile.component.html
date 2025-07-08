@@ -4,7 +4,9 @@
 
 <main style="max-width: 1200px;" class="m-auto flex flex-column p-3 gap-3 mt-2">
 
+    <!-- TabView for user profile sections -->
     <p-tabView (onChange)="onTabChange($event)">
+        <!-- Profile Tab -->
         <p-tabPanel header="{{ 'profile.tabs.profile' | translate }}">
             <div class="flex flex-column md:flex-row gap-3">
                 <div class="flex flex-column gap-2 w-full">
@@ -34,31 +36,32 @@
 
                     <hr class="surface-border my-1" />
 
+                    <!-- Active Sessions Section -->
                     <div id="active-sessions" class="flex flex-column gap-2">
                         <p class="text-color-secondary text-sm select-none uppercase">{{ 'user.active-sessions' |
                             translate }} ({{ activeSessionsCount }})</p>
 
                         <div class="border-1 surface-border border-round-md p-2 w-full">
 
-                            @for (session of sessions; track session.id) {
-                            <div *ngIf="session.is_active" class="flex flex-column">
-                                <p class="text-xs text-color-secondary select-none">{{ session.created_at |
-                                    date:'dd/MM/yyyy HH:mm' }}</p>
-                                <p>{{ session.ip_address }}</p>
-                                <p class="text-xs text-color-secondary select-none text-xs opacity-70"
-                                    style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;"
-                                    title="{{ session.user_agent }}">{{ session.user_agent }}</p>
+                            <!-- Loop through active sessions -->
+                            <div *ngFor="let session of sessions; trackBy: trackBySessionId">
+                                <div *ngIf="session.is_active" class="flex flex-column">
+                                    <p class="text-xs text-color-secondary select-none">{{ session.created_at |
+                                        date:'dd/MM/yyyy HH:mm' }}</p>
+                                    <p>{{ session.ip_address }}</p>
+                                    <p class="text-xs text-color-secondary select-none text-xs opacity-70"
+                                        style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;"
+                                        title="{{ session.user_agent }}">{{ session.user_agent }}</p>
+                                </div>
                             </div>
-                            }
                         </div>
                     </div>
                 </div>
 
                 <hr class="surface-border my-1" />
 
+                <!-- User Actions Section -->
                 <div class="flex flex-column gap-2">
-                    <!-- al momento le tabelle per le informazioni dell'utente sono vuote, perciò è inutile implementare il modifica profilo -->
-                    <!-- <p-button styleClass="white-space-nowrap justify-content-start" fluid="true" [label]="'user.edit-profile' | translate" icon="pi pi-pencil" severity="secondary" outlined="true" (click)="toggleDialog('edit')" [disabled]="isProcessing || isDownloading"/> -->
                     <p-button styleClass="white-space-nowrap justify-content-start" fluid="true"
                         [label]="'user.show-security-logs' | translate" icon="pi pi-shield" severity="secondary"
                         outlined="true" (click)="toggleDialog('security')" [disabled]="isProcessing || isDownloading" />
@@ -76,10 +79,11 @@
             </div>
 
         </p-tabPanel>
+        <!-- Administration Tab for Admin Users -->
         <p-tabPanel header="{{ 'profile.tabs.administration' | translate }}" *ngIf="user?.role === 'admin'">
             <div class="flex flex-column gap-3 w-full">
 
-                <!-- Alerts -->
+                <!-- Alerts Section -->
                 <div class="flex gap-2 justify-content-between align-items-center">
                     <h4>{{ 'profile.tabs.administration' | translate }}</h4>
                     <p-button [label]="'profile.administration.refresh' | translate" icon="pi pi-refresh"
@@ -87,15 +91,15 @@
                         [loading]="isLoadingAdminMetrics || isLoadingDetailedMetrics" />
                 </div>
 
-                <!-- Loading state -->
+                <!-- Loading State for Admin Metrics -->
                 <div *ngIf="isLoadingAdminMetrics || isLoadingDetailedMetrics" class="flex justify-content-center p-4">
                     <i class="pi pi-spin pi-spinner text-xl"></i>
                     <span class="ml-2">{{ 'profile.administration.loading' | translate }}</span>
                 </div>
 
-                <!-- Admin metrics display -->
+                <!-- Admin Metrics Display -->
                 <div *ngIf="!isLoadingAdminMetrics && adminMetrics" class="flex flex-column gap-3">
-                    <!-- Overview metrics -->
+                    <!-- Overview Metrics -->
                     <div class="border-1 surface-border border-round-md p-3">
                         <h5 class="m-0 mb-2">{{ 'profile.administration.overview' | translate }}</h5>
                         <div class="grid">
@@ -133,14 +137,17 @@
                         </div>
                     </div>
 
-                    <!-- User management -->
-                    <div class="flex gap-2 w-full sm:flex-row flex-column">
+                    <!-- User Management Actions -->
+                    <div class="flex gap-2 w-full md:flex-row flex-column">
                         <p-button [label]="'profile.administration.manage-users' | translate" icon="pi pi-users"
                             severity="secondary" outlined="true" (click)="toggleDialog('user-management')"
                             [disabled]="isLoadingUsers" fluid="true" class="w-full" />
                         <p-button [label]="'profile.administration.view-audit-logs' | translate" icon="pi pi-list"
                             severity="secondary" outlined="true" (click)="toggleDialog('audit-logs')"
                             [disabled]="isLoadingAuditLogs" fluid="true" class="w-full" />
+                        <p-button [label]="'profile.system-status.backup-management' | translate" icon="pi pi-database"
+                            severity="secondary" outlined="true" (click)="openBackupManagementDialog()" fluid="true"
+                            class="w-full" />
                     </div>
 
                     <!-- Detailed Metrics Section -->
@@ -148,7 +155,7 @@
                         class="border-1 surface-border border-round-md p-3">
                         <h5 class="m-0 mb-2">{{ 'profile.administration.detailed-metrics' | translate }}</h5>
 
-                        <!-- System Performance -->
+                        <!-- System Performance Metrics -->
                         <div class="grid mb-3">
                             <div class="col-12 md:col-3">
                                 <div class="flex flex-column gap-1">
@@ -209,6 +216,7 @@
                         </div>
                     </div>
 
+                    <!-- Alerts Display -->
                     <div class="flex flex-column gap-2">
                         <div *ngIf="adminMetrics.alerts.length === 0"
                             class="flex align-items-center gap-2 p-2 border-1 surface-border border-round">
@@ -227,26 +235,27 @@
                     </div>
                 </div>
 
-                <!-- Error state -->
+                <!-- Error State for Admin Metrics -->
                 <div *ngIf="!isLoadingAdminMetrics && !adminMetrics" class="flex justify-content-center p-4">
                     <i class="pi pi-exclamation-triangle text-xl text-orange-500"></i>
                     <span class="ml-2 text-orange-500">{{ 'profile.administration.error' | translate }}</span>
                 </div>
             </div>
         </p-tabPanel>
+        <!-- System Status Tab for Admin Users -->
         <p-tabPanel header="{{ 'profile.tabs.system-status' | translate }}" *ngIf="user?.role === 'admin'">
             <div class="flex flex-column gap-3 w-full">
 
-                <!-- Loading state -->
+                <!-- Loading State for System Status -->
                 <div *ngIf="isLoadingSystemStatus" class="flex justify-content-center p-4">
                     <i class="pi pi-spin pi-spinner text-xl"></i>
                     <span class="ml-2">{{ 'profile.system-status.loading' | translate }}</span>
                 </div>
 
-                <!-- System status display -->
+                <!-- System Status Display -->
                 <div *ngIf="!isLoadingSystemStatus && systemStatus" class="flex flex-column gap-3">
 
-                    <!-- Service status -->
+                    <!-- Service Status -->
                     <div class="flex gap-2 justify-content-between align-items-center">
                         <h4>{{ 'profile.system-status.services' | translate }}</h4>
 
@@ -255,7 +264,7 @@
                             [loading]="isLoadingSystemStatus" />
                     </div>
 
-                    <!-- Overall system status -->
+                    <!-- Overall System Status -->
                     <div class="border-1 surface-border border-round-md p-3">
                         <div class="flex align-items-center justify-content-between">
                             <div class="flex flex-column">
@@ -271,7 +280,7 @@
                         </div>
                     </div>
 
-                    <!-- System information -->
+                    <!-- System Information -->
                     <div class="border-1 surface-border border-round-md p-3">
                         <h5 class="m-0 mb-2">{{ 'profile.system-status.system-info' | translate }}</h5>
                         <div class="grid">
@@ -292,6 +301,7 @@
                         </div>
                     </div>
 
+                    <!-- Service Status Details -->
                     <div class="grid">
                         <div class="col-12 md:col-4">
                             <div class="border-1 surface-border p-3 border-round">
@@ -356,18 +366,9 @@
                             </div>
                         </div>
                     </div>
-
-                    <h4>{{ 'profile.system-status.backup-management' | translate }}</h4>
-                    <!-- Backup Description -->
-                    <p class="text-color-secondary text-sm">{{ 'profile.system-status.backup-description' | translate }}
-                    </p>
-                    <!-- Backup Management Button -->
-                    <p-button [label]="'profile.system-status.backup-management' | translate" icon="pi pi-database"
-                        severity="secondary" outlined="true" (click)="openBackupManagementDialog()" fluid="true"
-                        class="w-full" />
                 </div>
 
-                <!-- Error state -->
+                <!-- Error State for System Status -->
                 <div *ngIf="!isLoadingSystemStatus && !systemStatus" class="flex justify-content-center p-4">
                     <i class="pi pi-exclamation-triangle text-xl text-orange-500"></i>
                     <span class="ml-2 text-orange-500">{{ 'profile.system-status.error' | translate }}</span>
@@ -377,12 +378,7 @@
     </p-tabView>
 </main>
 
-<!-- modale di modifica del profilo -->
-<!-- <p-dialog [header]="'profile.dialogs.edit-profile' | translate" [modal]="true" [(visible)]="isEditDialogVisible" [breakpoints]="{ '1199px': '75vw', '575px': '90vw' }" [style]="{ width: '50vw' }" [draggable]="false" [resizable]="false">
-    <div class="flex flex-column gap-2">
-    </div>
-</p-dialog> -->
-
+<!-- Download Data Dialog -->
 <p-dialog [header]="'profile.dialogs.download-data' | translate" [modal]="true" [(visible)]="isDownloadDialogVisible"
     [breakpoints]="{ '1199px': '75vw', '575px': '90vw' }" [style]="{ width: '50vw' }" [draggable]="false"
     [resizable]="false">
@@ -409,6 +405,7 @@
     </div>
 </p-dialog>
 
+<!-- Delete Account Dialog -->
 <p-dialog [header]="'profile.dialogs.delete-account' | translate" [modal]="true" [(visible)]="isDeleteDialogVisible"
     [breakpoints]="{ '1199px': '75vw', '575px': '90vw' }" [style]="{ width: '50vw' }" [draggable]="false"
     [resizable]="false">
@@ -448,6 +445,7 @@
     </div>
 </p-dialog>
 
+<!-- Security Logs Dialog -->
 <p-dialog [header]="'profile.dialogs.security-logs' | translate" [modal]="true"
     [(visible)]="isSecurityLogsDialogVisible" [breakpoints]="{ '1199px': '75vw', '575px': '90vw' }" [draggable]="false"
     [resizable]="false" [maximizable]="true">
@@ -462,6 +460,7 @@
             <span class="ml-2">{{ 'profile.security-logs.no-logs' | translate }}</span>
         </div>
 
+        <!-- Security Logs Table -->
         <p-table *ngIf="!isLoadingSecurityLogs && securityLogs.length > 0" [value]="securityLogs" [paginator]="true"
             [rows]="securityLogsRows" [totalRecords]="securityLogsTotal" (onPage)="onSecurityLogsPageChange($event)"
             [showCurrentPageReport]="true" [tableStyle]="{ 'min-width': '50rem' }" [scrollable]="true"
@@ -483,7 +482,7 @@
             <ng-template pTemplate="body" let-log>
                 <tr>
                     <td>
-                        <span class="font-medium">{{ getActionName(log.action) | translate }}</span>
+                        <span class="font-medium">{{ log.action }}</span>
                     </td>
                     <td>
                         <code class="text-sm">{{ log.ip_address }}</code>
@@ -526,11 +525,12 @@
     </div>
 </p-dialog>
 
+<!-- User Management Dialog -->
 <p-dialog [header]="'profile.dialogs.user-management' | translate" [modal]="true"
     [(visible)]="isUserManagementDialogVisible" [breakpoints]="{ '1199px': '75vw', '575px': '90vw' }"
     [draggable]="false" [resizable]="false" [maximizable]="true">
     <div class="flex flex-column gap-3">
-        <!-- Search bar -->
+        <!-- Search Bar for Users -->
         <div class="flex gap-2 align-items-center">
             <input pInputText type="text" [(ngModel)]="userSearchQuery" (keyup.enter)="onUserSearch()"
                 [placeholder]="'profile.user-management.search-placeholder' | translate" class="w-full" />
@@ -538,13 +538,13 @@
                 (click)="onUserSearch()" [disabled]="isLoadingUsers" />
         </div>
 
-        <!-- Loading state -->
+        <!-- Loading State for Users -->
         <div *ngIf="isLoadingUsers" class="flex justify-content-center p-4">
             <i class="pi pi-spin pi-spinner text-xl"></i>
             <span class="ml-2">{{ 'profile.user-management.loading' | translate }}</span>
         </div>
 
-        <!-- Users table -->
+        <!-- Users Table -->
         <p-table *ngIf="!isLoadingUsers" [value]="users" [paginator]="true" [rows]="usersRows"
             [totalRecords]="usersTotal" (onPage)="onUsersPageChange($event)" [showCurrentPageReport]="true"
             [tableStyle]="{ 'min-width': '50rem' }" [scrollable]="true" responsiveLayout="scroll"
@@ -594,7 +594,7 @@
                     <td>
                         <div class="flex gap-1">
                             <p-button *ngIf="user.role !== 'admin'" icon="pi pi-trash" severity="secondary"
-                                outliend="true" size="small"
+                                outlined="true" size="small"
                                 [loading]="isDeletingUser && selectedUserForAction?.uuid === user.uuid"
                                 [disabled]="isDeletingUser || user.role === 'admin'"
                                 pTooltip="{{ 'profile.user-management.actions.delete' | translate }}"
@@ -616,6 +616,7 @@
     </div>
 </p-dialog>
 
+<!-- Change Password Dialog -->
 <p-dialog [header]="'profile.dialogs.change-password' | translate" [modal]="true"
     [(visible)]="isChangePasswordDialogVisible" [breakpoints]="{ '1199px': '75vw', '575px': '90vw' }"
     [style]="{ width: '50vw' }" [draggable]="false" [resizable]="false">
@@ -646,6 +647,7 @@
     </div>
 </p-dialog>
 
+<!-- Audit Logs Dialog -->
 <p-dialog [header]="'profile.dialogs.audit-logs' | translate" [modal]="true" [(visible)]="isAuditLogsDialogVisible"
     [breakpoints]="{ '1199px': '75vw', '575px': '90vw' }" [draggable]="false" [resizable]="false" [maximizable]="true">
     <div class="flex flex-column gap-3">
@@ -659,6 +661,7 @@
             <span class="ml-2">{{ 'profile.audit-logs.no-logs' | translate }}</span>
         </div>
 
+        <!-- Audit Logs Table -->
         <p-table *ngIf="!isLoadingAuditLogs && auditLogs.length > 0" [value]="auditLogs" [paginator]="true"
             [rows]="auditLogsRows" [totalRecords]="auditLogsTotal" (onPage)="onAuditLogsPageChange($event)"
             [showCurrentPageReport]="true" [tableStyle]="{ 'min-width': '50rem' }" [scrollable]="true"
@@ -680,7 +683,7 @@
             <ng-template pTemplate="body" let-log>
                 <tr>
                     <td>
-                        <span class="font-medium">{{ getAuditActionName(log.action) | translate }}</span>
+                        <span class="font-medium">{{ log.action }}</span>
                     </td>
                     <td>
                         <div class="flex flex-column">
@@ -790,19 +793,19 @@
                 [loading]="isLoadingBackups" [disabled]="isLoadingBackups" />
         </div>
 
-        <!-- Loading state -->
+        <!-- Loading State for Backups -->
         <div *ngIf="isLoadingBackups" class="flex justify-content-center p-4">
             <i class="pi pi-spin pi-spinner text-xl"></i>
             <span class="ml-2">{{ 'profile.system-status.loading-backups' | translate }}</span>
         </div>
 
-        <!-- Empty state -->
+        <!-- Empty State for Backups -->
         <div *ngIf="!isLoadingBackups && backups.length === 0" class="flex justify-content-center p-4">
             <i class="pi pi-info-circle text-xl text-blue-500"></i>
             <span class="ml-2">{{ 'profile.system-status.no-backups' | translate }}</span>
         </div>
 
-        <!-- Backup table -->
+        <!-- Backup Table -->
         <p-table *ngIf="!isLoadingBackups && backups.length > 0" [value]="backups" [paginator]="true"
             [rows]="backupsRows" [totalRecords]="backupsTotal" (onPage)="onBackupsPageChange($event)"
             [showCurrentPageReport]="true" [tableStyle]="{ 'min-width': '50rem' }" [scrollable]="true"

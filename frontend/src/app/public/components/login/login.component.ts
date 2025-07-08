@@ -14,7 +14,10 @@ import { NotificationService } from '../../../services/notification.service';
 import { AuthService } from '../../../services/auth.service';
 import { finalize } from 'rxjs';
 import { ThemeService } from '../../../services/theme.service';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { Language, TranslateModule, TranslateService } from '@ngx-translate/core';
+import { Observable } from 'rxjs';
+import { SelectModule } from 'primeng/select';
+import { LanguageService } from '../../../services/language.service';
 
 @Component({
   selector: 'app-login',
@@ -31,11 +34,13 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
     ToastModule,
     ReactiveFormsModule,
     TranslateModule,
-    TooltipModule
+    TooltipModule,
+    SelectModule
   ],
   providers: [
     MessageService,
-    NotificationService
+    NotificationService,
+    TranslateService
   ],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss'
@@ -43,7 +48,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 export class LoginComponent implements OnInit {
   loading = false;
   socialLoading = false;
-  isDarkMode$;
+  isDarkMode$: Observable<boolean>;
   focusPassword = false;
 
   form: FormGroup = new FormGroup({
@@ -61,10 +66,14 @@ export class LoginComponent implements OnInit {
     private authService: AuthService,
     private themeService: ThemeService,
     private translate: TranslateService,
+    private languageService: LanguageService
   ) {
     this.isDarkMode$ = this.themeService.isDarkMode$;
   }
 
+  /**
+   * Initializes the component and checks for email in the URL.
+   */
   ngOnInit() {
     this.checkEmailFromUrl();
     setTimeout(() => {
@@ -72,6 +81,9 @@ export class LoginComponent implements OnInit {
     }, 100);
   }
 
+  /**
+   * Checks the URL for an email parameter and updates the form.
+   */
   private checkEmailFromUrl() {
     const urlParams = new URLSearchParams(window.location.search);
     const email = urlParams.get('email');
@@ -84,6 +96,9 @@ export class LoginComponent implements OnInit {
     }
   }
 
+  /**
+   * Checks for notifications related to password reset and displays them.
+   */
   private checkNotifications() {
     const showNotification = localStorage.getItem('show_password_reset_notification');
     if (showNotification === 'true') {
@@ -104,6 +119,9 @@ export class LoginComponent implements OnInit {
     return this.form.get('rememberMe') as FormControl;
   }
 
+  /**
+   * Handles the login process, including form validation and API interaction.
+   */
   login() {
     if (this.form.invalid) {
       this.notificationService.handleWarning(this.translate.instant('auth.login.fill-required-fields'));
@@ -111,7 +129,7 @@ export class LoginComponent implements OnInit {
     }
 
     this.loading = true;
-    // Disabilita tutti i controlli durante il loading
+    // Disables all controls during loading
     this.form.disable();
     
     const credentials = {
@@ -124,7 +142,7 @@ export class LoginComponent implements OnInit {
       .pipe(
         finalize(() => {
           this.loading = false;
-          // Riabilita tutti i controlli dopo il loading
+          // Re-enables all controls after loading
           this.form.enable();
         })
       )
@@ -162,22 +180,36 @@ export class LoginComponent implements OnInit {
       });
   }
 
+  /**
+   * Toggles the dark mode setting.
+   */
   toggleDarkMode() {
     this.themeService.toggleDarkMode();
   }
 
+  /**
+   * Toggles the remember me setting.
+   */
   toggleRememberMe() {
     const currentValue = this.rememberMe.value;
     this.rememberMe.setValue(!currentValue);
   }
 
+  /**
+   * Placeholder for Google login functionality.
+   */
   loginWithGoogle(event?: Event) {
     this.socialLoading = false;
     this.notificationService.handleInfo(this.translate.instant('auth.login.google-login-coming-soon'));
   }
   
+  /**
+   * Placeholder for Apple login functionality.
+   */
   loginWithApple(event?: Event) {
     this.socialLoading = false;
     this.notificationService.handleInfo(this.translate.instant('auth.login.apple-login-coming-soon'));
   }
+
+  
 }

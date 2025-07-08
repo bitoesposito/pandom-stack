@@ -1,6 +1,6 @@
 import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { S3Client, PutObjectCommand, GetObjectCommand, CreateBucketCommand, HeadBucketCommand, PutBucketPolicyCommand, ListObjectsV2Command, ListBucketsCommand } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand, GetObjectCommand, CreateBucketCommand, HeadBucketCommand, PutBucketPolicyCommand, ListObjectsV2Command, ListBucketsCommand, HeadObjectCommand } from '@aws-sdk/client-s3';
 import * as https from 'https';
 
 @Injectable()
@@ -300,6 +300,23 @@ export class MinioService implements OnModuleInit {
     } catch (error) {
       this.logger.error('MinIO health check failed', { error: error.message });
       return false;
+    }
+  }
+
+  async getFileSize(key: string): Promise<number | null> {
+    try {
+      const command = new HeadObjectCommand({
+        Bucket: this.bucket,
+        Key: key
+      });
+      const result = await this.s3Client.send(command);
+      if (result && typeof result.ContentLength === 'number') {
+        return result.ContentLength;
+      }
+      return null;
+    } catch (error) {
+      this.logger.error('Failed to get file size from MinIO:', { key, error: error.message });
+      return null;
     }
   }
 }

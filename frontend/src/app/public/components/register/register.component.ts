@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { MessageService } from 'primeng/api';
@@ -11,7 +11,7 @@ import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
 import { NotificationService } from '../../../services/notification.service';
 import { AuthService } from '../../../services/auth.service';
-import { finalize } from 'rxjs';
+import { finalize, Observable, Subscription } from 'rxjs';
 import { ThemeService } from '../../../services/theme.service';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
@@ -38,10 +38,11 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
   templateUrl: './register.component.html',
   styleUrl: './register.component.scss'
 })
-export class RegisterComponent implements OnInit {
+export class RegisterComponent implements OnInit, OnDestroy {
   loading = false;
   socialLoading = false;
-  isDarkMode$;
+  isDarkMode$: Observable<boolean>;
+  private subscription: Subscription = new Subscription();
 
   form: FormGroup = new FormGroup({
     email: new FormControl(null, [
@@ -69,11 +70,20 @@ export class RegisterComponent implements OnInit {
 
   ngOnInit() {
     // Add password confirmation validation
-    this.form.get('confirmPassword')?.valueChanges.subscribe(() => {
-      this.validatePasswordConfirmation();
-    });
+    this.subscription.add(
+      this.form.get('confirmPassword')?.valueChanges.subscribe(() => {
+        this.validatePasswordConfirmation();
+      })
+    );
   }
 
+  ngOnDestroy() {
+    this.subscription.unsubscribe();
+  }
+
+  /**
+   * Validates that the password and confirm password fields match.
+   */
   private validatePasswordConfirmation() {
     const password = this.form.get('password')?.value;
     const confirmPassword = this.form.get('confirmPassword')?.value;
@@ -97,6 +107,9 @@ export class RegisterComponent implements OnInit {
     return this.form.get('confirmPassword') as FormControl;
   }
 
+  /**
+   * Handles the registration process, including form validation and API interaction.
+   */
   register() {
     if (this.form.invalid) {
       this.notificationService.handleWarning(this.translate.instant('auth.register.fill-required-fields'));
@@ -109,7 +122,7 @@ export class RegisterComponent implements OnInit {
     }
 
     this.loading = true;
-    // Disabilita tutti i controlli durante il loading
+    // Disables all controls during loading
     this.form.disable();
     
     const registrationData = {
@@ -121,7 +134,7 @@ export class RegisterComponent implements OnInit {
       .pipe(
         finalize(() => {
           this.loading = false;
-          // Riabilita tutti i controlli dopo il loading
+          // Re-enables all controls after loading
           this.form.enable();
         })
       )
@@ -139,15 +152,24 @@ export class RegisterComponent implements OnInit {
       });
   }
 
+  /**
+   * Toggles the dark mode setting.
+   */
   toggleDarkMode() {
     this.themeService.toggleDarkMode();
   }
 
+  /**
+   * Placeholder for Google registration functionality.
+   */
   registerWithGoogle(event?: Event) {
     this.socialLoading = false;
     this.notificationService.handleInfo(this.translate.instant('auth.register.google-register-coming-soon'));
   }
   
+  /**
+   * Placeholder for Apple registration functionality.
+   */
   registerWithApple(event?: Event) {
     this.socialLoading = false;
     this.notificationService.handleInfo(this.translate.instant('auth.register.apple-register-coming-soon'));

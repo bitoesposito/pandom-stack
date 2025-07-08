@@ -1,9 +1,11 @@
+// Styles for the OTP input to ensure full width
 p-inputotp {
   ::ng-deep input {
     width: 100% !important;
   }
 }
 
+// Styles for read-only fields to indicate they are not interactive
 .readonly {
   background-color: var(--surface-ground);
   color: var(--text-color-secondary);
@@ -11,17 +13,19 @@ p-inputotp {
   opacity: 0.7;
 }
 
-// Stili per i campi disabilitati durante il loading
+// Styles for disabled form fields to indicate they are not interactive
 :host ::ng-deep .p-disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
 
+// Styles specifically for disabled OTP input fields
 :host ::ng-deep .p-inputotp.p-disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
 
+// Styles specifically for disabled password fields
 :host ::ng-deep .p-password.p-disabled {
   opacity: 0.6;
   cursor: not-allowed;

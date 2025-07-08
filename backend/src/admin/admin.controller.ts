@@ -38,7 +38,7 @@ export class AdminController {
         @Query('search') search: string | undefined,
         @Req() req: AuthenticatedAdminRequest
     ): Promise<ApiResponseDto<any>> {
-        return this.adminService.getUsers(parseInt(page), parseInt(limit), search);
+        return this.adminService.getUsers(parseInt(page), parseInt(limit), search, req);
     }
 
     /**
@@ -51,7 +51,7 @@ export class AdminController {
         @Param('uuid') uuid: string,
         @Req() req: AuthenticatedAdminRequest
     ): Promise<ApiResponseDto<null>> {
-        return this.adminService.deleteUser(uuid, req.user.uuid, req.user.email);
+        return this.adminService.deleteUser(uuid, req.user.uuid, req.user.email, req);
     }
 
     /**
@@ -60,7 +60,7 @@ export class AdminController {
      */
     @Get('metrics')
     async getMetrics(@Req() req: AuthenticatedAdminRequest): Promise<ApiResponseDto<any>> {
-        return this.adminService.getMetrics();
+        return this.adminService.getMetrics(req);
     }
 
     /**
@@ -69,7 +69,7 @@ export class AdminController {
      */
     @Get('metrics/detailed')
     async getDetailedMetrics(@Req() req: AuthenticatedAdminRequest): Promise<ApiResponseDto<any>> {
-        return this.adminService.getDetailedMetrics();
+        return this.adminService.getDetailedMetrics(req);
     }
 
     /**
@@ -82,6 +82,6 @@ export class AdminController {
         @Query('limit') limit: string = '50',
         @Req() req: AuthenticatedAdminRequest
     ): Promise<ApiResponseDto<any>> {
-        return this.adminService.getAuditLogs(parseInt(page), parseInt(limit));
+        return this.adminService.getAuditLogs(parseInt(page), parseInt(limit), req);
     }
 } 

@@ -99,18 +99,17 @@ export class AdminService {
    * @returns Observable with audit logs
    */
   getAuditLogs(page: number = 1, limit: number = 50): Observable<GetAuditLogsResponse> {
-    console.log('🌐 [DEBUG] AdminService.getAuditLogs chiamata con:', { page, limit });
     const url = `${this.API_URL}/admin/audit-logs?page=${page}&limit=${limit}`;
-    console.log('🔗 [DEBUG] URL richiesta:', url);
     
     return this.http.get<GetAuditLogsResponse>(url, {
       headers: this.getHeaders()
     }).pipe(
       tap((response: any) => {
-        console.log('📡 [DEBUG] Risposta API audit logs:', response);
+        // Handle successful response if needed
       }),
       catchError((error: any) => {
-        console.error('💥 [DEBUG] Errore API audit logs:', error);
+        // Handle error appropriately
+        console.error('Error fetching audit logs:', error);
         throw error;
       })
     );

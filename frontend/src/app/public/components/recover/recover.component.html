@@ -3,17 +3,18 @@
 <main class="w-screen h-screen flex flex-column justify-content-center align-items-center p-3 ">
   <div class="w-full max-w-26rem flex flex-column gap-2 p-3 border-round-md">
 
+    <!-- Logo Section -->
     <a href="/">
       <img src="logo-full.svg" alt="logo" height="50"/>
-      <!-- in case of low contrast and diferent logo for dark and light mode, use this: -->
-      <!-- <img [src]="(isDarkMode$ | async) ? './logo-full-white.svg' : './logo-full-black.svg'" alt="logo" height="50"/> -->
     </a>
 
+    <!-- Header with Dark Mode Toggle -->
     <div class="flex align-items-center justify-content-between gap-2">
       <p class="text-2xl font-semibold">{{ 'auth.recover.title' | translate }}</p>
       <p-button [icon]="(isDarkMode$ | async) ? 'pi pi-moon' : 'pi pi-sun'" severity="secondary" (click)="toggleDarkMode()" pTooltip="Toggle dark mode" outlined="true" tooltipPosition="bottom"/>
     </div>
 
+    <!-- Recovery Form -->
     <form [formGroup]="form" (ngSubmit)="recover()" class="flex flex-column gap-3">
       <div class="flex gap-1 flex-column">
         <label for="email">{{ 'auth.recover.email-address' | translate }}</label>

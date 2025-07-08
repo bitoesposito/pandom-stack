@@ -11,6 +11,7 @@ import { finalize } from 'rxjs';
 import { ThemeService } from '../../../services/theme.service';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { InputOtp } from 'primeng/inputotp';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-verify',
@@ -36,7 +37,7 @@ export class VerifyComponent implements OnInit, OnDestroy {
   loading = false; 
   verifying = false;
   verificationAttempted = false;
-  isDarkMode$;
+  isDarkMode$: Observable<boolean>;
   resendTimer = 0;
   resendDisabled = false;
   private timerInterval: any;
@@ -70,6 +71,9 @@ export class VerifyComponent implements OnInit, OnDestroy {
     localStorage.removeItem('last_resend_time');
   }
 
+  /**
+   * Checks URL parameters to retrieve the user's email.
+   */
   private checkEmailFromUrl() {
     const urlParams = new URLSearchParams(window.location.search);
     const email = urlParams.get('email');
@@ -79,6 +83,9 @@ export class VerifyComponent implements OnInit, OnDestroy {
     }
   }
 
+  /**
+   * Initializes the resend timer based on the last resend time stored in local storage.
+   */
   private initializeResendTimer() {
     const lastResendTime = localStorage.getItem('last_resend_time');
     const currentTime = Date.now();
@@ -105,6 +112,9 @@ export class VerifyComponent implements OnInit, OnDestroy {
     }
   }
 
+  /**
+   * Starts the resend timer countdown.
+   */
   private startTimer() {
     this.timerInterval = setInterval(() => {
       this.resendTimer--;
@@ -118,6 +128,9 @@ export class VerifyComponent implements OnInit, OnDestroy {
     }, 1000);
   }
 
+  /**
+   * Resends the verification code to the user's email.
+   */
   resendCode() {
     if (this.resendDisabled || !this.userEmail) return;
 
@@ -142,6 +155,9 @@ export class VerifyComponent implements OnInit, OnDestroy {
       });
   }
 
+  /**
+   * Retrieves the label for the resend button, including the countdown timer if applicable.
+   */
   getResendButtonLabel(): string {
     if (this.resendDisabled && this.resendTimer > 0) {
       return `${this.translate.instant('auth.verify.resend-code')} (${this.resendTimer}s)`;
@@ -149,6 +165,9 @@ export class VerifyComponent implements OnInit, OnDestroy {
     return this.translate.instant('auth.verify.resend-code');
   }
 
+  /**
+   * Checks URL parameters to retrieve the verification token.
+   */
   private checkTokenFromUrl() {
     const urlParams = new URLSearchParams(window.location.search);
     const token = urlParams.get('token');
@@ -162,20 +181,23 @@ export class VerifyComponent implements OnInit, OnDestroy {
     return this.form.get('token') as FormControl
   }
 
+  /**
+   * Initiates the email verification process, including form validation and API interaction.
+   */
   verify() {
     if (this.form.invalid || this.verifying) {
       this.notificationService.handleWarning(this.translate.instant('auth.verify.fill-required-fields'));
       return;
     }
 
-    // Controllo aggiuntivo per evitare chiamate multiple
+    // Additional check to prevent multiple calls
     if (this.verifying) {
       return;
     }
 
     this.verifying = true;
     this.verificationAttempted = true;
-    // Disabilita tutti i controlli durante la verifica
+    // Disable all controls during verification
     this.form.disable();
 
     const data = {
@@ -189,7 +211,7 @@ export class VerifyComponent implements OnInit, OnDestroy {
     this.authService.verifyEmail(data)
       .pipe(
         finalize(() => {
-          // Non riabilitare il form qui, lo facciamo solo in caso di errore
+          // Do not re-enable the form here, only do so in case of error
         })
       )
       .subscribe({
@@ -197,11 +219,11 @@ export class VerifyComponent implements OnInit, OnDestroy {
           if (response.success) {
             this.notificationService.handleSuccess(this.translate.instant('auth.verify.success'));
             localStorage.removeItem('last_resend_time');
-            // Blocca il form e impedisci altre verifiche
+            // Block the form and prevent further verifications
             this.form.disable();
             this.verifying = true;
             this.verificationAttempted = true;
-            // Redirect dopo il toast
+            // Redirect after toast
             setTimeout(() => {
               this.router.navigate(['/login'], { 
                 queryParams: { email: this.userEmail } 
@@ -209,7 +231,7 @@ export class VerifyComponent implements OnInit, OnDestroy {
             }, 2000);
           } else {
             this.notificationService.handleWarning(response.message || this.translate.instant('auth.verify.verification-failed'));
-            // Riabilita il form solo in caso di errore
+            // Re-enable the form only in case of error
             this.form.enable();
             this.verifying = false;
             this.verificationAttempted = false;
@@ -217,7 +239,7 @@ export class VerifyComponent implements OnInit, OnDestroy {
         },
         error: (error: any) => {
           this.notificationService.handleError(error, this.translate.instant('auth.verify.verification-error'));
-          // Riabilita il form solo in caso di errore
+          // Re-enable the form only in case of error
           this.form.enable();
           this.verifying = false;
           this.verificationAttempted = false;
@@ -238,19 +260,19 @@ export class VerifyComponent implements OnInit, OnDestroy {
     const pastedText = clipboardData.getData('text');
     if (!pastedText) return;
     
-    // Estrai solo i numeri dal testo incollato
+    // Extract only numbers from pasted text
     const numbers = pastedText.replace(/\D/g, '').slice(0, 6);
     
     if (numbers.length === 6) {
-      // Temporaneamente disabilita l'auto-submit
+      // Temporarily disable auto-submit
       this.verificationAttempted = true;
       
       this.form.patchValue({ token: numbers });
       
-      // Riabilita l'auto-submit dopo un breve delay
+      // Re-enable auto-submit after a brief delay
       setTimeout(() => {
         this.verificationAttempted = false;
-        // Se il form è valido, procedi con la verifica
+        // If the form is valid, proceed with verification
         if (this.form.valid && !this.verifying) {
           this.verify();
         }

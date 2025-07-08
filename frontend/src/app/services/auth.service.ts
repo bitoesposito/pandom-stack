@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
-import { Observable } from 'rxjs';
+import { Observable, throwError } from 'rxjs';
 import { ApiResponse } from '../models/api-base.models';
 import { 
   LoginRequest, 
@@ -173,7 +173,7 @@ export class AuthService {
   refreshToken(): Observable<RefreshTokenApiResponse> {
     const refreshToken = this.getRefreshToken();
     if (!refreshToken) {
-      throw new Error('No refresh token available');
+      return throwError(() => new Error('No refresh token available'));
     }
     return this.http.post<RefreshTokenApiResponse>(`${this.API_URL}/auth/refresh`, { refresh_token: refreshToken });
   }

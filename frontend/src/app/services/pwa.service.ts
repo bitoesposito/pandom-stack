@@ -1,10 +1,22 @@
 import { Injectable } from '@angular/core';
 import { SwUpdate, VersionReadyEvent } from '@angular/service-worker';
 import { filter, map } from 'rxjs/operators';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, Subscription } from 'rxjs';
 import { OfflineStorageService } from './offline-storage.service';
 import { SyncQueueService } from './sync-queue.service';
 import { NotificationService } from './notification.service';
+
+// Define BeforeInstallPromptEvent type for TypeScript
+interface BeforeInstallPromptEvent extends Event {
+  readonly platforms: string[];
+  readonly userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>;
+  prompt(): Promise<void>;
+}
+
+// Extend WindowEventMap to include beforeinstallprompt event
+interface WindowEventMap {
+  beforeinstallprompt: BeforeInstallPromptEvent;
+}
 
 @Injectable({
   providedIn: 'root'
@@ -13,7 +25,8 @@ export class PwaService {
   private updateAvailable$ = new BehaviorSubject<boolean>(false);
   private isOnline$ = new BehaviorSubject<boolean>(navigator.onLine);
   private canInstall$ = new BehaviorSubject<boolean>(false);
-  private deferredPrompt: any = null;
+  private deferredPrompt: BeforeInstallPromptEvent | null = null;
+  private subscriptions: Subscription = new Subscription();
 
   constructor(
     private swUpdate: SwUpdate,
@@ -22,9 +35,10 @@ export class PwaService {
     private notification: NotificationService
   ) {
     this.initializePWA();
-    window.addEventListener('beforeinstallprompt', (event: any) => {
-      event.preventDefault();
-      this.deferredPrompt = event;
+    window.addEventListener('beforeinstallprompt', (event: Event) => {
+      const beforeInstallPromptEvent = event as BeforeInstallPromptEvent;
+      beforeInstallPromptEvent.preventDefault();
+      this.deferredPrompt = beforeInstallPromptEvent;
       this.canInstall$.next(true);
     });
     window.addEventListener('appinstalled', () => {
@@ -34,9 +48,13 @@ export class PwaService {
     });
   }
 
+  /**
+   * Initializes the PWA by setting up update checks and monitoring online/offline status.
+   */
   private initializePWA(): void {
     // Check for updates
     if (this.swUpdate.isEnabled) {
+      this.subscriptions.add(
       this.swUpdate.versionUpdates
         .pipe(
           filter((evt): evt is VersionReadyEvent => evt.type === 'VERSION_READY'),
@@ -44,7 +62,8 @@ export class PwaService {
         )
         .subscribe(() => {
           this.updateAvailable$.next(true);
-        });
+          })
+      );
 
       // Check for updates every hour
       setInterval(() => {
@@ -70,18 +89,30 @@ export class PwaService {
     });
   }
 
+  /**
+   * Returns an observable indicating if an update is available.
+   */
   get updateAvailable() {
     return this.updateAvailable$.asObservable();
   }
 
+  /**
+   * Returns an observable indicating if the application is online.
+   */
   get isOnline() {
     return this.isOnline$.asObservable();
   }
 
+  /**
+   * Returns an observable indicating if the PWA can be installed.
+   */
   get canInstall() {
     return this.canInstall$.asObservable();
   }
 
+  /**
+   * Activates the available update and reloads the application.
+   */
   async activateUpdate(): Promise<void> {
     if (this.swUpdate.isEnabled) {
       await this.swUpdate.activateUpdate();
@@ -89,21 +120,33 @@ export class PwaService {
     }
   }
 
+  /**
+   * Checks for updates to the service worker.
+   */
   async checkForUpdate(): Promise<void> {
     if (this.swUpdate.isEnabled) {
       await this.swUpdate.checkForUpdate();
     }
   }
 
+  /**
+   * Checks if the PWA is installed.
+   */
   isPWAInstalled(): boolean {
     return window.matchMedia('(display-mode: standalone)').matches ||
            (window.navigator as any).standalone === true;
   }
 
+  /**
+   * Checks if the PWA can be installed.
+   */
   canInstallPWA(): boolean {
     return 'serviceWorker' in navigator && 'PushManager' in window;
   }
 
+  /**
+   * Initializes offline services by setting up the offline storage database.
+   */
   async initializeOfflineServices(): Promise<void> {
     try {
       await this.offlineStorage.initializeDB();
@@ -112,6 +155,9 @@ export class PwaService {
     }
   }
 
+  /**
+   * Returns the current offline status and capability to work offline.
+   */
   getOfflineStatus(): { isOnline: boolean; canWorkOffline: boolean } {
     return {
       isOnline: navigator.onLine,
@@ -119,6 +165,9 @@ export class PwaService {
     };
   }
 
+  /**
+   * Prompts the user to install the PWA.
+   */
   async promptInstall(): Promise<void> {
     if (this.deferredPrompt) {
       this.deferredPrompt.prompt();

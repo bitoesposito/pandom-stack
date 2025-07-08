@@ -32,9 +32,10 @@ export class AuthService {
   /**
    * Register a new user
    * @param registerDto - Registration data
+   * @param req - Express request object for IP and User Agent
    * @returns Promise<ApiResponseDto<any>>
    */
-  async register(registerDto: RegisterDto): Promise<ApiResponseDto<any>> {
+  async register(registerDto: RegisterDto, req?: any): Promise<ApiResponseDto<any>> {
     try {
       // Check if user already exists
       const existingUser = await this.userRepository.findOne({
@@ -90,6 +91,12 @@ export class AuthService {
         otp: verificationToken,
         expiresAt: verificationExpiry 
       });
+
+      // Extract IP from request
+      const clientIp = this.getClientIp(req);
+
+      // Log user registration
+      await this.auditService.logUserRegistration(user.uuid, user.email, clientIp);
 
       this.logger.log('User registered successfully', { email: registerDto.email });
       
@@ -147,7 +154,7 @@ export class AuthService {
         // Log failed login attempt
         const clientIp = this.getClientIp(req);
         const userAgent = req?.headers?.['user-agent'] || 'Unknown';
-        await this.auditService.logLoginFailed(loginDto.email, clientIp, userAgent, 'Invalid password');
+        await this.auditService.logLoginFailed(loginDto.email, clientIp, userAgent, 'Invalid credentials');
         throw new UnauthorizedException('Invalid credentials');
       }
 
@@ -355,7 +362,7 @@ export class AuthService {
    * @param verifyEmailDto - Email verification data
    * @returns Promise<ApiResponseDto<null>>
    */
-  async verifyEmail(verifyEmailDto: VerifyEmailDto): Promise<ApiResponseDto<null>> {
+  async verifyEmail(verifyEmailDto: VerifyEmailDto, req?: any): Promise<ApiResponseDto<null>> {
     try {
       // Find user by verification token
       const user = await this.userRepository.findOne({
@@ -378,16 +385,7 @@ export class AuthService {
       await this.userRepository.save(user);
 
       // Log email verification
-      await this.auditService.log({
-        event_type: 'USER_VERIFY_EMAIL' as any,
-        user_id: user.uuid,
-        user_email: user.email,
-        status: 'SUCCESS',
-        details: {
-          verification_method: 'email_token',
-          timestamp: new Date().toISOString(),
-        },
-      });
+      await this.auditService.logEmailVerification(user.uuid, user.email, this.getClientIp(req));
 
       this.logger.log('Email verified successfully', { email: user.email });
       
@@ -482,6 +480,9 @@ export class AuthService {
       // Log password reset
       const clientIp = this.getClientIp(req);
       await this.auditService.logPasswordReset(user.uuid, user.email, clientIp);
+
+      // Log password change
+      await this.auditService.logPasswordChange(user.uuid, user.email, this.getClientIp(req));
 
       this.logger.log('Password reset successfully', { email: user.email });
       

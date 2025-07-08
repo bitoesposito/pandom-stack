@@ -82,12 +82,13 @@ export class ResilienceService {
    * @returns Promise<ApiResponseDto<BackupResponseDto>>
    */
   async createBackup(): Promise<ApiResponseDto<BackupResponseDto>> {
+    let localBackupPath = '';
     try {
       this.logger.log('Creating system backup');
 
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
       const backupFileName = `backup-${timestamp}.sql`;
-      const localBackupPath = path.join(this.backupDir, backupFileName);
+      localBackupPath = path.join(this.backupDir, backupFileName);
       const minioKey = `${this.backupBucketPrefix}${backupFileName}`;
 
       // Get database connection details from environment variables
@@ -105,7 +106,7 @@ export class ResilienceService {
       // Create backup command with proper escaping
       const backupCommand = `PGPASSWORD='${dbPassword}' pg_dump -h '${dbHost}' -p '${dbPort}' -U '${dbUser}' -d '${dbName}' -f '${localBackupPath}'`;
       
-      this.logger.log('Executing backup command', { 
+      this.logger.log('Executing backup command', {
         host: dbHost, 
         port: dbPort, 
         user: dbUser, 
@@ -165,14 +166,25 @@ export class ResilienceService {
     } catch (error) {
       this.logger.error('Failed to create system backup', { error: error.message });
       
-      // Log the failed backup attempt
+      // Log the failed backup attempt, including backup_size if available
+      let backupSize: number | undefined = undefined;
+      try {
+        if (localBackupPath && fs.existsSync(localBackupPath)) {
+          const stats = fs.statSync(localBackupPath);
+          backupSize = stats.size;
+        }
+      } catch {}
+      const details: any = {
+        action: 'create_backup',
+        error: error.message
+      };
+      if (backupSize !== undefined) {
+        details.backup_size = backupSize;
+      }
       await this.auditService.log({
         event_type: AuditEventType.DATA_EXPORT,
         status: 'FAILED',
-        details: {
-          action: 'create_backup',
-          error: error.message
-        }
+        details
       });
       
       throw error;
@@ -241,6 +253,13 @@ export class ResilienceService {
         fs.unlinkSync(localBackupPath);
       }
 
+      // Fetch real backup size from MinIO
+      let backupSize = 0;
+      try {
+        const size = await this.minioService.getFileSize(minioKey);
+        if (typeof size === 'number') backupSize = size;
+      } catch {}
+
       // Log the restore operation
       await this.auditService.log({
         event_type: AuditEventType.DATA_EXPORT,
@@ -249,6 +268,7 @@ export class ResilienceService {
           action: 'restore_backup',
           backup_file: backupFileName,
           minio_key: minioKey,
+          backup_size: backupSize,
           restore_timestamp: new Date().toISOString()
         }
       });
@@ -256,7 +276,7 @@ export class ResilienceService {
       const response: BackupResponseDto = {
         backup_id: backupId,
         backup_file: backupFileName,
-        backup_size: 0, // We don't have the size from MinIO yet
+        backup_size: backupSize,
         created_at: new Date().toISOString(),
         status: 'restored'
       };
@@ -265,18 +285,23 @@ export class ResilienceService {
       return ApiResponseDto.success(response, 'System backup restored successfully from MinIO');
     } catch (error) {
       this.logger.error('Failed to restore system backup', { backupId, error: error.message });
-      
       // Log the failed restore attempt
+      let backupSize = 0;
+      try {
+        const minioKey = `${this.backupBucketPrefix}backup-${backupId}.sql`;
+        const size = await this.minioService.getFileSize(minioKey);
+        if (typeof size === 'number') backupSize = size;
+      } catch {}
       await this.auditService.log({
         event_type: AuditEventType.DATA_EXPORT,
         status: 'FAILED',
         details: {
           action: 'restore_backup',
           backup_id: backupId,
+          backup_size: backupSize,
           error: error.message
         }
       });
-      
       throw error;
     }
   }
@@ -306,17 +331,23 @@ export class ResilienceService {
       const endIndex = startIndex + limit;
       const paginatedBackups = filteredBackups.slice(startIndex, endIndex);
 
-      const backups = paginatedBackups.map(file => {
+      // Fetch real sizes from MinIO for each backup file
+      const backups = await Promise.all(paginatedBackups.map(async file => {
         const backupId = file.replace('backup-', '').replace('.sql', '');
-        
+        const minioKey = this.backupBucketPrefix + file;
+        let backupSize = 0;
+        try {
+          const size = await this.minioService.getFileSize(minioKey);
+          if (typeof size === 'number') backupSize = size;
+        } catch {}
         return {
           backup_id: backupId,
           backup_file: file,
-          backup_size: 0, // We don't have size info from listing
+          backup_size: backupSize,
           created_at: new Date().toISOString(), // We don't have creation date from listing
           status: 'available'
         } as BackupResponseDto;
-      });
+      }));
 
       const pagination = {
         page,

@@ -4,17 +4,20 @@
 <main class="w-screen h-screen flex flex-column justify-content-center align-items-center p-3 ">
   <div class="w-full max-w-26rem flex flex-column gap-2 p-3 border-round-md">
 
+    <!-- Logo linking to the homepage, disabled during loading -->
     <a href="/" [class.pointer-events-none]="loading" [class.opacity-50]="loading">
       <img src="logo-full.svg" alt="logo" height="50"/>
       <!-- in case of low contrast and diferent logo for dark and light mode, use this: -->
       <!-- <img [src]="(isDarkMode$ | async) ? './logo-full-white.svg' : './logo-full-black.svg'" alt="logo" height="50"/> -->
     </a>
 
+    <!-- Header with title and dark mode toggle button -->
     <div class="flex align-items-center justify-content-between gap-2">
       <p class="text-2xl font-semibold">{{ 'auth.reset.title' | translate }}</p>
       <p-button [icon]="(isDarkMode$ | async) ? 'pi pi-moon' : 'pi pi-sun'" severity="secondary" (click)="toggleDarkMode()" pTooltip="Toggle dark mode" outlined="true" tooltipPosition="bottom" [disabled]="loading"/>
     </div>
 
+    <!-- Password reset form -->
     <form [formGroup]="form" (ngSubmit)="resetPassword()" class="flex flex-column gap-3">
       <!-- Email Display (Read-only) -->
       <div class="flex gap-1 flex-column" *ngIf="userEmail">
@@ -75,12 +78,13 @@
           <span *ngIf="confirmPassword.errors?.['required']">{{ 'auth.reset.confirm-password-required' | translate }}</span>
           <span *ngIf="confirmPassword.errors?.['passwordMismatch']">{{ 'auth.reset.passwords-not-match' | translate }}</span>
         </small>
-        <!-- Messaggio di conferma quando le password coincidono -->
+        <!-- Confirmation message when passwords match -->
         <small class="text-green-600" *ngIf="confirmPassword.valid && confirmPassword.value && password.value === confirmPassword.value">
           {{ 'auth.reset.passwords-match' | translate }}
         </small>
       </div>
 
+      <!-- Submit button and login link -->
       <div class="flex gap-3 flex-column mt-2">
         <p-button [label]="'auth.reset.reset-password' | translate" styleClass="w-full" type="submit" [disabled]="!form.valid || loading" [loading]="loading"/>
 

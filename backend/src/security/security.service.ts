@@ -166,9 +166,10 @@ export class SecurityService {
   /**
    * Download user data (GDPR compliance)
    * @param userId - User ID
+   * @param req - Request object for logging purposes
    * @returns Promise<ApiResponseDto<DownloadDataResponseDto>>
    */
-  async downloadData(userId: string): Promise<ApiResponseDto<DownloadDataResponseDto>> {
+  async downloadData(userId: string, req: Request): Promise<ApiResponseDto<DownloadDataResponseDto>> {
     try {
       this.logger.log('Initiating data download for user', { userId });
 
@@ -227,17 +228,7 @@ export class SecurityService {
       const downloadUrl = `${baseUrl}/security/downloads/user-data-${userId}-${timestamp}.json`;
 
       // Log the data export for audit
-      await this.auditService.log({
-        event_type: AuditEventType.DATA_EXPORT,
-        user_id: userId,
-        user_email: user.email,
-        status: 'SUCCESS',
-        details: {
-          download_url: downloadUrl,
-          expires_at: expiresAt.toISOString(),
-          data_size: JSON.stringify(userData).length
-        }
-      });
+      await this.auditService.logDataExport(user.uuid, user.email, 'user_data', this.getClientIp(req));
 
       const response: DownloadDataResponseDto = {
         download_url: downloadUrl,
