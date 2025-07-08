@@ -1,27 +1,31 @@
-import { User } from './user.models';
+import { ApiResponse } from './api-base.models';
 
 /**
- * Login request data
- * Contains email, password and remember me option
+ * Modelli per l'autenticazione PANDOM
+ * Basati sulla struttura reale del backend
  */
-export interface LoginRequestData {
+
+/**
+ * Ruoli utente disponibili
+ */
+export type UserRole = 'admin' | 'user';
+
+/**
+ * Stati di verifica
+ */
+export type VerificationStatus = 'pending' | 'verified' | 'expired';
+
+/**
+ * Dati per il login
+ */
+export interface LoginRequest {
   email: string;
   password: string;
   rememberMe?: boolean;
 }
 
 /**
- * Register request data
- * Contains email and password
- */
-export interface RegisterRequestData {
-  email: string;
-  password: string;
-}
-
-/**
- * Login response data
- * Contains the JWT token, refresh token and essential user data
+ * Risposta al login
  */
 export interface LoginResponseData {
   access_token: string;
@@ -30,47 +34,98 @@ export interface LoginResponseData {
   user: {
     uuid: string;
     email: string;
-    role: string;
+    role: UserRole;
+    is_verified: boolean;
   };
 }
 
 /**
- * Password recovery response
- * Returns the token expiration time
+ * Dati per la registrazione
  */
-export interface RecoverResponse {
-  expiresIn: number; // Duration in seconds (10 minutes)
-}
-
-/**
- * Token verification request body
- * Requires token and new password
- */
-export interface VerifyRequest {
-  token: string;
+export interface RegisterRequest {
+  email: string;
   password: string;
 }
 
 /**
- * Email verification request body
- * Requires only the verification token
+ * Dati per il refresh token
+ */
+export interface RefreshTokenRequest {
+  refresh_token: string;
+}
+
+/**
+ * Dati per il recupero password
+ */
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+/**
+ * Dati per il reset password
+ */
+export interface ResetPasswordRequest {
+  otp: string;
+  password: string;
+}
+
+/**
+ * Dati per la verifica email
  */
 export interface VerifyEmailRequest {
   token: string;
 }
 
 /**
- * Resend verification email request body
- * Requires only the email address
+ * Dati per il reinvio verifica email
  */
 export interface ResendVerificationRequest {
   email: string;
 }
 
 /**
- * Forgot password request body
- * Requires only the email address
+ * Dati utente completi (risposta /auth/me)
  */
-export interface ForgotPasswordRequest {
+export interface UserData {
+  uuid: string;
   email: string;
+  role: UserRole;
+  is_active: boolean;
+  is_verified: boolean;
+  is_configured: boolean;
+  last_login_at?: string;
+  profile_uuid?: string;
+  created_at: string;
+  updated_at: string;
+  profile?: UserProfileData;
 }
+
+/**
+ * Dati profilo utente
+ */
+export interface UserProfileData {
+  uuid: string;
+  tags: string[];
+  metadata: Record<string, any>;
+  created_at: string;
+  updated_at: string;
+}
+
+/**
+ * Dati utente e profilo per la risposta /auth/me
+ */
+export interface GetMeData {
+  user: UserData;
+  profile: UserProfileData;
+}
+
+// Tipi per le chiamate API
+export type LoginApiResponse = ApiResponse<LoginResponseData>;
+export type RegisterApiResponse = ApiResponse<UserData>;
+export type RefreshTokenApiResponse = ApiResponse<LoginResponseData>;
+export type ForgotPasswordApiResponse = ApiResponse<{ message: string; expiresIn: number }>;
+export type ResetPasswordApiResponse = ApiResponse<null>;
+export type VerifyEmailApiResponse = ApiResponse<null>;
+export type ResendVerificationApiResponse = ApiResponse<null>;
+export type GetMeApiResponse = ApiResponse<GetMeData>;
+

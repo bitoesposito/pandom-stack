@@ -5,6 +5,7 @@ import { ApiResponseDto } from '../common/common.interface';
 import { User } from '../auth/entities/user.entity';
 import { UserProfile } from './entities/user-profile.entity';
 import { UpdateProfileDto } from './users.dto';
+import { AuditService } from '../common/services/audit.service';
 
 /**
  * Service handling user profile business logic
@@ -19,6 +20,7 @@ export class UsersService {
     private readonly userRepository: Repository<User>,
     @InjectRepository(UserProfile)
     private readonly userProfileRepository: Repository<UserProfile>,
+    private readonly auditService: AuditService
   ) { }
 
   /**
@@ -66,9 +68,10 @@ export class UsersService {
    * Update user profile
    * @param userId - User ID
    * @param updateProfileDto - Profile update data
+   * @param req - Express request object for IP and User Agent
    * @returns Promise<ApiResponseDto<any>>
    */
-  async updateProfile(userId: string, updateProfileDto: UpdateProfileDto): Promise<ApiResponseDto<any>> {
+  async updateProfile(userId: string, updateProfileDto: UpdateProfileDto, req?: any): Promise<ApiResponseDto<any>> {
     try {
       this.logger.log('Updating user profile', { userId, data: updateProfileDto });
 
@@ -123,6 +126,12 @@ export class UsersService {
         updatedFields: Object.keys(updateProfileDto)
       });
       
+      // Extract IP from request
+      const clientIp = this.getClientIp(req);
+
+      // Log profile update
+      await this.auditService.logProfileUpdate(userId, user.email, clientIp);
+      
       return ApiResponseDto.success(profileData, 'Profile updated successfully');
     } catch (error) {
       this.logger.error('Failed to update user profile', { userId, error: error.message });
@@ -171,5 +180,28 @@ export class UsersService {
         throw new BadRequestException('Metadata size cannot exceed 10KB');
       }
     }
+  }
+
+  /**
+   * Get client IP address from request
+   * @param req - Express request object
+   * @returns string - Client IP address
+   */
+  private getClientIp(req?: any): string {
+    if (!req) return 'Unknown';
+    const forwardedFor = req.headers?.['x-forwarded-for'] as string;
+    const realIp = req.headers?.['x-real-ip'] as string;
+    const remoteAddr = req.connection?.remoteAddress || req.socket?.remoteAddress;
+    if (forwardedFor) {
+      const ips = forwardedFor.split(',').map(ip => ip.trim());
+      return ips[0];
+    }
+    if (realIp) {
+      return realIp;
+    }
+    if (remoteAddr) {
+      return remoteAddr.replace(/^::ffff:/, '');
+    }
+    return 'Unknown';
   }
 } 

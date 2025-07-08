@@ -1,3 +1,11 @@
+/**
+ * NavBar Component Styles
+ * 
+ * Custom styles for the navigation bar component.
+ * Includes language selector customization and PrimeNG overrides.
+ */
+
+/* Language selector dropdown customization */
 #language-selector {
     ::ng-deep .p-select-dropdown {
         width: unset !important;
@@ -9,6 +17,7 @@
     }
 }
 
+/* Remove background from language selector */
 p-select {
     background-color: unset !important;
 }

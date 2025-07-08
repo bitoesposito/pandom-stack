@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormControl, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
@@ -12,7 +12,7 @@ import { TooltipModule } from 'primeng/tooltip';
 import { InputOtpModule } from 'primeng/inputotp';
 import { NotificationService } from '../../../services/notification.service';
 import { AuthService } from '../../../services/auth.service';
-import { finalize } from 'rxjs';
+import { finalize, Observable, Subscription } from 'rxjs';
 import { ThemeService } from '../../../services/theme.service';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
@@ -40,9 +40,10 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
   templateUrl: './reset.component.html',
   styleUrl: './reset.component.scss'
 })
-export class ResetComponent implements OnInit {
+export class ResetComponent implements OnInit, OnDestroy {
   loading = false;
-  isDarkMode$;
+  isDarkMode$: Observable<boolean>;
+  private subscription: Subscription = new Subscription();
   userEmail: string = '';
 
   form: FormGroup = new FormGroup({
@@ -69,6 +70,13 @@ export class ResetComponent implements OnInit {
     this.setupPasswordConfirmation();
   }
 
+  ngOnDestroy() {
+    this.subscription.unsubscribe();
+  }
+
+  /**
+   * Checks URL parameters to retrieve the user's email.
+   */
   private checkParamsFromUrl() {
     const urlParams = new URLSearchParams(window.location.search);
     const email = urlParams.get('email');
@@ -78,17 +86,27 @@ export class ResetComponent implements OnInit {
     }
   }
 
+  /**
+   * Sets up real-time validation for password confirmation.
+   */
   private setupPasswordConfirmation() {
-    // Validazione in tempo reale per entrambi i campi password
-    this.form.get('password')?.valueChanges.subscribe(() => {
-      this.validatePasswordConfirmation();
-    });
+    // Real-time validation for both password fields
+    this.subscription.add(
+      this.form.get('password')?.valueChanges.subscribe(() => {
+        this.validatePasswordConfirmation();
+      })
+    );
     
-    this.form.get('confirmPassword')?.valueChanges.subscribe(() => {
-      this.validatePasswordConfirmation();
-    });
+    this.subscription.add(
+      this.form.get('confirmPassword')?.valueChanges.subscribe(() => {
+        this.validatePasswordConfirmation();
+      })
+    );
   }
 
+  /**
+   * Validates that the password and confirm password fields match.
+   */
   private validatePasswordConfirmation() {
     const password = this.form.get('password')?.value;
     const confirmPassword = this.form.get('confirmPassword')?.value;
@@ -100,7 +118,7 @@ export class ResetComponent implements OnInit {
         this.form.get('confirmPassword')?.setErrors(null);
       }
     } else {
-      // Rimuovi errori se uno dei campi è vuoto
+      // Remove errors if one of the fields is empty
       this.form.get('confirmPassword')?.setErrors(null);
     }
   }
@@ -117,8 +135,11 @@ export class ResetComponent implements OnInit {
     return this.form.get('confirmPassword') as FormControl;
   }
 
+  /**
+   * Initiates the password reset process, including form validation and API interaction.
+   */
   resetPassword() {
-    // Validazione OTP
+    // OTP validation
     if (this.otp.invalid) {
       if (this.otp.errors?.['required']) {
         this.notificationService.handleWarning(this.translate.instant('auth.reset.otp-required'));
@@ -126,7 +147,7 @@ export class ResetComponent implements OnInit {
       return;
     }
 
-    // Validazione password
+    // Password validation
     if (this.password.invalid) {
       if (this.password.errors?.['required']) {
         this.notificationService.handleWarning(this.translate.instant('auth.reset.password-required'));
@@ -136,7 +157,7 @@ export class ResetComponent implements OnInit {
       return;
     }
 
-    // Validazione conferma password
+    // Confirm password validation
     if (this.confirmPassword.invalid) {
       if (this.confirmPassword.errors?.['required']) {
         this.notificationService.handleWarning(this.translate.instant('auth.reset.confirm-password-required'));
@@ -146,14 +167,14 @@ export class ResetComponent implements OnInit {
       return;
     }
 
-    // Controllo finale di sicurezza
+    // Final security check
     if (this.password.value !== this.confirmPassword.value) {
       this.notificationService.handleWarning(this.translate.instant('auth.reset.passwords-not-match'));
       return;
     }
 
     this.loading = true;
-    // Disabilita tutti i controlli durante il loading
+    // Disable all controls during loading
     this.form.disable();
     
     const data = {
@@ -189,6 +210,9 @@ export class ResetComponent implements OnInit {
       });
   }
 
+  /**
+   * Toggles the dark mode setting.
+   */
   toggleDarkMode() {
     this.themeService.toggleDarkMode();
   }

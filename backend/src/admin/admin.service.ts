@@ -31,9 +31,10 @@ export class AdminService {
    * @param page - Page number
    * @param limit - Items per page
    * @param search - Search query
+   * @param req - Request object
    * @returns Promise<ApiResponseDto<UserManagementResponseDto>>
    */
-  async getUsers(page: number = 1, limit: number = 10, search?: string): Promise<ApiResponseDto<UserManagementResponseDto>> {
+  async getUsers(page: number = 1, limit: number = 10, search?: string, req?: any): Promise<ApiResponseDto<UserManagementResponseDto>> {
     try {
       this.logger.log('Getting users for admin management', { page, limit, search });
 
@@ -93,9 +94,10 @@ export class AdminService {
    * @param uuid - User UUID
    * @param adminId - Admin user ID
    * @param adminEmail - Admin email
+   * @param req - Request object
    * @returns Promise<ApiResponseDto<null>>
    */
-  async deleteUser(uuid: string, adminId: string, adminEmail: string): Promise<ApiResponseDto<null>> {
+  async deleteUser(uuid: string, adminId: string, adminEmail: string, req?: any): Promise<ApiResponseDto<null>> {
     try {
       this.logger.log('Deleting user account', { uuid, adminId });
 
@@ -120,10 +122,12 @@ export class AdminService {
       }
 
       // Log the deletion attempt
+      const clientIp = this.getClientIp(req);
       await this.auditService.log({
         event_type: AuditEventType.USER_DELETED,
         user_id: adminId,
         user_email: adminEmail,
+        ip_address: clientIp,
         status: 'SUCCESS',
         details: {
           action: 'admin_delete_user',
@@ -171,10 +175,34 @@ export class AdminService {
   }
 
   /**
+   * Get client IP address from request
+   * @param req - Express request object
+   * @returns string - Client IP address
+   */
+  private getClientIp(req?: any): string {
+    if (!req) return 'Unknown';
+    const forwardedFor = req.headers?.['x-forwarded-for'] as string;
+    const realIp = req.headers?.['x-real-ip'] as string;
+    const remoteAddr = req.connection?.remoteAddress || req.socket?.remoteAddress;
+    if (forwardedFor) {
+      const ips = forwardedFor.split(',').map(ip => ip.trim());
+      return ips[0];
+    }
+    if (realIp) {
+      return realIp;
+    }
+    if (remoteAddr) {
+      return remoteAddr.replace(/^::ffff:/, '');
+    }
+    return 'Unknown';
+  }
+
+  /**
    * Get system metrics
+   * @param req - Request object
    * @returns Promise<ApiResponseDto<SystemMetricsResponseDto>>
    */
-  async getMetrics(): Promise<ApiResponseDto<SystemMetricsResponseDto>> {
+  async getMetrics(req?: any): Promise<ApiResponseDto<SystemMetricsResponseDto>> {
     try {
       this.logger.log('Getting system metrics');
 
@@ -233,9 +261,10 @@ export class AdminService {
 
   /**
    * Get detailed system metrics
+   * @param req - Request object
    * @returns Promise<ApiResponseDto<any>>
    */
-  async getDetailedMetrics(): Promise<ApiResponseDto<any>> {
+  async getDetailedMetrics(req?: any): Promise<ApiResponseDto<any>> {
     try {
       this.logger.log('Getting detailed system metrics');
 
@@ -262,14 +291,15 @@ export class AdminService {
    * Get audit logs
    * @param page - Page number
    * @param limit - Items per page
+   * @param req - Request object
    * @returns Promise<ApiResponseDto<AuditLogsResponseDto>>
    */
-  async getAuditLogs(page: number = 1, limit: number = 50): Promise<ApiResponseDto<AuditLogsResponseDto>> {
+  async getAuditLogs(page: number = 1, limit: number = 50, req?: any): Promise<ApiResponseDto<AuditLogsResponseDto>> {
     try {
       this.logger.log('Getting audit logs', { page, limit });
 
-      // Get all audit logs (in production, you'd implement pagination in AuditService)
-      const allLogs = await this.auditService.getAuditLogsByType(AuditEventType.USER_LOGIN_SUCCESS, 1000);
+      // Get all audit logs without filtering by event type
+      const allLogs = await this.auditService.getAllAuditLogs();
 
       // Apply pagination manually
       const skip = (page - 1) * limit;

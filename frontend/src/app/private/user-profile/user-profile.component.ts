@@ -1,14 +1,15 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { NavBarComponent } from '../nav-bar/nav-bar.component';
 import { CommonModule } from '@angular/common';
 import { TabViewModule } from 'primeng/tabview';
 import { ButtonModule } from 'primeng/button';
 import { AuthService } from '../../services/auth.service';
-import { SecurityService, SecuritySession, SecurityLog } from '../../services/security.service';
+import { SecurityService } from '../../services/security.service';
+import { SecuritySession, SecurityLog } from '../../models/security.models';
 import { ResilienceService } from '../../services/resilience.service';
 import { AdminService } from '../../services/admin.service';
 import { DialogModule } from 'primeng/dialog';
-import { Router, RouterModule } from '@angular/router';
+import { Router } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { NotificationService } from '../../services/notification.service';
 import { ToastModule } from 'primeng/toast';
@@ -20,7 +21,14 @@ import { InputTextModule } from 'primeng/inputtext';
 import { FormsModule } from '@angular/forms';
 import { SystemStatusResponse, BackupResponse } from '../../models/resilience.models';
 import { SystemMetricsResponse, DetailedSystemMetricsResponse } from '../../models/admin.models';
+import { Subject, takeUntil } from 'rxjs';
 
+/**
+ * UserProfile Component
+ * 
+ * Gestisce il profilo utente, sessioni di sicurezza, log di sicurezza,
+ * stato del sistema e gestione dei backup.
+ */
 @Component({
   selector: 'app-user-profile',
   imports: [
@@ -29,20 +37,19 @@ import { SystemMetricsResponse, DetailedSystemMetricsResponse } from '../../mode
     TabViewModule,
     ButtonModule,
     DialogModule,
-    RouterModule,
     TranslateModule,
     ToastModule,
     TableModule,
     TagModule,
     TooltipModule,
     InputTextModule,
-    FormsModule
+    FormsModule,
   ],
   providers: [MessageService, NotificationService],
   templateUrl: './user-profile.component.html',
   styleUrl: './user-profile.component.scss'
 })
-export class UserProfileComponent implements OnInit {
+export class UserProfileComponent implements OnInit, OnDestroy {
   userProfile: any = null;
   user: any = null;
   sessions: SecuritySession[] = [];
@@ -94,6 +101,9 @@ export class UserProfileComponent implements OnInit {
   isDeletingUser: boolean = false;
   selectedUserForAction: any = null;
 
+  // Destroy subject for proper cleanup
+  private destroy$ = new Subject<void>();
+
   get activeSessionsCount(): number {
     return this.sessions.filter(session => session.is_active).length;
   }
@@ -113,58 +123,81 @@ export class UserProfileComponent implements OnInit {
     this.loadSessions();
   }
 
+  ngOnDestroy(): void {
+    // Cleanup subscriptions to prevent memory leaks
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
   /**
    * Handle tab change events
    * @param event - Tab change event
    */
   onTabChange(event: any): void {
-    // event.index contiene l'indice del tab attivo
-    console.log('[DEBUG] Tab changed, event:', event);
     if (event.index === 1 && this.user?.role === 'admin') {
-      console.log('[DEBUG] Trigger loadAdminData (tab 1, admin)');
       this.loadAdminData();
     }
     if (event.index === 2 && this.user?.role === 'admin' && !this.systemStatus) {
-      console.log('[DEBUG] Trigger loadSystemStatus (tab 2, admin)');
       this.loadSystemStatus();
     }
   }
 
-  private loadUserProfile() {
-    this.authService.getCurrentUser().subscribe({
+  /**
+   * Load user profile data
+   */
+  private loadUserProfile(): void {
+    this.authService.getCurrentUser()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
       next: (data) => {
-        this.user = data.data.user;
-        this.userProfile = data.data.profile;
-        console.log('Dati profilo auth:', this.user);
-        console.log('Dati profilo utente:', this.userProfile);
+        if (data.data) {
+          this.user = data.data.user;
+          this.userProfile = data.data.profile;
+        }
       },
       error: (err) => {
         console.error('Errore nel recupero del profilo:', err);
+          this.notificationService.handleError(err, 'profile.load.error');
       }
     });
   }
 
-  private loadSessions() {
-    this.securityService.getSessions().subscribe({
+  /**
+   * Load user sessions
+   */
+  private loadSessions(): void {
+    this.securityService.getSessions()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
       next: (data: any) => {
-        this.sessions = data.data.sessions || [];
-        console.log('Sessions loaded:', this.sessions);
+        if (data.data) {
+          this.sessions = data.data.sessions || [];
+        }
       },
       error: (err: any) => {
         console.error('Errore nel recupero delle sessioni:', err);
+          this.notificationService.handleError(err, 'profile.sessions.error');
       }
     });
   }
 
-  loadSecurityLogs(page: number = 1, rows: number = 10) {
+  /**
+   * Load security logs
+   * @param page - Page number
+   * @param rows - Number of rows per page
+   */
+  loadSecurityLogs(page: number = 1, rows: number = 10): void {
     this.isLoadingSecurityLogs = true;
-    this.securityService.getSecurityLogs(page, rows).subscribe({
+    this.securityService.getSecurityLogs(page, rows)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
       next: (data: any) => {
-        this.securityLogs = data.data.logs || [];
-        this.securityLogsTotal = data.data.pagination?.total || 0;
-        this.securityLogsPage = data.data.pagination?.page || page;
-        this.securityLogsRows = data.data.pagination?.limit || rows;
-        console.log('Security logs loaded:', this.securityLogs);
+        if (data.data) {
+          this.securityLogs = data.data.logs || [];
+          this.securityLogsTotal = data.data.pagination?.total || 0;
+          this.securityLogsPage = data.data.pagination?.page || page;
+          this.securityLogsRows = data.data.pagination?.limit || rows;
+        }
         this.isLoadingSecurityLogs = false;
       },
       error: (err: any) => {
@@ -175,58 +208,75 @@ export class UserProfileComponent implements OnInit {
     });
   }
 
-  loadSystemStatus() {
-    console.log('[DEBUG] Chiamo loadSystemStatus');
+  /**
+   * Load system status
+   */
+  loadSystemStatus(): void {
     this.isLoadingSystemStatus = true;
-    this.resilienceService.getSystemStatus().subscribe({
+    this.resilienceService.getSystemStatus()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
       next: (data: any) => {
-        console.log('[DEBUG] Risposta system status:', data);
-        this.systemStatus = data.data;
+        if (data.data) {
+          this.systemStatus = data.data;
+        }
         this.isLoadingSystemStatus = false;
       },
       error: (err: any) => {
-        console.error('[DEBUG] Errore nel recupero dello stato del sistema:', err);
+          console.error('Errore nel recupero dello stato del sistema:', err);
         this.notificationService.handleError(err, 'profile.system-status.error');
         this.isLoadingSystemStatus = false;
       }
     });
   }
 
-  loadAdminData() {
-    console.log('[DEBUG] Chiamo loadAdminData');
+  /**
+   * Load admin data
+   */
+  loadAdminData(): void {
     this.isLoadingAdminMetrics = true;
     this.isLoadingDetailedMetrics = true;
     
     // Carica metriche base
-    this.adminService.getMetrics().subscribe({
+    this.adminService.getMetrics()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
       next: (data: any) => {
-        console.log('[DEBUG] Risposta admin metrics:', data);
-        this.adminMetrics = data.data;
+        if (data.data) {
+          this.adminMetrics = data.data;
+        }
         this.isLoadingAdminMetrics = false;
       },
       error: (err: any) => {
-        console.error('[DEBUG] Errore nel recupero delle metriche admin:', err);
+          console.error('Errore nel recupero delle metriche admin:', err);
         this.notificationService.handleError(err, 'profile.administration.error');
         this.isLoadingAdminMetrics = false;
       }
     });
 
     // Carica metriche dettagliate
-    this.adminService.getDetailedMetrics().subscribe({
+    this.adminService.getDetailedMetrics()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
       next: (data: any) => {
-        console.log('[DEBUG] Risposta detailed metrics:', data);
-        this.detailedMetrics = data.data;
+        if (data.data) {
+          this.detailedMetrics = data.data;
+        }
         this.isLoadingDetailedMetrics = false;
       },
       error: (err: any) => {
-        console.error('[DEBUG] Errore nel recupero delle metriche dettagliate:', err);
+          console.error('Errore nel recupero delle metriche dettagliate:', err);
         this.notificationService.handleError(err, 'profile.administration.error');
         this.isLoadingDetailedMetrics = false;
       }
     });
   }
 
-  toggleDialog(key: string) {
+  /**
+   * Toggle dialog visibility
+   * @param key - Dialog key
+   */
+  toggleDialog(key: string): void {
     switch (key) {
       case 'edit':
         this.isEditDialogVisible = !this.isEditDialogVisible;
@@ -370,35 +420,6 @@ export class UserProfileComponent implements OnInit {
         this.notificationService.handleError(error, 'profile.delete-account.failed');
       }
     });
-  }
-
-  /**
-   * Get the translated action name
-   */
-  getActionName(action: string): string {
-    const actionMap: { [key: string]: string } = {
-      'login': 'profile.security-logs.actions.login',
-      'logout': 'profile.security-logs.actions.logout',
-      'password_change': 'profile.security-logs.actions.password-change',
-      'password_reset': 'profile.security-logs.actions.password-reset',
-      'account_deletion': 'profile.security-logs.actions.account-deletion',
-      'session_creation': 'profile.security-logs.actions.session-creation',
-      'session_termination': 'profile.security-logs.actions.session-termination',
-      'failed_login': 'profile.security-logs.actions.failed-login',
-      'suspicious_activity': 'profile.security-logs.actions.suspicious-activity',
-      'USER_LOGIN_SUCCESS': 'profile.security-logs.actions.USER_LOGIN_SUCCESS',
-      'USER_LOGOUT': 'profile.security-logs.actions.USER_LOGOUT',
-      'USER_RESET_PASSWORD': 'profile.security-logs.actions.USER_RESET_PASSWORD',
-      'USER_CHANGE_PASSWORD': 'profile.security-logs.actions.USER_CHANGE_PASSWORD',
-      'USER_DELETE_ACCOUNT': 'profile.security-logs.actions.USER_DELETE_ACCOUNT',
-      'SUSPICIOUS_ACTIVITY': 'profile.security-logs.actions.SUSPICIOUS_ACTIVITY',
-      'DATA_EXPORT': 'profile.security-logs.actions.DATA_EXPORT',
-      'SESSION_CREATION': 'profile.security-logs.actions.SESSION_CREATION',
-      'SESSION_TERMINATION': 'profile.security-logs.actions.SESSION_TERMINATION',
-      'USER_VERIFY_EMAIL': 'profile.security-logs.actions.USER_VERIFY_EMAIL',
-    };
-    
-    return actionMap[action] || action;
   }
 
   /**
@@ -593,42 +614,19 @@ export class UserProfileComponent implements OnInit {
     this.loadSecurityLogs(newPage, event.rows);
   }
 
-  getAuditActionName(action: string): string {
-    const actionMap: { [key: string]: string } = {
-      'USER_LOGIN_SUCCESS': 'profile.security-logs.actions.USER_LOGIN_SUCCESS',
-      'USER_LOGOUT': 'profile.security-logs.actions.USER_LOGOUT',
-      'USER_RESET_PASSWORD': 'profile.security-logs.actions.USER_RESET_PASSWORD',
-      'USER_CHANGE_PASSWORD': 'profile.security-logs.actions.USER_CHANGE_PASSWORD',
-      'USER_DELETE_ACCOUNT': 'profile.security-logs.actions.USER_DELETE_ACCOUNT',
-      'SUSPICIOUS_ACTIVITY': 'profile.security-logs.actions.SUSPICIOUS_ACTIVITY',
-      'DATA_EXPORT': 'profile.security-logs.actions.DATA_EXPORT',
-      'SESSION_CREATION': 'profile.security-logs.actions.SESSION_CREATION',
-      'SESSION_TERMINATION': 'profile.security-logs.actions.SESSION_TERMINATION',
-      // fallback
-      'login': 'profile.security-logs.actions.login',
-      'logout': 'profile.security-logs.actions.logout',
-      'password_change': 'profile.security-logs.actions.password-change',
-      'password_reset': 'profile.security-logs.actions.password-reset',
-      'account_deletion': 'profile.security-logs.actions.account-deletion',
-      'session_creation': 'profile.security-logs.actions.session-creation',
-      'session_termination': 'profile.security-logs.actions.session-termination',
-      'failed_login': 'profile.security-logs.actions.failed-login',
-      'suspicious_activity': 'profile.security-logs.actions.suspicious-activity',
-    };
-    return actionMap[action] || action;
-  }
-
   // User Management Methods
   loadUsers(page: number = 1, rows: number = 10) {
     console.log('Loading users with page:', page, 'rows:', rows, 'search:', this.userSearchQuery);
     this.isLoadingUsers = true;
     this.adminService.getUsers(page, rows, this.userSearchQuery).subscribe({
       next: (data: any) => {
-        this.users = data.data.users || [];
-        this.usersTotal = data.data.pagination?.total || 0;
-        this.usersPage = data.data.pagination?.page || page;
-        this.usersRows = data.data.pagination?.limit || rows;
-        console.log('Users loaded:', this.users);
+        if (data.data) {
+          this.users = data.data.users || [];
+          this.usersTotal = data.data.pagination?.total || 0;
+          this.usersPage = data.data.pagination?.page || page;
+          this.usersRows = data.data.pagination?.limit || rows;
+          console.log('Users loaded:', this.users);
+        }
         this.isLoadingUsers = false;
       },
       error: (err: any) => {
@@ -702,11 +700,13 @@ export class UserProfileComponent implements OnInit {
     this.isLoadingBackups = true;
     this.resilienceService.listBackups(page, rows).subscribe({
       next: (data: any) => {
-        this.backups = data.data.backups || [];
-        this.backupsTotal = data.data.pagination?.total || 0;
-        this.backupsPage = data.data.pagination?.page || page;
-        this.backupsRows = data.data.pagination?.limit || rows;
-        console.log('Backups loaded:', this.backups);
+        if (data.data) {
+          this.backups = data.data.backups || [];
+          this.backupsTotal = data.data.pagination?.total || 0;
+          this.backupsPage = data.data.pagination?.page || page;
+          this.backupsRows = data.data.pagination?.limit || rows;
+          console.log('Backups loaded:', this.backups);
+        }
         this.isLoadingBackups = false;
       },
       error: (err: any) => {
@@ -794,5 +794,10 @@ export class UserProfileComponent implements OnInit {
 
   formatBackupDate(dateString: string): string {
     return new Date(dateString).toLocaleString();
+  }
+
+  // Method to track sessions by their ID
+  trackBySessionId(index: number, session: any): any {
+    return session.id;
   }
 }

@@ -23,8 +23,6 @@ export class OfflineDataService {
 
   async syncUserData(userId: string): Promise<void> {
     try {
-      console.log('Syncing user data for:', userId);
-      
       // Sincronizza dati utente dal server
       const userData = await this.userService.getUser(userId).toPromise();
       
@@ -44,10 +42,8 @@ export class OfflineDataService {
       
       await this.offlineStorage.storeUserData(offlineUserData);
       this.notification.handleSuccess('Dati utente sincronizzati offline');
-      console.log('User data synced successfully');
     } catch (error) {
       this.notification.handleError(error, 'Errore durante la sincronizzazione dei dati utente offline');
-      console.error('Failed to sync user data:', error);
       throw error;
     }
   }
@@ -67,8 +63,6 @@ export class OfflineDataService {
       if (!token) throw new Error('User not authenticated');
       const userId = this.extractUserIdFromToken(token);
       if (!userId) throw new Error('Could not extract user ID from token');
-
-      // console.log('Updating profile offline:', profileData);
 
       // Salva modifica in coda sync
       await this.syncQueue.addToQueue({
@@ -103,8 +97,6 @@ export class OfflineDataService {
     const userId = this.extractUserIdFromToken(token);
     if (!userId) throw new Error('Could not extract user ID from token');
 
-    // console.log('Updating user data offline:', userData);
-
     // Salva modifica in coda sync
     await this.syncQueue.addToQueue({
       type: 'UPDATE',
@@ -122,7 +114,6 @@ export class OfflineDataService {
       currentData.user = { ...currentData.user, ...userData };
       currentData.updated_at = new Date().toISOString();
       await this.offlineStorage.storeUserData(currentData);
-      console.log('Local user data updated');
     }
   }
 
@@ -168,8 +159,6 @@ export class OfflineDataService {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      
-      // console.log('Offline data downloaded successfully');
     } catch (error) {
       console.error('Failed to download offline data:', error);
       throw error;
@@ -189,11 +178,8 @@ export class OfflineDataService {
   }
 
   async forceSync(userId: string): Promise<void> {
-    console.log('Forcing sync for user:', userId);
-    
     try {
       await this.syncUserData(userId);
-      console.log('Force sync completed successfully');
     } catch (error) {
       console.error('Force sync failed:', error);
       throw error;
@@ -201,25 +187,26 @@ export class OfflineDataService {
   }
 
   async getOfflineMetrics(userId: string): Promise<OfflineMetrics> {
-    const offlineStart = localStorage.getItem('offline-start');
-    const offlineTime = offlineStart ? 
-      Math.floor((Date.now() - new Date(offlineStart).getTime()) / 1000) : 0;
-    
+    try {
+      const stats = await this.offlineStorage.getDatabaseStats();
+      if (!stats) {
+        throw new Error('No offline metrics available');
+      }
     const pendingOperations = await this.syncQueue.getPendingOperations();
     const syncResults = this.syncQueue.getSyncResults();
-    
     const successRate = syncResults.length > 0 ? 
       (syncResults.filter(r => r.success).length / syncResults.length) * 100 : 100;
-    
-    const dataFreshness = await this.getDataFreshness(userId);
-    
     return {
-      offline_time: offlineTime,
+        offline_time: 0, // Placeholder, calculate if needed
       operations_queued: pendingOperations.length,
       sync_success_rate: successRate,
-      data_freshness: dataFreshness,
+        data_freshness: await this.getDataFreshness(userId),
       last_sync: new Date().toISOString()
     };
+    } catch (error) {
+      this.notification.handleError(error, 'Errore ottenimento metriche offline');
+      throw error;
+    }
   }
 
   async isDataStale(userId: string, maxAgeSeconds: number = 3600): Promise<boolean> {
@@ -229,7 +216,6 @@ export class OfflineDataService {
 
   async refreshDataIfStale(userId: string, maxAgeSeconds: number = 3600): Promise<void> {
     if (await this.isDataStale(userId, maxAgeSeconds)) {
-      console.log('Data is stale, refreshing...');
       await this.forceSync(userId);
     }
   }
@@ -237,9 +223,9 @@ export class OfflineDataService {
   async clearOfflineData(userId: string): Promise<void> {
     try {
       await this.offlineStorage.deleteUserData(userId);
-      // console.log('Offline data cleared for user:', userId);
+      this.notification.handleSuccess('Dati offline cancellati');
     } catch (error) {
-      console.error('Failed to clear offline data:', error);
+      this.notification.handleError(error, 'Errore cancellazione dati offline');
       throw error;
     }
   }
@@ -255,9 +241,8 @@ export class OfflineDataService {
 
   private extractUserIdFromToken(token: string): string | null {
     try {
-      // Decodifica JWT token (implementazione semplificata)
       const payload = JSON.parse(atob(token.split('.')[1]));
-      return payload.sub || payload.userId || null;
+      return payload.sub || null;
     } catch (error) {
       console.error('Failed to extract user ID from token:', error);
       return null;

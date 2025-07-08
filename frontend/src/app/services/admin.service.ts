@@ -2,8 +2,18 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { ApiResponse } from '../models/api.models';
-import { SystemMetricsResponse, DetailedSystemMetricsResponse, UserManagementResponse, AuditLogsResponse } from '../models/admin.models';
+import { ApiResponse } from '../models/api-base.models';
+import { 
+  SystemMetricsResponse, 
+  DetailedSystemMetricsResponse, 
+  UserManagementResponse, 
+  AuditLogsResponse,
+  GetMetricsResponse,
+  GetDetailedMetricsResponse,
+  GetUserManagementResponse,
+  GetAuditLogsResponse,
+  DeleteUserResponse
+} from '../models/admin.models';
 import { AuthService } from './auth.service';
 import { tap, catchError } from 'rxjs/operators';
 
@@ -27,8 +37,8 @@ export class AdminService {
    * Get system metrics
    * @returns Observable with system metrics
    */
-  getMetrics(): Observable<ApiResponse<SystemMetricsResponse>> {
-    return this.http.get<ApiResponse<SystemMetricsResponse>>(`${this.API_URL}/admin/metrics`, {
+  getMetrics(): Observable<GetMetricsResponse> {
+    return this.http.get<GetMetricsResponse>(`${this.API_URL}/admin/metrics`, {
       headers: this.getHeaders()
     });
   }
@@ -37,8 +47,8 @@ export class AdminService {
    * Get detailed system metrics
    * @returns Observable with detailed system metrics
    */
-  getDetailedMetrics(): Observable<ApiResponse<DetailedSystemMetricsResponse>> {
-    return this.http.get<ApiResponse<DetailedSystemMetricsResponse>>(`${this.API_URL}/admin/metrics/detailed`, {
+  getDetailedMetrics(): Observable<GetDetailedMetricsResponse> {
+    return this.http.get<GetDetailedMetricsResponse>(`${this.API_URL}/admin/metrics/detailed`, {
       headers: this.getHeaders()
     });
   }
@@ -50,12 +60,12 @@ export class AdminService {
    * @param search - Search query
    * @returns Observable with user management data
    */
-  getUsers(page: number = 1, limit: number = 10, search?: string): Observable<ApiResponse<UserManagementResponse>> {
+  getUsers(page: number = 1, limit: number = 10, search?: string): Observable<GetUserManagementResponse> {
     let url = `${this.API_URL}/admin/users?page=${page}&limit=${limit}`;
     if (search && search.trim() !== '') {
       url += `&search=${encodeURIComponent(search)}`;
     }
-    return this.http.get<ApiResponse<UserManagementResponse>>(url, {
+    return this.http.get<GetUserManagementResponse>(url, {
       headers: this.getHeaders()
     });
   }
@@ -65,8 +75,8 @@ export class AdminService {
    * @param uuid - User UUID
    * @returns Observable with suspension response
    */
-  suspendUser(uuid: string): Observable<ApiResponse<null>> {
-    return this.http.put<ApiResponse<null>>(`${this.API_URL}/admin/users/${uuid}/suspend`, {}, {
+  suspendUser(uuid: string): Observable<DeleteUserResponse> {
+    return this.http.put<DeleteUserResponse>(`${this.API_URL}/admin/users/${uuid}/suspend`, {}, {
       headers: this.getHeaders()
     });
   }
@@ -76,8 +86,8 @@ export class AdminService {
    * @param uuid - User UUID
    * @returns Observable with deletion response
    */
-  deleteUser(uuid: string): Observable<ApiResponse<null>> {
-    return this.http.delete<ApiResponse<null>>(`${this.API_URL}/admin/users/${uuid}`, {
+  deleteUser(uuid: string): Observable<DeleteUserResponse> {
+    return this.http.delete<DeleteUserResponse>(`${this.API_URL}/admin/users/${uuid}`, {
       headers: this.getHeaders()
     });
   }
@@ -88,19 +98,18 @@ export class AdminService {
    * @param limit - Items per page
    * @returns Observable with audit logs
    */
-  getAuditLogs(page: number = 1, limit: number = 50): Observable<ApiResponse<AuditLogsResponse>> {
-    console.log('🌐 [DEBUG] AdminService.getAuditLogs chiamata con:', { page, limit });
+  getAuditLogs(page: number = 1, limit: number = 50): Observable<GetAuditLogsResponse> {
     const url = `${this.API_URL}/admin/audit-logs?page=${page}&limit=${limit}`;
-    console.log('🔗 [DEBUG] URL richiesta:', url);
     
-    return this.http.get<ApiResponse<AuditLogsResponse>>(url, {
+    return this.http.get<GetAuditLogsResponse>(url, {
       headers: this.getHeaders()
     }).pipe(
-      tap((response) => {
-        console.log('📡 [DEBUG] Risposta API audit logs:', response);
+      tap((response: any) => {
+        // Handle successful response if needed
       }),
-      catchError((error) => {
-        console.error('💥 [DEBUG] Errore API audit logs:', error);
+      catchError((error: any) => {
+        // Handle error appropriately
+        console.error('Error fetching audit logs:', error);
         throw error;
       })
     );

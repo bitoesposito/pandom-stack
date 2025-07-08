@@ -1,8 +1,24 @@
 /**
- * Models for Admin API responses
- * Handles system metrics, user management, and administrative functions
+ * Modelli per le funzioni amministrative PANDOM
+ * Basati sulla struttura reale del backend
  */
 
+import { ApiResponse, PaginationResponse } from './api-base.models';
+import { UserRole } from './auth.models';
+
+/**
+ * Stati di salute del sistema
+ */
+export type SystemHealthStatus = 'healthy' | 'degraded' | 'down';
+
+/**
+ * Tipi di alert
+ */
+export type AlertType = 'error' | 'warning' | 'info' | 'success';
+
+/**
+ * Metriche di sistema di base
+ */
 export interface SystemMetricsResponse {
   overview: {
     total_users: number;
@@ -17,13 +33,16 @@ export interface SystemMetricsResponse {
   };
   alerts: Array<{
     id: string;
-    type: 'error' | 'warning' | 'info';
+    type: AlertType;
     message: string;
     timestamp: string;
     resolved: boolean;
   }>;
 }
 
+/**
+ * Metriche di sistema dettagliate
+ */
 export interface DetailedSystemMetricsResponse {
   system: {
     totalRequests: number;
@@ -45,7 +64,7 @@ export interface DetailedSystemMetricsResponse {
   }>;
   alerts: Array<{
     id: string;
-    type: 'error' | 'warning' | 'info';
+    type: AlertType;
     message: string;
     timestamp: string;
     resolved: boolean;
@@ -53,11 +72,14 @@ export interface DetailedSystemMetricsResponse {
   timestamp: string;
 }
 
+/**
+ * Dati per la gestione utenti (admin)
+ */
 export interface UserManagementResponse {
   users: Array<{
     uuid: string;
     email: string;
-    role: string;
+    role: UserRole;
     is_verified: boolean;
     created_at: string;
     last_login_at?: string;
@@ -67,29 +89,37 @@ export interface UserManagementResponse {
       bio?: string;
     };
   }>;
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    total_pages: number;
-  };
+  pagination: PaginationResponse;
 }
 
+/**
+ * Log di audit
+ */
+export interface AuditLog {
+  id: string;
+  action: string;
+  user_uuid: string;
+  user_email: string;
+  ip_address: string;
+  user_agent: string;
+  timestamp: string;
+  details: any;
+  resource_type?: string;
+  resource_id?: string;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+}
+
+/**
+ * Risposta con log di audit
+ */
 export interface AuditLogsResponse {
-  logs: Array<{
-    id: string;
-    action: string;
-    user_uuid: string;
-    user_email: string;
-    ip_address: string;
-    user_agent: string;
-    timestamp: string;
-    details: any;
-  }>;
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    total_pages: number;
-  };
-} 
+  logs: AuditLog[];
+  pagination: PaginationResponse;
+}
+
+// Tipi per le chiamate API
+export type GetMetricsResponse = ApiResponse<SystemMetricsResponse>;
+export type GetDetailedMetricsResponse = ApiResponse<DetailedSystemMetricsResponse>;
+export type GetUserManagementResponse = ApiResponse<UserManagementResponse>;
+export type GetAuditLogsResponse = ApiResponse<AuditLogsResponse>;
+export type DeleteUserResponse = ApiResponse<null>; 

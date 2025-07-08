@@ -4,6 +4,7 @@ import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
 import { User } from '../auth/entities/user.entity';
 import { UserProfile } from './entities/user-profile.entity';
+import { CommonModule } from '../common/modules/common.module';
 
 /**
  * Users module configuration
@@ -12,6 +13,7 @@ import { UserProfile } from './entities/user-profile.entity';
 @Module({
   imports: [
     TypeOrmModule.forFeature([User, UserProfile]),
+    CommonModule,
   ],
   controllers: [UsersController],
   providers: [UsersService],

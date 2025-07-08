@@ -77,6 +77,9 @@ async function bootstrap() {
       maxAge: 3600
     });
     
+    // Trust proxy for correct IP detection behind reverse proxy/Docker
+    app.getHttpAdapter().getInstance().set('trust proxy', true);
+    
     // Apply global metrics interceptor
     const metricsInterceptor = app.get(MetricsInterceptor);
     app.useGlobalInterceptors(metricsInterceptor);

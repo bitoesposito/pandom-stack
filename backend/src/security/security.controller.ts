@@ -56,7 +56,7 @@ export class SecurityController {
     @Get('download-data')
     @UseGuards(JwtAuthGuard)
     async downloadData(@Req() req: AuthenticatedRequest): Promise<ApiResponseDto<any>> {
-        return this.securityService.downloadData(req.user.uuid);
+        return this.securityService.downloadData(req.user.uuid, req);
     }
 
     /**

@@ -10,7 +10,7 @@ import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
 import { NotificationService } from '../../../services/notification.service';
 import { AuthService } from '../../../services/auth.service';
-import { finalize } from 'rxjs';
+import { finalize, Observable } from 'rxjs';
 import { ThemeService } from '../../../services/theme.service';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
@@ -38,7 +38,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 })
 export class RecoverComponent {
   loading = false;
-  isDarkMode$;
+  isDarkMode$: Observable<boolean>;
 
   form: FormGroup = new FormGroup({
     email: new FormControl(null, [
@@ -61,6 +61,9 @@ export class RecoverComponent {
     return this.form.get('email') as FormControl;
   }
 
+  /**
+   * Handles the password recovery process, including form validation and API interaction.
+   */
   recover() {
     if (this.form.invalid) {
       this.notificationService.handleWarning(this.translate.instant('auth.recover.fill-required-fields'));
@@ -98,6 +101,9 @@ export class RecoverComponent {
       });
   }
 
+  /**
+   * Toggles the dark mode setting.
+   */
   toggleDarkMode() {
     this.themeService.toggleDarkMode();
   }

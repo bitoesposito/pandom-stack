@@ -32,6 +32,6 @@ export class UsersController {
     @HttpCode(HttpStatus.OK)
     @UseGuards(JwtAuthGuard)
     async updateProfile(@Body() updateProfileDto: UpdateProfileDto, @Req() req: any): Promise<ApiResponseDto<any>> {
-        return this.usersService.updateProfile(req.user.uuid, updateProfileDto);
+        return this.usersService.updateProfile(req.user.uuid, updateProfileDto, req);
     }
 } 

@@ -3,6 +3,7 @@ import { TranslateService } from '@ngx-translate/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { Language } from '../models/language.models';
 import { ApplicationRef } from '@angular/core';
+import { map } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root'
@@ -142,11 +143,9 @@ export class LanguageService {
    * Get current language as observable
    */
   getCurrentLanguageObject$(): Observable<Language | undefined> {
-    return new Observable(observer => {
-      this.currentLanguage$.subscribe(languageCode => {
-        observer.next(this.getLanguageByCode(languageCode));
-      });
-    });
+    return this.currentLanguage$.pipe(
+      map(languageCode => this.getLanguageByCode(languageCode))
+    );
   }
 
   /**

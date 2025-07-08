@@ -1,28 +1,54 @@
 /**
- * Models for Resilience API responses
- * Handles system status, backup operations, and disaster recovery
+ * Modelli per la resilienza PANDOM
+ * Basati sulla struttura reale del backend
  */
 
+import { ApiResponse, PaginationResponse } from './api-base.models';
+
+/**
+ * Stati di salute del sistema
+ */
+export type SystemHealthStatus = 'healthy' | 'degraded' | 'down';
+
+/**
+ * Stati di backup
+ */
+export type BackupStatus = 'completed' | 'restored' | 'available';
+
+/**
+ * Stati di automazione
+ */
+export type AutomationStatus = 'running' | 'stopped';
+
+/**
+ * Risposta per lo stato del sistema
+ */
 export interface SystemStatusResponse {
-  status: 'healthy' | 'degraded' | 'down';
+  status: SystemHealthStatus;
   timestamp: string;
   version: string;
   uptime: number;
   services: {
-    database: 'healthy' | 'degraded' | 'down';
-    storage: 'healthy' | 'degraded' | 'down';
-    email: 'healthy' | 'degraded' | 'down';
+    database: SystemHealthStatus;
+    storage: SystemHealthStatus;
+    email: SystemHealthStatus;
   };
 }
 
+/**
+ * Risposta per le operazioni di backup
+ */
 export interface BackupResponse {
   backup_id: string;
   backup_file: string;
   backup_size: number;
   created_at: string;
-  status: 'completed' | 'restored' | 'available';
+  status: BackupStatus;
 }
 
+/**
+ * Risposta per lo stato dei backup
+ */
 export interface BackupStatusResponse {
   last_backup: {
     timestamp: string;
@@ -37,8 +63,27 @@ export interface BackupStatusResponse {
     next_cleanup: string;
   };
   automation_status: {
-    backup_cron: 'running' | 'stopped';
-    cleanup_cron: 'running' | 'stopped';
-    verify_cron: 'running' | 'stopped';
+    backup_cron: AutomationStatus;
+    cleanup_cron: AutomationStatus;
+    verify_cron: AutomationStatus;
   };
-} 
+}
+
+/**
+ * Risposta per la lista backup con paginazione
+ */
+export interface BackupListResponse {
+  backups: BackupResponse[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+  };
+}
+
+// Tipi per le chiamate API
+export type GetSystemStatusResponse = ApiResponse<SystemStatusResponse>;
+export type CreateBackupResponse = ApiResponse<BackupResponse>;
+export type ListBackupsResponse = ApiResponse<BackupListResponse>;
+export type RestoreBackupResponse = ApiResponse<BackupResponse>;
+export type GetBackupStatusResponse = ApiResponse<BackupStatusResponse>; 

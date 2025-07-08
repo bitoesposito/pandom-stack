@@ -30,8 +30,8 @@ export class AuthController {
      */
     @Post('login')
     @HttpCode(HttpStatus.OK)
-    async login(@Body() loginDto: LoginDto): Promise<ApiResponseDto<any>> {
-        return this.authService.login(loginDto);
+    async login(@Body() loginDto: LoginDto, @Req() req: any): Promise<ApiResponseDto<any>> {
+        return this.authService.login(loginDto, req);
     }
 
     /**
@@ -80,8 +80,8 @@ export class AuthController {
      */
     @Post('reset-password')
     @HttpCode(HttpStatus.OK)
-    async resetPassword(@Body() resetPasswordDto: ResetPasswordDto): Promise<ApiResponseDto<null>> {
-        return this.authService.resetPassword(resetPasswordDto);
+    async resetPassword(@Body() resetPasswordDto: ResetPasswordDto, @Req() req: any): Promise<ApiResponseDto<null>> {
+        return this.authService.resetPassword(resetPasswordDto, req);
     }
 
     /**

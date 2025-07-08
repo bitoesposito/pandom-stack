@@ -1,10 +1,11 @@
+// Media query for small screens
 @media screen and (max-width: 425px) {
     main {
         height: min-content !important;
     }
 }
 
-// Stili per i campi disabilitati durante il loading
+// Styles for disabled fields during loading
 :host ::ng-deep .p-disabled {
   opacity: 0.6;
   cursor: not-allowed;

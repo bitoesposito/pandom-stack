@@ -221,6 +221,124 @@ export class AuditService {
   }
 
   /**
+   * Log user registration
+   */
+  async logUserRegistration(userId: string, userEmail: string, ipAddress?: string): Promise<void> {
+    await this.log({
+      event_type: AuditEventType.USER_REGISTER,
+      user_id: userId,
+      user_email: userEmail,
+      ip_address: ipAddress,
+      status: 'SUCCESS',
+      details: {
+        registration_method: 'standard',
+        timestamp: new Date().toISOString(),
+      },
+    });
+  }
+
+  /**
+   * Log user deletion
+   */
+  async logUserDeletion(userId: string, userEmail: string, ipAddress?: string): Promise<void> {
+    await this.log({
+      event_type: AuditEventType.USER_DELETED,
+      user_id: userId,
+      user_email: userEmail,
+      ip_address: ipAddress,
+      status: 'SUCCESS',
+      details: {
+        deletion_method: 'admin_action',
+        timestamp: new Date().toISOString(),
+      },
+    });
+  }
+
+  /**
+   * Log profile update
+   */
+  async logProfileUpdate(userId: string, userEmail: string, ipAddress?: string): Promise<void> {
+    await this.log({
+      event_type: AuditEventType.USER_STATUS_CHANGED, // Assuming this event type for profile updates
+      user_id: userId,
+      user_email: userEmail,
+      ip_address: ipAddress,
+      status: 'SUCCESS',
+      details: {
+        update_method: 'user_initiated',
+        timestamp: new Date().toISOString(),
+      },
+    });
+  }
+
+  /**
+   * Log email verification
+   */
+  async logEmailVerification(userId: string, userEmail: string, ipAddress?: string): Promise<void> {
+    await this.log({
+      event_type: AuditEventType.USER_VERIFY_EMAIL,
+      user_id: userId,
+      user_email: userEmail,
+      ip_address: ipAddress,
+      status: 'SUCCESS',
+      details: {
+        verification_method: 'email_link',
+        timestamp: new Date().toISOString(),
+      },
+    });
+  }
+
+  /**
+   * Log password change
+   */
+  async logPasswordChange(userId: string, userEmail: string, ipAddress?: string): Promise<void> {
+    await this.log({
+      event_type: AuditEventType.USER_CHANGE_PASSWORD,
+      user_id: userId,
+      user_email: userEmail,
+      ip_address: ipAddress,
+      status: 'SUCCESS',
+      details: {
+        change_method: 'user_initiated',
+        timestamp: new Date().toISOString(),
+      },
+    });
+  }
+
+  /**
+   * Log failed login attempt
+   */
+  async logFailedLoginAttempt(email: string, ipAddress: string, reason: string): Promise<void> {
+    await this.log({
+      event_type: AuditEventType.USER_LOGIN_FAILED,
+      user_email: email,
+      ip_address: ipAddress,
+      status: 'FAILED',
+      details: {
+        reason,
+        timestamp: new Date().toISOString(),
+      },
+    });
+  }
+
+  /**
+   * Log data export
+   */
+  async logDataExport(userId: string, userEmail: string, resource: string, ipAddress?: string): Promise<void> {
+    await this.log({
+      event_type: AuditEventType.DATA_EXPORT,
+      user_id: userId,
+      user_email: userEmail,
+      ip_address: ipAddress,
+      status: 'SUCCESS',
+      details: {
+        resource,
+        timestamp: new Date().toISOString(),
+      },
+    });
+  }
+
+  /**
    * Write audit entry to file
    */
   private writeToFile(entry: AuditLogEntry): void {
@@ -252,6 +370,20 @@ export class AuditService {
       .filter(line => line.trim())
       .map(line => JSON.parse(line))
       .filter((entry: AuditLogEntry) => entry.event_type === eventType)
+      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+      .slice(0, limit);
+
+    return logs;
+  }
+
+  /**
+   * Get all audit logs
+   */
+  async getAllAuditLogs(limit: number = 1000): Promise<AuditLogEntry[]> {
+    const logs = fs.readFileSync(this.auditLogPath, 'utf8')
+      .split('\n')
+      .filter(line => line.trim())
+      .map(line => JSON.parse(line))
       .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
       .slice(0, limit);
 
