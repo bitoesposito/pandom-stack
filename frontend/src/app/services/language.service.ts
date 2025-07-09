@@ -277,7 +277,6 @@ export class LanguageService {
   setLanguage(languageCode: string): void {
     // Validate language code
     if (!this.isValidLanguage(languageCode)) {
-      console.warn(`Invalid language code: ${languageCode}. Using default.`);
       languageCode = this.DEFAULT_LANGUAGE;
     }
 
@@ -347,7 +346,6 @@ export class LanguageService {
       const saved = localStorage.getItem(this.STORAGE_KEY);
       return saved && this.isValidLanguage(saved) ? saved : this.DEFAULT_LANGUAGE;
     } catch (error) {
-      console.warn('Error reading language from localStorage:', error);
       return this.DEFAULT_LANGUAGE;
     }
   }
@@ -369,7 +367,6 @@ export class LanguageService {
     try {
       localStorage.setItem(this.STORAGE_KEY, languageCode);
     } catch (error) {
-      console.warn('Error saving language to localStorage:', error);
     }
   }
 
@@ -391,7 +388,6 @@ export class LanguageService {
     try {
       localStorage.removeItem(this.STORAGE_KEY);
     } catch (error) {
-      console.warn('Error clearing language from localStorage:', error);
     }
   }
 

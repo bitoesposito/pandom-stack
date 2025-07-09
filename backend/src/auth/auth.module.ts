@@ -9,11 +9,12 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { User } from './entities/user.entity';
 import { UserProfile } from '../users/entities/user-profile.entity';
-import { RolesGuard } from './guards/roles.guard';
-import { JwtStrategy } from './strategies/jwt.strategy';
 import { MailModule } from '../common/modules/mail.module';
 import { CommonModule } from '../common/modules/common.module';
 import { SessionModule } from '../common/modules/session.module';
+import { CookieAuthInterceptor } from './interceptors/cookie-auth.interceptor';
+import { JwtStrategy } from './strategies/jwt.strategy';
+import { GuardsModule } from './guards/guards.module';
 
 /**
  * Auth Module
@@ -77,6 +78,9 @@ import { SessionModule } from '../common/modules/session.module';
     
     // Session module for session management
     SessionModule,
+    
+    // Guards module for authentication and authorization
+    GuardsModule,
   ],
   
   // Controllers that handle HTTP requests
@@ -85,14 +89,14 @@ import { SessionModule } from '../common/modules/session.module';
   // Service providers for business logic
   providers: [
     AuthService,      // Core authentication service
-    RolesGuard,       // Role-based access control guard
     JwtStrategy,      // JWT authentication strategy
+    CookieAuthInterceptor, // Cookie authentication interceptor
   ],
   
   // Exports for use in other modules
   exports: [
     AuthService,      // Export for other modules to use authentication
-    RolesGuard,       // Export for other modules to use role protection
+    GuardsModule,     // Export guards module for other modules
   ],
 })
 export class AuthModule {}

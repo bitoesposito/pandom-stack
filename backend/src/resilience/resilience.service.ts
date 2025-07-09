@@ -180,15 +180,16 @@ export class ResilienceService {
    */
   async createBackup(req?: any): Promise<ApiResponseDto<BackupResponseDto>> {
     let localBackupPath = '';
+    
+    // Extract user context for audit logging
+    const user = req?.user;
+    const userId = user?.uuid || undefined;
+    const userEmail = user?.email || undefined;
+    const ipAddress = this.getClientIp(req);
+    const userAgent = req?.headers?.['user-agent'] || undefined;
+    
     try {
       this.logger.log('Creating system backup');
-
-      // Extract user context for audit logging
-      const user = req?.user;
-      const userId = user?.uuid || undefined;
-      const userEmail = user?.email || undefined;
-      const ipAddress = this.getClientIp(req);
-      const userAgent = req?.headers?.['user-agent'] || undefined;
 
       // Generate backup filename with timestamp
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
@@ -248,16 +249,18 @@ export class ResilienceService {
       fs.unlinkSync(localBackupPath);
 
       // Log the successful backup creation for audit
-      await this.auditService.log({
-        event_type: AuditEventType.DATA_EXPORT,
-        status: 'SUCCESS',
-        details: {
+      await this.auditService.logBackupCreated(
+        userId,
+        userEmail,
+        ipAddress,
+        userAgent,
+        {
           action: 'create_backup',
           backup_file: backupFileName,
           backup_size: backupStats.size,
           minio_key: minioKey
         }
-      });
+      );
 
       const response: BackupResponseDto = {
         backup_id: timestamp,
@@ -288,7 +291,11 @@ export class ResilienceService {
         details.backup_size = backupSize;
       }
       await this.auditService.log({
-        event_type: AuditEventType.DATA_EXPORT,
+        event_type: AuditEventType.BACKUP_CREATED,
+        user_id: userId,
+        user_email: userEmail,
+        ip_address: ipAddress,
+        user_agent: userAgent,
         status: 'FAILED',
         details
       });

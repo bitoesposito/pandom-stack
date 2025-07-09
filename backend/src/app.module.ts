@@ -14,6 +14,7 @@ import { SecurityLog } from './common/entities/security-log.entity';
 import { SessionLog } from './common/entities/session-log.entity';
 import { CommonModule } from './common/modules/common.module';
 import { MinioModule } from './common/modules/minio.module';
+import { GuardsModule } from './auth/guards/guards.module';
 
 @Module({
   imports: [
@@ -31,7 +32,7 @@ import { MinioModule } from './common/modules/minio.module';
         database: configService.get('POSTGRES_DB') || 'postgres',
         entities: [User, UserProfile, AuditLog, SecurityLog, SessionLog],
         synchronize: true, // Solo per sviluppo! In produzione usa migration
-        logging: true, // Abilita logging per debug
+        logging: ['error'], // Solo errori
         ssl: false,
       }),
       inject: [ConfigService],
@@ -43,7 +44,8 @@ import { MinioModule } from './common/modules/minio.module';
     SecurityModule,
     ResilienceModule,
     AdminModule,
-    MinioModule
+    MinioModule,
+    GuardsModule
   ],
   controllers: [],
   providers: [],

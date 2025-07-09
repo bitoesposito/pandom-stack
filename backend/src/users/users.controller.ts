@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Put, HttpCode, HttpStatus, UseGuards, Req } from '@nestjs/common';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CookieAuthGuard } from '../auth/guards/cookie-auth.guard';
 import { UpdateProfileDto } from './users.dto';
 import { ApiResponseDto } from '../common/common.interface';
 import { UsersService } from './users.service';
@@ -105,7 +105,7 @@ export class UsersController {
      * @throws NotFoundException if user or profile not found
      */
     @Get()
-    @UseGuards(JwtAuthGuard)
+    @UseGuards(CookieAuthGuard)
     async getProfile(@Req() req: any): Promise<ApiResponseDto<any>> {
         return this.usersService.getProfile(req.user.uuid);
     }
@@ -189,7 +189,7 @@ export class UsersController {
      */
     @Put()
     @HttpCode(HttpStatus.OK)
-    @UseGuards(JwtAuthGuard)
+    @UseGuards(CookieAuthGuard)
     async updateProfile(@Body() updateProfileDto: UpdateProfileDto, @Req() req: any): Promise<ApiResponseDto<any>> {
         return this.usersService.updateProfile(req.user.uuid, updateProfileDto, req);
     }

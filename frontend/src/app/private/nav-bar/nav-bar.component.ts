@@ -8,10 +8,9 @@ import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
 import { ThemeService } from '../../services/theme.service';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { AuthService } from '../../services/auth.service';
-import { PwaService } from '../../services/pwa.service';
+import { CookieAuthService } from '../../services/cookie-auth.service';
 import { PopoverModule } from 'primeng/popover';
-import { jwtDecode } from 'jwt-decode';
+
 import { SelectModule } from 'primeng/select';
 import { FormsModule } from '@angular/forms';
 import { LanguageService } from '../../services/language.service';
@@ -27,6 +26,7 @@ import { Subject, takeUntil } from 'rxjs';
  */
 @Component({
   selector: 'app-nav-bar',
+  standalone: true,
   imports: [
     ButtonModule,
     CommonModule,
@@ -48,9 +48,6 @@ export class NavBarComponent implements OnInit, OnDestroy {
 
   // Observable streams for reactive UI updates
   isDarkMode$;
-  updateAvailable$;
-  isOnline$;
-  canInstallPwa$;
   currentLanguage$;
   
   // User data from JWT token
@@ -68,16 +65,12 @@ export class NavBarComponent implements OnInit, OnDestroy {
     private router: Router,
     private themeService: ThemeService,
     private translate: TranslateService,
-    private authService: AuthService,
-    private pwaService: PwaService,
+    private authService: CookieAuthService,
     private languageService: LanguageService,
     private cdr: ChangeDetectorRef
   ) {
     // Initialize observable streams
     this.isDarkMode$ = this.themeService.isDarkMode$;
-    this.updateAvailable$ = this.pwaService.updateAvailable;
-    this.isOnline$ = this.pwaService.isOnline;
-    this.canInstallPwa$ = this.pwaService.canInstall;
     this.currentLanguage$ = this.languageService.currentLanguage$;
   }
 
@@ -94,38 +87,32 @@ export class NavBarComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Load and decode user data from JWT token
+   * Load user data from authentication service
    */
   private loadUserData(): void {
-    const token = this.authService.getToken();
-    if (!token) {
-      this.handleAuthError();
-      return;
-    }
-
-    try {
-      const decoded = jwtDecode(token) as UserData;
-      this.user = {
-        uuid: decoded.uuid,
-        email: decoded.email,
-        role: decoded.role,
-        is_active: decoded.is_active,
-        is_verified: decoded.is_verified,
-        is_configured: decoded.is_configured,
-        created_at: decoded.created_at,
-        updated_at: decoded.updated_at
-      };
-    } catch (error) {
-      console.error('Error decoding JWT token:', error);
-      this.handleAuthError();
-    }
+    // Handle user switching to ensure fresh data and proper cleanup
+    this.authService.handleUserSwitch().subscribe({
+      next: (response) => {
+        if (response.data) {
+          this.user = response.data.user;
+          // Update authentication status
+          this.authService.setAuthStatus('authenticated');
+        }
+      },
+      error: (error) => {
+        console.error('Error loading user data:', error);
+        this.handleAuthError();
+      }
+    });
   }
 
   /**
    * Handle authentication errors by logging out user
    */
   private handleAuthError(): void {
-    this.authService.logout();
+    // Immediately clear user data and authentication state
+    this.user = null;
+    this.authService.forceLogout();
     this.router.navigate(['/login']);
   }
 
@@ -159,28 +146,15 @@ export class NavBarComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Update PWA application
-   */
-  async updateApp(): Promise<void> {
-    try {
-      await this.pwaService.activateUpdate();
-      this.notificationService.handleSuccess(
-        this.translate.instant('pwa.update-success')
-      );
-    } catch (error) {
-      this.notificationService.handleError(
-        error, 
-        this.translate.instant('pwa.update-error')
-      );
-    }
-  }
-
-  /**
    * Logout user and redirect to login
    */
   disconnect(): void {
-    this.authService.logout();
-    this.router.navigate(['/login']);
+    this.user = null;
+    this.authService.forceLogout();
+    this.authService.logout().subscribe({
+      next: () => this.router.navigate(['/login']),
+      error: () => this.router.navigate(['/login'])
+    });
   }
 
   /**
@@ -188,19 +162,5 @@ export class NavBarComponent implements OnInit, OnDestroy {
    */
   toggleDarkMode(): void {
     this.themeService.toggleDarkMode();
-  }
-
-  /**
-   * Install PWA application
-   */
-  async installPwa(): Promise<void> {
-    try {
-      await this.pwaService.promptInstall();
-    } catch (error) {
-      this.notificationService.handleError(
-        error,
-        this.translate.instant('pwa.install-error')
-      );
-    }
   }
 }

@@ -5,9 +5,7 @@ import { catchError, throwError } from 'rxjs';
 export const errorInterceptor: HttpInterceptorFn = (req, next) => {
   return next(req).pipe(
     catchError((error: HttpErrorResponse) => {
-      console.log('Error Interceptor - Raw Error:', error);
-      console.log('Error Interceptor - Error Status:', error.status);
-      console.log('Error Interceptor - Error Body:', error.error);
+      // Tutti i console.log, console.warn, console.error e relativi commenti/documentazione sono stati rimossi da questo file.
       
       let errorMessage = 'An error occurred';
       
@@ -32,8 +30,6 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
           errorMessage = error.message;
         }
       }
-
-      console.log('Error Interceptor - Final Error Message:', errorMessage);
 
       // Create a new error object with the processed message
       const processedError = {

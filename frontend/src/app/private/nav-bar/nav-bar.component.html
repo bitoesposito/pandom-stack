@@ -13,11 +13,6 @@
     
     <!-- Right side controls -->
     <div class="flex gap-2 align-items-center">
-        
-        <!-- Online/Offline Status Indicator -->
-        <div class="flex align-items-center gap-1 p-2" *ngIf="!(isOnline$ | async)">
-            <i class="pi pi-wifi text-red-500"></i>
-        </div>
 
         <!-- Language Selector -->
         <p-select
@@ -86,28 +81,6 @@
 
                 <!-- Action Buttons Section -->
                 <div class="flex flex-column">
-                    <!-- PWA Install Button -->
-                    <p-button 
-                        *ngIf="canInstallPwa$ | async"
-                        styleClass="justify-content-start"
-                        icon="pi pi-download"
-                        [label]="'pwa.install' | translate"
-                        severity="secondary"
-                        text="true"
-                        (click)="installPwa()"
-                        fluid="true"
-                        iconPos="left"/>
-                        
-                    <!-- Update Available Button -->
-                    <p-button 
-                    *ngIf="updateAvailable$ | async"
-                    styleClass="justify-content-start"
-                    icon="pi pi-download" 
-                    [label]="'pwa.update-available' | translate" 
-                    severity="success"
-                    (click)="updateApp()"
-                    fluid="true"
-                    iconPos="left"/>
         
                     <!-- Theme Toggle Button -->
                     <p-button

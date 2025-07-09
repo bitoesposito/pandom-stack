@@ -11,7 +11,7 @@ import { RippleModule } from 'primeng/ripple';
 import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
 import { NotificationService } from '../../../services/notification.service';
-import { AuthService } from '../../../services/auth.service';
+import { CookieAuthService } from '../../../services/cookie-auth.service';
 import { finalize } from 'rxjs';
 import { ThemeService } from '../../../services/theme.service';
 import { Language, TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -63,7 +63,7 @@ export class LoginComponent implements OnInit {
   constructor(
     private notificationService: NotificationService,
     private router: Router,
-    private authService: AuthService,
+    private authService: CookieAuthService,
     private themeService: ThemeService,
     private translate: TranslateService,
     private languageService: LanguageService
@@ -132,6 +132,9 @@ export class LoginComponent implements OnInit {
     // Disables all controls during loading
     this.form.disable();
     
+    // Clear any cached data from previous sessions before login
+    this.authService.clearAllAuthData();
+    
     const credentials = {
       email: this.email.value,
       password: this.password.value,
@@ -147,34 +150,26 @@ export class LoginComponent implements OnInit {
         })
       )
       .subscribe({
-        next: (response) => {
+        next: (response: any) => {
           this.notificationService.handleApiResponse(response, this.translate.instant('auth.login.login-failed'));
-          
           if (response.success && response.data) {
-            // Store token based on remember me setting
-            this.authService.setToken(response.data.access_token);
-            
-            // Store refresh token
-            if (response.data.refresh_token) {
-              this.authService.setRefreshToken(response.data.refresh_token);
-            }
-            
-            // Store remember me preference
-            if (this.rememberMe.value) {
-              localStorage.setItem('remember_me', 'true');
-            } else {
-              localStorage.removeItem('remember_me');
-            }
-            
-            // Redirect based on user role
-            if (response.data.user.role === 'admin') {
-              this.router.navigate(['/']);
-            } else {
-              this.router.navigate(['/']);
-            }
+            // Set authentication status (tokens are in httpOnly cookies)
+            this.authService.setAuthStatus('authenticated');
+            // Dopo login, aggiorna lo stato utente SOLO con la risposta di /auth/me
+            this.authService.forceRefreshUserData().subscribe({
+              next: (data) => {
+                // (opzionale) puoi salvare user/profile in uno stato globale se serve
+                // Poi redirect
+                window.location.href = '/';
+              },
+              error: () => {
+                // Anche in caso di errore, redirect per forzare reload
+                window.location.href = '/';
+              }
+            });
           }
         },
-        error: (error) => {
+        error: (error: any) => {
           this.notificationService.handleError(error, this.translate.instant('auth.login.login-error'));
         }
       });

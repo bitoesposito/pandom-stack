@@ -14,7 +14,7 @@ import {
   GetAuditLogsResponse,
   DeleteUserResponse
 } from '../models/admin.models';
-import { AuthService } from './auth.service';
+import { CookieAuthService } from './cookie-auth.service';
 import { tap, catchError } from 'rxjs/operators';
 
 /**
@@ -90,7 +90,7 @@ export class AdminService {
 
   constructor(
     private http: HttpClient,
-    private authService: AuthService
+    private authService: CookieAuthService
   ) {}
 
   // ============================================================================
@@ -98,21 +98,20 @@ export class AdminService {
   // ============================================================================
 
   /**
-   * Get authentication headers with JWT token
+   * Get authentication headers for cookie-based auth
    * 
-   * Creates HTTP headers with the current user's JWT token
-   * for authenticated API requests. Admin operations require
-   * valid authentication and admin privileges.
+   * Creates HTTP headers for authenticated API requests.
+   * With cookie-based authentication, no additional headers are needed.
    * 
-   * @returns HttpHeaders with Authorization Bearer token
+   * @returns HttpHeaders for authenticated requests
    * 
    * @example
    * const headers = this.getHeaders();
-   * // Returns: Authorization: Bearer <jwt_token>
+   * this.http.get('/api/protected', { headers, withCredentials: true });
    */
   private getHeaders(): HttpHeaders {
-    const token = this.authService.getToken();
-    return new HttpHeaders().set('Authorization', `Bearer ${token}`);
+    // With cookie-based auth, no additional headers needed
+    return new HttpHeaders();
   }
 
   // ============================================================================
@@ -145,7 +144,8 @@ export class AdminService {
    */
   getMetrics(): Observable<GetMetricsResponse> {
     return this.http.get<GetMetricsResponse>(`${this.API_URL}/admin/metrics`, {
-      headers: this.getHeaders()
+      headers: this.getHeaders(),
+      withCredentials: true
     });
   }
 
@@ -177,7 +177,8 @@ export class AdminService {
    */
   getDetailedMetrics(): Observable<GetDetailedMetricsResponse> {
     return this.http.get<GetDetailedMetricsResponse>(`${this.API_URL}/admin/metrics/detailed`, {
-      headers: this.getHeaders()
+      headers: this.getHeaders(),
+      withCredentials: true
     });
   }
 
@@ -223,7 +224,8 @@ export class AdminService {
       url += `&search=${encodeURIComponent(search)}`;
     }
     return this.http.get<GetUserManagementResponse>(url, {
-      headers: this.getHeaders()
+      headers: this.getHeaders(),
+      withCredentials: true
     });
   }
 
@@ -252,7 +254,8 @@ export class AdminService {
    */
   suspendUser(uuid: string): Observable<DeleteUserResponse> {
     return this.http.put<DeleteUserResponse>(`${this.API_URL}/admin/users/${uuid}/suspend`, {}, {
-      headers: this.getHeaders()
+      headers: this.getHeaders(),
+      withCredentials: true
     });
   }
 
@@ -282,7 +285,8 @@ export class AdminService {
    */
   deleteUser(uuid: string): Observable<DeleteUserResponse> {
     return this.http.delete<DeleteUserResponse>(`${this.API_URL}/admin/users/${uuid}`, {
-      headers: this.getHeaders()
+      headers: this.getHeaders(),
+      withCredentials: true
     });
   }
 

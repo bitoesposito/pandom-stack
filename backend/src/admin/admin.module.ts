@@ -7,6 +7,7 @@ import { AdminService } from './admin.service';
 import { User } from '../auth/entities/user.entity';
 import { UserProfile } from '../users/entities/user-profile.entity';
 import { CommonModule } from '../common/modules/common.module';
+import { GuardsModule } from '../auth/guards/guards.module';
 
 /**
  * Admin Module
@@ -26,6 +27,7 @@ import { CommonModule } from '../common/modules/common.module';
   imports: [
     TypeOrmModule.forFeature([User, UserProfile]),
     CommonModule,
+    GuardsModule,
   ],
   controllers: [AdminController],
   providers: [AdminService],

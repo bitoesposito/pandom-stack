@@ -9,7 +9,7 @@ import {
   RestoreBackupResponse,
   GetBackupStatusResponse
 } from '../models/resilience.models';
-import { AuthService } from './auth.service';
+import { CookieAuthService } from './cookie-auth.service';
 
 /**
  * Resilience Service
@@ -75,7 +75,7 @@ export class ResilienceService {
 
   constructor(
     private http: HttpClient,
-    private authService: AuthService
+    private authService: CookieAuthService
   ) {}
 
   // ============================================================================
@@ -83,20 +83,20 @@ export class ResilienceService {
   // ============================================================================
 
   /**
-   * Get authentication headers with JWT token
+   * Get authentication headers for cookie-based auth
    * 
-   * Creates HTTP headers with the current user's JWT token
-   * for authenticated API requests.
+   * Creates HTTP headers for authenticated API requests.
+   * With cookie-based authentication, no additional headers are needed.
    * 
-   * @returns HttpHeaders with Authorization Bearer token
+   * @returns HttpHeaders for authenticated requests
    * 
    * @example
    * const headers = this.getHeaders();
-   * // Returns: Authorization: Bearer <jwt_token>
+   * this.http.get('/api/protected', { headers, withCredentials: true });
    */
   private getHeaders(): HttpHeaders {
-    const token = this.authService.getToken();
-    return new HttpHeaders().set('Authorization', `Bearer ${token}`);
+    // With cookie-based auth, no additional headers needed
+    return new HttpHeaders();
   }
 
   // ============================================================================
@@ -126,7 +126,8 @@ export class ResilienceService {
    */
   getSystemStatus(): Observable<GetSystemStatusResponse> {
     return this.http.get<GetSystemStatusResponse>(`${this.API_URL}/resilience/status`, {
-      headers: this.getHeaders()
+      headers: this.getHeaders(),
+      withCredentials: true
     });
   }
 
@@ -159,7 +160,8 @@ export class ResilienceService {
    */
   createBackup(): Observable<CreateBackupResponse> {
     return this.http.post<CreateBackupResponse>(`${this.API_URL}/resilience/backup`, {}, {
-      headers: this.getHeaders()
+      headers: this.getHeaders(),
+      withCredentials: true
     });
   }
 
@@ -188,7 +190,8 @@ export class ResilienceService {
    */
   listBackups(page: number = 1, limit: number = 10): Observable<ListBackupsResponse> {
     return this.http.get<ListBackupsResponse>(`${this.API_URL}/resilience/backup?page=${page}&limit=${limit}`, {
-      headers: this.getHeaders()
+      headers: this.getHeaders(),
+      withCredentials: true
     });
   }
 
@@ -219,7 +222,8 @@ export class ResilienceService {
    */
   restoreBackup(backupId: string): Observable<RestoreBackupResponse> {
     return this.http.post<RestoreBackupResponse>(`${this.API_URL}/resilience/backup/${backupId}/restore`, {}, {
-      headers: this.getHeaders()
+      headers: this.getHeaders(),
+      withCredentials: true
     });
   }
 
@@ -252,7 +256,8 @@ export class ResilienceService {
    */
   getBackupStatus(): Observable<GetBackupStatusResponse> {
     return this.http.get<GetBackupStatusResponse>(`${this.API_URL}/resilience/backup/status`, {
-      headers: this.getHeaders()
+      headers: this.getHeaders(),
+      withCredentials: true
     });
   }
 } 

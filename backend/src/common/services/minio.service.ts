@@ -1,6 +1,7 @@
 import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { S3Client, PutObjectCommand, GetObjectCommand, CreateBucketCommand, HeadBucketCommand, PutBucketPolicyCommand, ListObjectsV2Command, ListBucketsCommand, HeadObjectCommand } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import * as https from 'https';
 
 /**
@@ -78,19 +79,17 @@ export class MinioService implements OnModuleInit {
     // Configure endpoints for different access patterns
     this.internalEndpoint = `http://minio:${minioPort}`;
     
-    // Configure public endpoint with SSL support
+    // Configure public endpoint using MINIO_URL or fallback to localhost
+    const minioUrl = this.configService.get<string>('MINIO_URL');
+    if (minioUrl) {
+      this.publicEndpoint = `http://${minioUrl}/minio`;
+    } else {
     const useSSL = this.configService.get<string>('MINIO_USE_SSL') === 'true';
     const protocol = useSSL ? 'https' : 'http';
-    
-    // Clean endpoint and construct public URL
-    const cleanEndpoint = minioEndpoint.replace(/^https?:\/\//, '').replace(/:\d+$/, '');
-    this.publicEndpoint = `${protocol}://${cleanEndpoint}/minio`;
+      this.publicEndpoint = `${protocol}://localhost:${minioPort}/minio`;
+    }
 
-    this.logger.debug('MinIO service initialized with endpoints:', {
-      internalEndpoint: this.internalEndpoint,
-      publicEndpoint: this.publicEndpoint,
-      bucket: this.bucket
-    });
+
 
     // Initialize S3 client with MinIO configuration
     this.s3Client = new S3Client({
@@ -123,10 +122,7 @@ export class MinioService implements OnModuleInit {
    * @throws Error if initialization fails
    */
   async onModuleInit() {
-    this.logger.debug('Initializing MinIO service...');
-    this.logger.debug(`Using bucket: ${this.bucket}`);
-    this.logger.debug(`Internal endpoint: ${this.internalEndpoint}`);
-    this.logger.debug(`Public endpoint: ${this.publicEndpoint}`);
+
 
     // Perform initialization tasks
     await this.createBucketIfNotExists();
@@ -137,7 +133,7 @@ export class MinioService implements OnModuleInit {
     try {
       const command = new HeadBucketCommand({ Bucket: this.bucket });
       await this.s3Client.send(command);
-      this.logger.debug('Successfully verified bucket access');
+
     } catch (error) {
       this.logger.error(`Failed to access bucket: ${error.message}`);
       throw error;
@@ -160,14 +156,14 @@ export class MinioService implements OnModuleInit {
     try {
       const command = new HeadBucketCommand({ Bucket: this.bucket });
       await this.s3Client.send(command);
-      this.logger.debug(`Bucket ${this.bucket} already exists`);
+      
     } catch (error) {
       if (error.name === 'NotFound') {
         const createCommand = new CreateBucketCommand({
           Bucket: this.bucket,
         });
         await this.s3Client.send(createCommand);
-        this.logger.debug(`Created bucket ${this.bucket}`);
+
       } else {
         throw error;
       }
@@ -202,7 +198,7 @@ export class MinioService implements OnModuleInit {
       });
 
       await this.s3Client.send(command);
-      this.logger.debug('Successfully set bucket policy for public read access');
+
     } catch (error) {
       this.logger.error('Failed to set bucket policy:', error);
       throw error;
@@ -228,7 +224,7 @@ export class MinioService implements OnModuleInit {
       });
 
       await this.s3Client.send(command);
-      this.logger.debug('Created backups directory in MinIO bucket');
+
     } catch (error) {
       this.logger.error('Failed to create backups directory:', error);
       // Don't throw error as this is not critical
@@ -255,12 +251,7 @@ export class MinioService implements OnModuleInit {
    * // Returns: 'https://example.com/minio/bucket/uploads/profile.jpg'
    */
   async uploadFile(file: Express.Multer.File, key: string): Promise<string> {
-    this.logger.debug('Starting file upload to MinIO', {
-      bucket: this.bucket,
-      key,
-      fileSize: file.buffer.length,
-      contentType: file.mimetype
-    });
+
 
     try {
       const command = new PutObjectCommand({
@@ -270,17 +261,12 @@ export class MinioService implements OnModuleInit {
         ContentType: file.mimetype,
       });
 
-      this.logger.debug('Sending PutObjectCommand to MinIO', {
-        endpoint: this.internalEndpoint,
-        bucket: this.bucket,
-        key
-      });
+
 
       await this.s3Client.send(command);
-      this.logger.debug('File uploaded successfully to MinIO');
+
 
       const fileUrl = await this.getFileUrl(key);
-      this.logger.debug('Generated signed URL for file', { fileUrl });
       
       return fileUrl;
     } catch (error) {
@@ -310,15 +296,8 @@ export class MinioService implements OnModuleInit {
    */
   async getFileUrl(key: string): Promise<string> {
     try {
-      this.logger.debug('Generating URL for file', {
-        bucket: this.bucket,
-        key,
-        publicEndpoint: this.publicEndpoint
-      });
-
       // Return a clean URL without AWS signature parameters
       const fileUrl = `${this.publicEndpoint}/${this.bucket}/${key}`;
-      this.logger.debug('Generated clean URL for file', { fileUrl });
       return fileUrl;
     } catch (error) {
       this.logger.error('Error generating file URL:', {
@@ -329,6 +308,59 @@ export class MinioService implements OnModuleInit {
         endpoint: this.publicEndpoint
       });
       throw new Error(`Failed to generate file URL: ${error.message}`);
+    }
+  }
+
+  /**
+   * Generate signed URL for direct file download
+   * 
+   * Creates a signed URL that allows direct file download without authentication.
+   * The URL is valid for a specified duration and includes AWS signature parameters.
+   * 
+   * @param key - Storage key (path) of the file
+   * @param expiresIn - URL expiration time in seconds (default: 3600 = 1 hour)
+   * @returns Promise with signed URL for direct download
+   * @throws Error if URL generation fails
+   * 
+   * @example
+   * const url = await this.getSignedDownloadUrl('uploads/document.pdf', 7200);
+   * // Returns: 'https://minio.example.com/bucket/uploads/document.pdf?X-Amz-Algorithm=...'
+   */
+  async getSignedDownloadUrl(key: string, expiresIn: number = 3600): Promise<string> {
+    try {
+      // Create a temporary S3 client with public endpoint for signed URLs
+      const publicS3Client = new S3Client({
+        endpoint: this.publicEndpoint.replace('/minio', ''), // Remove /minio suffix for S3 client
+        region: 'us-east-1',
+        credentials: {
+          accessKeyId: this.configService.getOrThrow<string>('MINIO_ROOT_USER'),
+          secretAccessKey: this.configService.getOrThrow<string>('MINIO_ROOT_PASSWORD'),
+        },
+        forcePathStyle: true,
+        // Disable SSL verification for local development
+        requestHandler: {
+          httpsAgent: new https.Agent({
+            rejectUnauthorized: false
+          })
+        }
+      });
+
+      const command = new GetObjectCommand({
+        Bucket: this.bucket,
+        Key: key,
+      });
+
+      const fileUrl = await getSignedUrl(publicS3Client, command, { expiresIn });
+      return fileUrl;
+    } catch (error) {
+      this.logger.error('Error generating signed download URL:', {
+        error: error.message,
+        stack: error.stack,
+        bucket: this.bucket,
+        key,
+        expiresIn
+      });
+      throw new Error(`Failed to generate signed download URL: ${error.message}`);
     }
   }
 
@@ -346,21 +378,11 @@ export class MinioService implements OnModuleInit {
    * const fileBuffer = await this.downloadFile('uploads/document.pdf');
    */
   async downloadFile(key: string): Promise<Buffer> {
-    this.logger.debug('Starting file download from MinIO', {
-      bucket: this.bucket,
-      key
-    });
 
     try {
       const command = new GetObjectCommand({
         Bucket: this.bucket,
         Key: key,
-      });
-
-      this.logger.debug('Sending GetObjectCommand to MinIO', {
-        endpoint: this.internalEndpoint,
-        bucket: this.bucket,
-        key
       });
 
       const response = await this.s3Client.send(command);
@@ -375,11 +397,6 @@ export class MinioService implements OnModuleInit {
         chunks.push(chunk);
       }
       const buffer = Buffer.concat(chunks);
-
-      this.logger.debug('File downloaded successfully from MinIO', {
-        key,
-        size: buffer.length
-      });
 
       return buffer;
     } catch (error) {
@@ -408,10 +425,6 @@ export class MinioService implements OnModuleInit {
    * // Returns: ['uploads/file1.jpg', 'uploads/file2.pdf', ...]
    */
   async listFiles(prefix: string): Promise<string[]> {
-    this.logger.debug('Starting file listing from MinIO', {
-      bucket: this.bucket,
-      prefix
-    });
 
     try {
       const command = new ListObjectsV2Command({
@@ -419,25 +432,13 @@ export class MinioService implements OnModuleInit {
         Prefix: prefix,
       });
 
-      this.logger.debug('Sending ListObjectsV2Command to MinIO', {
-        endpoint: this.internalEndpoint,
-        bucket: this.bucket,
-        prefix
-      });
-
       const response = await this.s3Client.send(command);
       
       if (!response.Contents) {
-        this.logger.debug('No files found in MinIO', { prefix });
         return [];
       }
 
       const files = response.Contents.map(obj => obj.Key).filter(key => key !== undefined) as string[];
-      
-      this.logger.debug('Files listed successfully from MinIO', {
-        prefix,
-        count: files.length
-      });
 
       return files;
     } catch (error) {

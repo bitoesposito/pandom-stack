@@ -8,7 +8,7 @@ import {
   DownloadDataApiResponse,
   DeleteAccountResponse
 } from '../models/security.models';
-import { AuthService } from './auth.service';
+import { CookieAuthService } from './cookie-auth.service';
 
 /**
  * Security Service
@@ -77,7 +77,7 @@ export class SecurityService {
 
   constructor(
     private http: HttpClient,
-    private authService: AuthService
+    private authService: CookieAuthService
   ) {}
 
   // ============================================================================
@@ -85,20 +85,20 @@ export class SecurityService {
   // ============================================================================
 
   /**
-   * Get authentication headers with JWT token
+   * Get authentication headers for cookie-based auth
    * 
-   * Creates HTTP headers with the current user's JWT token
-   * for authenticated API requests.
+   * Creates HTTP headers for authenticated API requests.
+   * With cookie-based authentication, no additional headers are needed.
    * 
-   * @returns HttpHeaders with Authorization Bearer token
+   * @returns HttpHeaders for authenticated requests
    * 
    * @example
    * const headers = this.getHeaders();
-   * // Returns: Authorization: Bearer <jwt_token>
+   * this.http.get('/api/protected', { headers, withCredentials: true });
    */
   private getHeaders(): HttpHeaders {
-    const token = this.authService.getToken();
-    return new HttpHeaders().set('Authorization', `Bearer ${token}`);
+    // With cookie-based auth, no additional headers needed
+    return new HttpHeaders();
   }
 
   // ============================================================================
@@ -135,7 +135,8 @@ export class SecurityService {
     });
     
     return this.http.get<GetSecurityLogsResponse>(`${this.API_URL}/security/logs?${params}`, {
-      headers: this.getHeaders()
+      headers: this.getHeaders(),
+      withCredentials: true
     });
   }
 
@@ -159,7 +160,8 @@ export class SecurityService {
    */
   getSessions(): Observable<GetSessionsResponse> {
     return this.http.get<GetSessionsResponse>(`${this.API_URL}/security/sessions`, {
-      headers: this.getHeaders()
+      headers: this.getHeaders(),
+      withCredentials: true
     });
   }
 
@@ -190,7 +192,8 @@ export class SecurityService {
    */
   downloadData(): Observable<DownloadDataApiResponse> {
     return this.http.get<DownloadDataApiResponse>(`${this.API_URL}/security/download-data`, {
-      headers: this.getHeaders()
+      headers: this.getHeaders(),
+      withCredentials: true
     });
   }
 
@@ -221,7 +224,8 @@ export class SecurityService {
    */
   deleteAccount(): Observable<DeleteAccountResponse> {
     return this.http.delete<DeleteAccountResponse>(`${this.API_URL}/security/delete-account`, {
-      headers: this.getHeaders()
+      headers: this.getHeaders(),
+      withCredentials: true
     });
   }
 } 

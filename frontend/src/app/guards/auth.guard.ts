@@ -1,31 +1,52 @@
 import { CanActivateFn, Router } from '@angular/router';
 import { inject } from '@angular/core';
-import { jwtDecode } from 'jwt-decode';
-import { AuthService } from '../services/auth.service';
+import { CookieAuthService } from '../services/cookie-auth.service';
+import { map, catchError, of } from 'rxjs';
 
 export const authGuard: CanActivateFn = () => {
   const router = inject(Router);
-  const authService = inject(AuthService);
-  const token = authService.getToken();
+  const authService = inject(CookieAuthService);
 
-  if (!token) {
-    router.navigate(['/login']);
-    return false;
+  // First check local sessionStorage for immediate response
+  const localAuth = authService.isAuthenticated();
+
+  if (localAuth) {
+    // Even if we have local auth, verify with server to ensure data is fresh
+    return authService.handleUserSwitch().pipe(
+      map(response => {
+        if (response.success && response.data?.user) {
+          authService.setAuthStatus('authenticated');
+          return true;
+        } else {
+          authService.clearAllAuthData();
+          router.navigate(['/login']);
+          return false;
+        }
+      }),
+      catchError(error => {
+        console.error('Auth check failed:', error);
+        authService.clearAllAuthData();
+        router.navigate(['/login']);
+        return of(false);
+      })
+    );
   }
 
-  try {
-    const decoded: any = jwtDecode(token);
-    
-    if (!decoded.exp || Date.now() >= decoded.exp * 1000) {
-      authService.logout();
+  // If no local auth, check with server
+  return authService.checkAuthStatus().pipe(
+    map(response => {
+      if (response.success && response.data?.authenticated) {
+        authService.setAuthStatus('authenticated');
+        return true;
+      } else {
+        router.navigate(['/login']);
+        return false;
+      }
+    }),
+    catchError(error => {
+      console.error('Auth check failed:', error);
       router.navigate(['/login']);
-      return false;
-    }
-
-    return true;
-  } catch (error) {
-    authService.logout();
-    router.navigate(['/login']);
-    return false;
-  }
+      return of(false);
+    })
+  );
 }; 

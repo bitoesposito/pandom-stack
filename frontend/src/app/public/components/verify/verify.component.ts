@@ -12,6 +12,7 @@ import { ThemeService } from '../../../services/theme.service';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { InputOtp } from 'primeng/inputotp';
 import { Observable } from 'rxjs';
+import { CookieAuthService } from '../../../services/cookie-auth.service';
 
 @Component({
   selector: 'app-verify',
@@ -50,7 +51,7 @@ export class VerifyComponent implements OnInit, OnDestroy {
   constructor(
     private notificationService: NotificationService,
     private router: Router,
-    private authService: AuthService,
+    private authService: CookieAuthService,
     private themeService: ThemeService,
     private translate: TranslateService
   ) {

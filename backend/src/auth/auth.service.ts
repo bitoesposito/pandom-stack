@@ -3,12 +3,16 @@ import {
   Logger, 
   UnauthorizedException, 
   ConflictException, 
-  BadRequestException 
+  BadRequestException, 
+  InternalServerErrorException,
+  NotFoundException
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
+import { Response, Request } from 'express'; // Added Response and Request import
+import { HttpStatus } from '@nestjs/common';
 
 // Local imports
 import { ApiResponseDto } from '../common/common.interface';
@@ -144,18 +148,11 @@ export class AuthService {
       // Send verification email (non-blocking)
       try {
         await this.mailService.sendVerificationEmail(registerDto.email, verificationToken);
-        this.logger.log('Verification email sent successfully', { email: registerDto.email });
+  
       } catch (emailError) {
         this.logger.error('Failed to send verification email', { email: registerDto.email, error: emailError });
         // Don't fail registration if email fails, just log it
       }
-
-      // Log verification token to console for development
-      this.logger.log('Verification OTP generated', { 
-        email: registerDto.email, 
-        otp: verificationToken,
-        expiresAt: verificationExpiry 
-      });
 
       // Extract IP from request for audit logging
       const clientIp = this.getClientIp(req);
@@ -163,7 +160,7 @@ export class AuthService {
       // Log user registration for audit purposes
       await this.auditService.logUserRegistration(user.uuid, user.email, clientIp);
 
-      this.logger.log('User registered successfully', { email: registerDto.email });
+
       
       return ApiResponseDto.success({
         user: {
@@ -189,122 +186,132 @@ export class AuthService {
   /**
    * Authenticate user and generate JWT tokens
    * 
-   * Validates user credentials and generates access and refresh tokens.
-   * Supports "remember me" functionality for extended sessions.
+   * Authenticates user credentials and generates JWT access and refresh tokens.
+   * Implements secure token storage using httpOnly cookies.
    * 
    * Process:
-   * 1. Validates user existence and account status
-   * 2. Verifies password hash
-   * 3. Updates last login timestamp
-   * 4. Generates JWT tokens with appropriate expiration
-   * 5. Stores refresh token in database
-   * 6. Logs successful login
+   * 1. Validates user credentials
+   * 2. Checks account status and verification
+   * 3. Creates user session
+   * 4. Generates JWT tokens
+   * 5. Sets secure httpOnly cookies
    * 
    * Security Features:
-   * - Password verification with bcrypt
+   * - Password hashing verification
    * - Account status validation
-   * - Token expiration management
-   * - Refresh token storage for security
-   * - IP and user agent tracking
+   * - Email verification check
+   * - Secure session management
+   * - httpOnly cookie storage
+   * - CSRF protection
    * 
    * @param loginDto - User login credentials
-   * @param req - Express request object for IP tracking
-   * @returns Promise with JWT tokens and user data
+   * @param response - Express response object for cookie setting
+   * @returns Promise with user data and session info
    * 
    * @throws UnauthorizedException if credentials are invalid
    * @throws UnauthorizedException if account is deactivated
+   * @throws UnauthorizedException if email is not verified
    * @throws Error if login process fails
    */
-  async login(loginDto: LoginDto, req?: any): Promise<ApiResponseDto<LoginResponse>> {
+  async login(loginDto: LoginDto, response: Response, req?: Request): Promise<ApiResponseDto<any>> {
     try {
-      // Find user by email with profile relation
+      // Find user by email
       const user = await this.userRepository.findOne({
         where: { email: loginDto.email },
         relations: ['profile']
       });
 
+      // Validate user credentials
       if (!user) {
-        // Log failed login attempt
-        const clientIp = this.getClientIp(req);
-        const userAgent = req?.headers?.['user-agent'] || 'Unknown';
-        await this.auditService.logLoginFailed(loginDto.email, clientIp, userAgent, 'User not found');
+        this.logger.warn('Login attempt with invalid email', { email: loginDto.email });
         throw new UnauthorizedException('Invalid credentials');
       }
 
-      // Check if user account is active
+      const isPasswordValid = await bcrypt.compare(loginDto.password, user.password_hash);
+      if (!isPasswordValid) {
+        this.logger.warn('Login attempt with invalid password', { email: loginDto.email });
+        throw new UnauthorizedException('Invalid credentials');
+      }
+
       if (!user.is_active) {
-        // Log failed login attempt
-        const clientIp = this.getClientIp(req);
-        const userAgent = req?.headers?.['user-agent'] || 'Unknown';
-        await this.auditService.logLoginFailed(loginDto.email, clientIp, userAgent, 'Account deactivated');
+        this.logger.warn('Login attempt for deactivated account', { email: loginDto.email });
         throw new UnauthorizedException('Account is deactivated');
       }
 
-      // Verify password using bcrypt
-      const isPasswordValid = await bcrypt.compare(loginDto.password, user.password_hash);
-      if (!isPasswordValid) {
-        // Log failed login attempt
-        const clientIp = this.getClientIp(req);
-        const userAgent = req?.headers?.['user-agent'] || 'Unknown';
-        await this.auditService.logLoginFailed(loginDto.email, clientIp, userAgent, 'Invalid credentials');
-        throw new UnauthorizedException('Invalid credentials');
+      if (!user.is_verified) {
+        this.logger.warn('Login attempt for unverified email', { email: loginDto.email });
+        throw new UnauthorizedException('Email not verified');
       }
 
-      // Update last login timestamp
-      user.last_login_at = new Date();
-      await this.userRepository.save(user);
+      // Get client information
+      const ipAddress = req?.headers['x-forwarded-for']?.toString() || req?.socket?.remoteAddress || 'unknown';
+      const userAgent = req?.headers['user-agent'] || 'unknown';
+      const deviceInfo = this.getDeviceInfo(userAgent);
 
-      // Extract IP and User Agent from request
-      const clientIp = this.getClientIp(req);
-      const userAgent = req?.headers?.['user-agent'] || 'Unknown';
-      const deviceInfo = this.getDeviceInfo(req);
+      // Create session
+      let session;
+      try {
+        session = await this.sessionService.createSession({
+          userId: user.uuid,
+          deviceInfo,
+          ipAddress,
+          userAgent,
+          rememberMe: loginDto.rememberMe || false
+        });
+      } catch (sessionError) {
+        this.logger.error('Failed to create user session', { userId: user.uuid });
+        throw new InternalServerErrorException('Failed to create session');
+      }
 
-      // Create session using SessionService
-      const session = await this.sessionService.createSession({
-        userId: user.uuid,
-        deviceInfo,
-        ipAddress: clientIp,
-        userAgent,
-        rememberMe: loginDto.rememberMe || false
-      });
+      // Invalidate other sessions if remember_me is false
+      if (!loginDto.rememberMe) {
+        await this.sessionService.invalidateOtherSessions(user.uuid, session.id);
+        
+      }
 
-      // Log successful login for audit purposes
-      await this.auditService.logLoginSuccess(user.uuid, user.email, clientIp, userAgent, session.id);
+      // Set cookies
+      const cookieOptions = {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict' as const,
+        path: '/',
+        domain: process.env.COOKIE_DOMAIN || undefined
+      };
 
-      // Prepare response with user data and session tokens
-      const response: LoginResponse = {
-        access_token: session.token,
-        refresh_token: session.refreshToken,
+      response.cookie('access_token', session.token, { ...cookieOptions, maxAge: 15 * 60 * 1000 }); // 15 minutes
+      response.cookie('refresh_token', session.refreshToken, cookieOptions);
+
+      // Prepare response data
+      const responseData = {
         session_id: session.id,
-        expires_in: loginDto.rememberMe ? 30 * 24 * 3600 : 7 * 24 * 3600, // 30 days or 7 days in seconds
+        expires_in: 15 * 60, // 15 minutes in seconds
         user: {
           uuid: user.uuid,
           email: user.email,
           role: user.role,
-          is_active: user.is_active,
           is_verified: user.is_verified,
-          is_configured: user.is_configured,
-          last_login_at: user.last_login_at.toISOString()
+          is_active: user.is_active,
+          last_login_at: user.last_login_at?.toISOString()
         }
       };
 
-      // Include profile information (always created now)
+      // Include profile information if available
       if (user.profile) {
-        response.profile = {
+        (responseData as any).profile = {
           uuid: user.profile.uuid,
           tags: user.profile.tags
         };
       }
 
-      this.logger.log('User logged in successfully', { 
-        email: user.email, 
-        sessionId: session.id,
-        rememberMe: loginDto.rememberMe 
-      });
-      
-      return ApiResponseDto.success(response, 'Login successful');
+      this.logger.log('User logged in successfully', { userId: user.uuid, email: user.email });
+
+      return ApiResponseDto.success(responseData, 'Login successful');
     } catch (error) {
-      this.logger.error('Login failed', error);
+      this.logger.error('Login failed', {
+        email: loginDto.email,
+        error: error.message,
+        ipAddress: req?.headers['x-forwarded-for']?.toString() || req?.socket?.remoteAddress || 'unknown'
+      });
       throw error;
     }
   }
@@ -321,21 +328,24 @@ export class AuthService {
    * 3. Checks stored refresh token matches
    * 4. Generates new access and refresh tokens
    * 5. Updates stored refresh token
+   * 6. Sets new secure httpOnly cookies
    * 
    * Security Features:
    * - Token signature validation
    * - Token expiration checking
    * - Token rotation for security
    * - Database token validation
+   * - httpOnly cookie storage
    * 
    * @param refreshToken - The refresh token to validate
+   * @param response - Express response object for cookie setting
    * @returns Promise with new JWT tokens
    * 
    * @throws UnauthorizedException if refresh token is invalid or expired
    * @throws UnauthorizedException if user account is deactivated
    * @throws Error if token refresh fails
    */
-  async refreshToken(refreshToken: string): Promise<ApiResponseDto<any>> {
+  async refreshToken(refreshToken: string, response: Response): Promise<ApiResponseDto<any>> {
     try {
       // Verify the refresh token signature and expiration
       const payload = this.jwtService.verify(refreshToken);
@@ -367,12 +377,28 @@ export class AuthService {
         throw new UnauthorizedException('Account is deactivated');
       }
 
-      // Prepare response with new tokens
-      const response: any = {
-        access_token: session.token,
-        refresh_token: session.refreshToken,
+      // Set secure httpOnly cookies
+      const cookieOptions = {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production', // HTTPS only in production
+        sameSite: 'strict' as const,
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        path: '/'
+      };
+
+      // Set access token cookie (shorter expiration)
+      response.cookie('access_token', session.token, {
+        ...cookieOptions,
+        maxAge: 15 * 60 * 1000 // 15 minutes
+      });
+
+      // Set refresh token cookie (longer expiration)
+      response.cookie('refresh_token', session.refreshToken, cookieOptions);
+
+      // Prepare response without tokens in body
+      const responseData: any = {
         session_id: session.id,
-        expires_in: 7 * 24 * 3600, // 7 days in seconds
+        expires_in: 15 * 60, // 15 minutes in seconds
         user: {
           uuid: user.uuid,
           email: user.email,
@@ -386,21 +412,120 @@ export class AuthService {
 
       // Include profile information if available
       if (user.profile) {
-        response.profile = {
+        responseData.profile = {
           uuid: user.profile.uuid,
           tags: user.profile.tags
         };
       }
 
-      this.logger.log('Token refreshed successfully', { 
-        userId: user.uuid, 
-        sessionId: session.id 
-      });
+      this.logger.log('Token refreshed successfully', { userId: user.uuid });
 
-      return ApiResponseDto.success(response, 'Token refreshed successfully');
+      return ApiResponseDto.success(responseData, 'Token refreshed successfully');
     } catch (error) {
       this.logger.error('Token refresh failed', error);
       throw error;
+    }
+  }
+
+  /**
+   * Logout user and clear all authentication data
+   * 
+   * Performs a complete logout by removing all stored authentication
+   * data including cookies and server-side session.
+   * 
+   * @param response - Express response object for cookie clearing
+   * @param sessionId - Optional session ID to invalidate
+   * @returns Promise with logout confirmation
+   * 
+   * @example
+   * await this.logout(res, sessionId);
+   * // All auth data cleared, cookies removed, session invalidated
+   * 
+   * Logout process:
+   * - Removes access token cookie
+   * - Removes refresh token cookie
+   * - Invalidates server-side session
+   * - Logs logout event
+   */
+  async logout(response: Response, sessionId?: string): Promise<ApiResponseDto<null>> {
+    const cookieOptions = {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict' as const,
+      path: '/',
+    };
+    response.clearCookie('access_token', cookieOptions);
+    response.clearCookie('refresh_token', cookieOptions);
+    // Forza la rimozione anche senza opzioni (fallback)
+    response.clearCookie('access_token');
+    response.clearCookie('refresh_token');
+
+    if (sessionId) {
+      await this.sessionService.invalidateSession(sessionId, 'LOGOUT');
+
+    } else {
+
+    }
+
+    this.logger.log('User logged out successfully');
+    return ApiResponseDto.success(null, 'Logout successful');
+  }
+
+  /**
+   * Check authentication status
+   * 
+   * Verifies if the current user is authenticated by checking
+   * the JWT token from cookies.
+   * 
+   * @param req - Request object with cookies
+   * @returns Promise with authentication status
+   */
+  async checkAuthStatus(req: Request): Promise<ApiResponseDto<any>> {
+    try {
+      const accessToken = req.cookies?.access_token;
+      
+      if (!accessToken) {
+        return ApiResponseDto.success({ authenticated: false }, 'Not authenticated');
+      }
+
+      // Verify the token
+      const payload = this.jwtService.verify(accessToken);
+      
+      // Check if user exists and is active
+      const user = await this.userRepository.findOne({
+        where: { uuid: payload.sub },
+        relations: ['profile']
+      });
+
+      if (!user || !user.is_active) {
+        return ApiResponseDto.success({ authenticated: false }, 'User not found or inactive');
+      }
+
+      // Return user data without sensitive information
+      const userData = {
+        uuid: user.uuid,
+        email: user.email,
+        role: user.role,
+        is_active: user.is_active,
+        is_verified: user.is_verified,
+        is_configured: user.is_configured
+      };
+
+      if (user.profile) {
+        userData['profile'] = {
+          uuid: user.profile.uuid,
+          tags: user.profile.tags
+        };
+      }
+
+      return ApiResponseDto.success({ 
+        authenticated: true, 
+        user: userData 
+      }, 'Authenticated');
+
+    } catch (error) {
+      this.logger.error('Auth check failed', error);
+      return ApiResponseDto.success({ authenticated: false }, 'Token invalid or expired');
     }
   }
 
@@ -422,42 +547,43 @@ export class AuthService {
    */
   async getMe(userId: string): Promise<ApiResponseDto<any>> {
     try {
+
+      
       const user = await this.userRepository.findOne({
         where: { uuid: userId },
         relations: ['profile']
       });
 
       if (!user) {
-        throw new UnauthorizedException('User not found');
+        this.logger.warn('User not found in getMe', { userId });
+        throw new NotFoundException('User not found');
       }
 
-      // Prepare response with complete user data
-      const response: any = {
-        user: {
-          uuid: user.uuid,
-          email: user.email,
-          role: user.role,
-          is_active: user.is_active,
-          is_verified: user.is_verified,
-          is_configured: user.is_configured,
-          last_login_at: user.last_login_at?.toISOString(),
-          created_at: user.created_at.toISOString(),
-          updated_at: user.updated_at.toISOString()
+
+
+      return {
+        http_status_code: HttpStatus.OK,
+        success: true,
+        message: 'User data retrieved successfully',
+        data: {
+          user: {
+            uuid: user.uuid,
+            email: user.email,
+            role: user.role,
+            is_verified: user.is_verified,
+            is_active: user.is_active,
+            created_at: user.created_at,
+            updated_at: user.updated_at
+          },
+          profile: user.profile ? {
+            uuid: user.profile.uuid,
+            tags: user.profile.tags,
+            metadata: user.profile.metadata,
+            created_at: user.profile.created_at,
+            updated_at: user.profile.updated_at
+          } : null
         }
       };
-
-      // Include profile information (always created now)
-      if (user.profile) {
-        response.profile = {
-          uuid: user.profile.uuid,
-          tags: user.profile.tags,
-          metadata: user.profile.metadata,
-          created_at: user.profile.created_at.toISOString(),
-          updated_at: user.profile.updated_at.toISOString()
-        };
-      }
-
-      return ApiResponseDto.success(response, 'User data retrieved successfully');
     } catch (error) {
       this.logger.error('Get user data failed', error);
       throw error;
@@ -656,7 +782,7 @@ export class AuthService {
       const userAgent = this.getUserAgent(req);
       await this.auditService.logEmailVerification(user.uuid, user.email, clientIp, userAgent);
 
-      this.logger.log('Email verified successfully', { email: user.email });
+
       
       return ApiResponseDto.success(null, 'Email verified successfully');
     } catch (error) {
@@ -712,18 +838,12 @@ export class AuthService {
       // Send verification email
       try {
         await this.mailService.sendVerificationEmail(user.email, verificationToken);
-        this.logger.log('Verification email resent successfully', { email: user.email });
+  
       } catch (emailError) {
         this.logger.error('Failed to resend verification email', { email: user.email, error: emailError });
-        throw new BadRequestException('Failed to send verification email');
       }
 
-      // Log verification token to console for development
-      this.logger.log('Verification OTP generated', { 
-        email: user.email, 
-        otp: verificationToken,
-        expiresAt: verificationExpiry 
-      });
+
 
       return ApiResponseDto.success(null, 'Verification email sent successfully');
     } catch (error) {
@@ -782,18 +902,13 @@ export class AuthService {
       // Send reset email (non-blocking)
       try {
         await this.mailService.sendPasswordResetEmail(user.email, resetToken);
-        this.logger.log('Password reset email sent successfully', { email: user.email });
+  
       } catch (emailError) {
         this.logger.error('Failed to send password reset email', { email: user.email, error: emailError });
         // Don't fail the request if email fails, just log it
       }
 
-      // Log reset token to console for development
-      this.logger.log('Password reset OTP generated', { 
-        email: user.email, 
-        otp: resetToken,
-        expiresAt: resetTokenExpiry 
-      });
+
 
       return ApiResponseDto.success(null, 'If the email exists, a password reset link has been sent');
     } catch (error) {
@@ -863,7 +978,7 @@ export class AuthService {
       await this.auditService.logPasswordReset(user.uuid, user.email, clientIp, userAgent);
       await this.auditService.logPasswordChange(user.uuid, user.email, clientIp, userAgent);
 
-      this.logger.log('Password reset successfully', { email: user.email });
+
       
       return ApiResponseDto.success(null, 'Password reset successfully');
     } catch (error) {

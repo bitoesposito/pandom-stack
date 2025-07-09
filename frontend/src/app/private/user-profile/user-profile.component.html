@@ -3,9 +3,14 @@
 <p-toast class="absolute" />
 
 <main style="max-width: 1200px;" class="m-auto flex flex-column p-3 gap-3 mt-2">
+    <!-- Spinner di caricamento profilo -->
+    <div *ngIf="isLoadingProfile || !user" class="flex justify-content-center align-items-center" style="min-height: 200px;">
+        <i class="pi pi-spin pi-spinner text-3xl"></i>
+        <span class="ml-2">Caricamento profilo...</span>
+    </div>
 
-    <!-- TabView for user profile sections -->
-    <p-tabView (onChange)="onTabChange($event)">
+    <!-- TabView per il profilo utente, visibile solo se il profilo è caricato -->
+    <p-tabView *ngIf="!isLoadingProfile && user" (onChange)="onTabChange($event)">
         <!-- Profile Tab -->
         <p-tabPanel header="{{ 'profile.tabs.profile' | translate }}">
             <div class="flex flex-column md:flex-row gap-3">
@@ -400,7 +405,8 @@
             <p-button [label]="'common.cancel' | translate" severity="secondary" outlined="true"
                 (click)="isDownloadDialogVisible = false" [disabled]="isDownloading" />
             <p-button [label]="'profile.download.confirm' | translate" severity="primary"
-                (click)="downloadPersonalData()" [loading]="isDownloading" [disabled]="isDownloading" />
+                (click)="downloadPersonalData()" [loading]="isDownloading" [disabled]="isDownloading" 
+                type="button" />
         </div>
     </div>
 </p-dialog>

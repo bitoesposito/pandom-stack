@@ -6,12 +6,14 @@ import {
   HttpCode, 
   HttpStatus, 
   UseGuards, 
-  Req 
+  Req,
+  Res
 } from '@nestjs/common';
-import { Request } from 'express';
+import { Request, Response } from 'express';
 
 // Local imports
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { CookieAuthGuard } from './guards/cookie-auth.guard';
 import { 
   LoginDto, 
   RegisterDto, 
@@ -38,6 +40,8 @@ interface AuthenticatedRequest extends Request {
     email: string;
     /** Role of the authenticated user */
     role: string;
+    /** Session ID for logout */
+    sessionId?: string;
   };
 }
 
@@ -141,9 +145,10 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async login(
     @Body() loginDto: LoginDto, 
-    @Req() req: Request
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response
   ): Promise<ApiResponseDto<any>> {
-    return this.authService.login(loginDto, req);
+    return this.authService.login(loginDto, res, req);
   }
 
   /**
@@ -171,9 +176,42 @@ export class AuthController {
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
   async refreshToken(
-    @Body() refreshTokenDto: RefreshTokenDto
+    @Body() refreshTokenDto: RefreshTokenDto,
+    @Res({ passthrough: true }) res: Response
   ): Promise<ApiResponseDto<any>> {
-    return this.authService.refreshToken(refreshTokenDto.refresh_token);
+    return this.authService.refreshToken(refreshTokenDto.refresh_token, res);
+  }
+
+  /**
+   * Logout user and clear authentication data
+   * 
+   * Performs a complete logout by removing all stored authentication
+   * data including cookies and server-side session.
+   * 
+   * Process:
+   * 1. Clears authentication cookies
+   * 2. Invalidates server-side session
+   * 3. Logs logout event
+   * 
+   * @param req - Authenticated request object with user data
+   * @param res - Express response object for cookie clearing
+   * @returns Promise with logout confirmation
+   * 
+   * @example
+   * POST /auth/logout
+   * Authorization: Bearer <jwt_token>
+   */
+  @Post('logout')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(CookieAuthGuard)
+  async logout(
+    @Req() req: AuthenticatedRequest,
+    @Res({ passthrough: true }) res: Response
+  ): Promise<ApiResponseDto<null>> {
+    // Extract session ID from user object (added by CookieAuthGuard)
+    const sessionId = req.user?.sessionId;
+    
+    return this.authService.logout(res, sessionId);
   }
 
   // ============================================================================
@@ -194,9 +232,26 @@ export class AuthController {
    * Authorization: Bearer <jwt_token>
    */
   @Get('me')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(CookieAuthGuard)
   async getMe(@Req() req: AuthenticatedRequest): Promise<ApiResponseDto<any>> {
     return this.authService.getMe(req.user.uuid);
+  }
+
+  /**
+   * Check authentication status
+   * 
+   * Verifies if the current user is authenticated by checking
+   * the JWT token from cookies.
+   * 
+   * @param req - Request object with cookies
+   * @returns Promise with authentication status
+   * 
+   * @example
+   * GET /auth/check
+   */
+  @Get('check')
+  async checkAuth(@Req() req: Request): Promise<ApiResponseDto<any>> {
+    return this.authService.checkAuthStatus(req);
   }
 
   // ============================================================================

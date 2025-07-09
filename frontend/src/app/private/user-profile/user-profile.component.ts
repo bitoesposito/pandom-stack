@@ -23,6 +23,7 @@ import { SystemStatusResponse, BackupResponse } from '../../models/resilience.mo
 import { SystemMetricsResponse, DetailedSystemMetricsResponse } from '../../models/admin.models';
 import { Subject, takeUntil } from 'rxjs';
 import { PaginatorModule } from 'primeng/paginator';
+import { CookieAuthService } from '../../services/cookie-auth.service';
 
 /**
  * UserProfile Component
@@ -103,6 +104,8 @@ export class UserProfileComponent implements OnInit, OnDestroy {
   isDeletingUser: boolean = false;
   selectedUserForAction: any = null;
 
+  isLoadingProfile: boolean = false;
+
   // Destroy subject for proper cleanup
   private destroy$ = new Subject<void>();
 
@@ -111,7 +114,7 @@ export class UserProfileComponent implements OnInit, OnDestroy {
   }
 
   constructor(
-    private authService: AuthService,
+    private authService: CookieAuthService,
     private securityService: SecurityService,
     private resilienceService: ResilienceService,
     private adminService: AdminService,
@@ -121,8 +124,55 @@ export class UserProfileComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    this.loadUserProfile();
+    this.isLoadingProfile = true;
+    this.authService.forceRefreshUserData().subscribe({
+      next: (data) => {
+        if (data.data) {
+          this.user = data.data.user;
+          this.userProfile = data.data.profile;
+        } else {
+          this.user = null;
+          this.userProfile = null;
+        }
+        this.isLoadingProfile = false;
+      },
+      error: (err) => {
+        this.user = null;
+        this.userProfile = null;
+        this.isLoadingProfile = false;
+      }
+    });
     this.loadSessions();
+  }
+
+  // Metodo da chiamare dopo login
+  refreshUserAfterLogin(): void {
+    this.isLoadingProfile = true;
+    this.authService.forceRefreshUserData().subscribe({
+      next: (data) => {
+        if (data.data) {
+          this.user = data.data.user;
+          this.userProfile = data.data.profile;
+        } else {
+          this.user = null;
+          this.userProfile = null;
+        }
+        this.isLoadingProfile = false;
+      },
+      error: (err) => {
+        this.user = null;
+        this.userProfile = null;
+        this.isLoadingProfile = false;
+      }
+    });
+  }
+
+  // Metodo da chiamare dopo logout
+  clearUserAfterLogout(): void {
+    this.user = null;
+    this.userProfile = null;
+    this.isLoadingProfile = false;
+    this.authService.forceLogout();
   }
 
   ngOnDestroy(): void {
@@ -136,6 +186,7 @@ export class UserProfileComponent implements OnInit, OnDestroy {
    * @param event - Tab change event
    */
   onTabChange(event: any): void {
+    // Solo admin può caricare dati admin
     if (event.index === 1 && this.user?.role === 'admin') {
       this.loadAdminData();
     }
@@ -148,7 +199,7 @@ export class UserProfileComponent implements OnInit, OnDestroy {
    * Load user profile data
    */
   private loadUserProfile(): void {
-    this.authService.getCurrentUser()
+    this.authService.handleUserSwitch()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
       next: (data) => {
@@ -158,7 +209,6 @@ export class UserProfileComponent implements OnInit, OnDestroy {
         }
       },
       error: (err) => {
-        console.error('Errore nel recupero del profilo:', err);
           this.notificationService.handleError(err, 'profile.load.error');
       }
     });
@@ -177,7 +227,6 @@ export class UserProfileComponent implements OnInit, OnDestroy {
         }
       },
       error: (err: any) => {
-        console.error('Errore nel recupero delle sessioni:', err);
           this.notificationService.handleError(err, 'profile.sessions.error');
       }
     });
@@ -195,7 +244,6 @@ export class UserProfileComponent implements OnInit, OnDestroy {
       .subscribe({
       next: (data: any) => {
         if (data.data) {
-          console.log('🔍 [DEBUG] Dati ricevuti:', data.data);
           this.securityLogs = data.data.logs || [];
           this.securityLogsTotal = data.data.pagination?.total || 0;
           this.securityLogsPage = data.data.pagination?.page || page;
@@ -204,7 +252,6 @@ export class UserProfileComponent implements OnInit, OnDestroy {
         this.isLoadingSecurityLogs = false;
       },
       error: (err: any) => {
-        console.error('Errore nel recupero dei log di sicurezza:', err);
         this.notificationService.handleError(err, 'profile.security-logs.error');
         this.isLoadingSecurityLogs = false;
       }
@@ -226,8 +273,7 @@ export class UserProfileComponent implements OnInit, OnDestroy {
         this.isLoadingSystemStatus = false;
       },
       error: (err: any) => {
-          console.error('Errore nel recupero dello stato del sistema:', err);
-        this.notificationService.handleError(err, 'profile.system-status.error');
+          this.notificationService.handleError(err, 'profile.system-status.error');
         this.isLoadingSystemStatus = false;
       }
     });
@@ -237,6 +283,9 @@ export class UserProfileComponent implements OnInit, OnDestroy {
    * Load admin data
    */
   loadAdminData(): void {
+    if (this.user?.role !== 'admin') {
+      return;
+    }
     this.isLoadingAdminMetrics = true;
     this.isLoadingDetailedMetrics = true;
     
@@ -251,8 +300,7 @@ export class UserProfileComponent implements OnInit, OnDestroy {
         this.isLoadingAdminMetrics = false;
       },
       error: (err: any) => {
-          console.error('Errore nel recupero delle metriche admin:', err);
-        this.notificationService.handleError(err, 'profile.administration.error');
+          this.notificationService.handleError(err, 'profile.administration.error');
         this.isLoadingAdminMetrics = false;
       }
     });
@@ -268,8 +316,7 @@ export class UserProfileComponent implements OnInit, OnDestroy {
         this.isLoadingDetailedMetrics = false;
       },
       error: (err: any) => {
-          console.error('Errore nel recupero delle metriche dettagliate:', err);
-        this.notificationService.handleError(err, 'profile.administration.error');
+          this.notificationService.handleError(err, 'profile.administration.error');
         this.isLoadingDetailedMetrics = false;
       }
     });
@@ -306,7 +353,6 @@ export class UserProfileComponent implements OnInit, OnDestroy {
         }
         break;
       case 'user-management':
-        console.log('Opening user management dialog');
         this.isUserManagementDialogVisible = !this.isUserManagementDialogVisible;
         if (this.isUserManagementDialogVisible) {
           this.loadUsers(1, this.usersRows);
@@ -321,21 +367,21 @@ export class UserProfileComponent implements OnInit, OnDestroy {
    * Download personal data from the server
    */
   downloadPersonalData(): void {
+    // Prevent multiple simultaneous downloads
+    if (this.isDownloading) {
+      return;
+    }
+    
     this.isDownloading = true;
     this.securityService.downloadData().subscribe({
       next: (response) => {
-        this.isDownloading = false;
         if (response.success && response.data?.download_url) {
+          
           // Close the modal first
           this.isDownloadDialogVisible = false;
           
-          // Create a temporary link to download the file
-          const link = document.createElement('a');
-          link.href = response.data.download_url;
-          link.download = `personal-data-${new Date().toISOString().split('T')[0]}.${response.data.format}`;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
+          // Open download URL in new window/tab (better Firefox compatibility)
+          window.open(response.data.download_url, '_blank');
           
           // Show success notification after modal is closed
           setTimeout(() => {
@@ -344,13 +390,16 @@ export class UserProfileComponent implements OnInit, OnDestroy {
         } else {
           this.notificationService.handleError(response, 'profile.download.error');
         }
+        this.isDownloading = false;
       },
       error: (error) => {
-        this.isDownloading = false;
         this.notificationService.handleError(error, 'profile.download.error');
+        this.isDownloading = false;
       }
     });
   }
+
+  
 
   /**
    * Request password change by sending reset email
@@ -375,9 +424,19 @@ export class UserProfileComponent implements OnInit, OnDestroy {
           // Keep isProcessing true until redirect
           // Logout the user and redirect after toast is shown
           setTimeout(() => {
-            this.authService.logout();
+            this.authService.logout().subscribe({
+              next: () => {
+                this.authService.clearAuthStatus();
+                this.router.navigate(['/reset'], { 
+                  queryParams: { email: this.user.email } 
+                });
+              },
+              error: () => {
+                this.authService.clearAuthStatus();
             this.router.navigate(['/reset'], { 
               queryParams: { email: this.user.email } 
+                });
+              }
             });
           }, 2000);
         } else {
@@ -410,8 +469,23 @@ export class UserProfileComponent implements OnInit, OnDestroy {
           // Keep isProcessing true until redirect
           // Logout the user and redirect after toast is shown
           setTimeout(() => {
-            this.authService.logout();
-            this.router.navigate(['/login']);
+            // Immediately clear user data and authentication state
+            this.user = null;
+            this.userProfile = null;
+            this.authService.forceLogout();
+            
+            // Call server logout (but don't wait for it)
+            this.authService.logout().subscribe({
+              next: () => {
+                // Server logout successful, redirect
+                this.router.navigate(['/login']);
+              },
+              error: () => {
+                // Server logout failed, but we've already cleared local state
+                // Redirect anyway
+                this.router.navigate(['/login']);
+              }
+            });
           }, 2000);
         } else {
           this.isProcessing = false;
@@ -522,22 +596,13 @@ export class UserProfileComponent implements OnInit, OnDestroy {
   }
 
   onAuditLogsPageChange(event: any) {
-    console.log('🔄 [DEBUG] onAuditLogsPageChange chiamata con evento:', event);
-    console.log('📄 [DEBUG] Dettagli evento paginazione:', {
-      page: event.page,
-      first: event.first,
-      rows: event.rows,
-      pageCount: event.pageCount
-    });
     
     // Calcola la pagina corrente basandosi su first e rows
     // PrimeNG usa first (indice 0-based) e rows per calcolare la pagina
     const newPage = Math.floor(event.first / event.rows) + 1;
-    console.log('🎯 [DEBUG] Pagina calcolata:', newPage, '(first:', event.first, 'rows:', event.rows, ')');
     
     // Verifica che la pagina sia valida
     if (isNaN(newPage) || newPage < 1) {
-      console.error('❌ [DEBUG] Pagina non valida calcolata:', newPage);
       return;
     }
     
@@ -545,22 +610,13 @@ export class UserProfileComponent implements OnInit, OnDestroy {
   }
 
   onSecurityLogsPageChange(event: any) {
-    console.log('🔄 [DEBUG] onSecurityLogsPageChange chiamata con evento:', event);
-    console.log('📄 [DEBUG] Dettagli evento paginazione:', {
-      page: event.page,
-      first: event.first,
-      rows: event.rows,
-      pageCount: event.pageCount
-    });
     
     // Calcola la pagina corrente basandosi su first e rows
     // PrimeNG usa first (indice 0-based) e rows per calcolare la pagina
     const newPage = Math.floor(event.first / event.rows) + 1;
-    console.log('🎯 [DEBUG] Pagina calcolata:', newPage, '(first:', event.first, 'rows:', event.rows, ')');
     
     // Verifica che la pagina sia valida
     if (isNaN(newPage) || newPage < 1) {
-      console.error('❌ [DEBUG] Pagina non valida calcolata:', newPage);
       return;
     }
     
@@ -622,7 +678,6 @@ export class UserProfileComponent implements OnInit, OnDestroy {
         this.selectedUserForAction = null;
       },
       error: (err: any) => {
-        console.error('Errore nella cancellazione dell\'utente:', err);
         this.notificationService.handleError(err, 'profile.user-management.delete-error');
         this.isDeletingUser = false;
         this.selectedUserForAction = null;
@@ -665,12 +720,10 @@ export class UserProfileComponent implements OnInit, OnDestroy {
           this.backupsTotal = data.data.pagination?.total || 0;
           this.backupsPage = data.data.pagination?.page || page;
           this.backupsRows = data.data.pagination?.limit || rows;
-          console.log('Backups loaded:', this.backups);
         }
         this.isLoadingBackups = false;
       },
       error: (err: any) => {
-        console.error('Errore nel caricamento dei backup:', err);
         this.notificationService.handleError(err, 'profile.system-status.backup-list-failed');
         this.isLoadingBackups = false;
       }
@@ -686,7 +739,6 @@ export class UserProfileComponent implements OnInit, OnDestroy {
         this.isCreatingBackup = false;
       },
       error: (err: any) => {
-        console.error('Errore nella creazione del backup:', err);
         this.notificationService.handleError(err, 'profile.system-status.backup-creation-failed');
         this.isCreatingBackup = false;
       }
@@ -711,7 +763,6 @@ export class UserProfileComponent implements OnInit, OnDestroy {
         this.selectedBackupForRestore = null;
       },
       error: (err: any) => {
-        console.error('Errore nel ripristino del backup:', err);
         this.notificationService.handleError(err, 'profile.system-status.backup-restore-failed');
         this.isRestoringBackup = false;
         this.isRestoreDialogVisible = false;

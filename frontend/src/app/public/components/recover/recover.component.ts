@@ -13,6 +13,7 @@ import { AuthService } from '../../../services/auth.service';
 import { finalize, Observable } from 'rxjs';
 import { ThemeService } from '../../../services/theme.service';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { CookieAuthService } from '../../../services/cookie-auth.service';
 
 @Component({
   selector: 'app-recover',
@@ -50,7 +51,7 @@ export class RecoverComponent {
   constructor(
     private notificationService: NotificationService,
     private router: Router,
-    private authService: AuthService,
+    private authService: CookieAuthService,
     private themeService: ThemeService,
     private translate: TranslateService
   ) {

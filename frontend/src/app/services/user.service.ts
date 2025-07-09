@@ -7,7 +7,7 @@ import {
   UserWithProfile, 
   UpdateProfileRequest,
 } from '../models/user.models';
-import { AuthService } from './auth.service';
+import { CookieAuthService } from './cookie-auth.service';
 
 /**
  * User Service
@@ -80,7 +80,7 @@ export class UserService {
 
   constructor(
     private http: HttpClient,
-    private authService: AuthService
+    private authService: CookieAuthService
   ) {}
 
   // ============================================================================
@@ -88,20 +88,20 @@ export class UserService {
   // ============================================================================
 
   /**
-   * Get authentication headers with JWT token
+   * Get authentication headers for cookie-based auth
    * 
-   * Creates HTTP headers with the current user's JWT token
-   * for authenticated API requests.
+   * Creates HTTP headers for authenticated API requests.
+   * With cookie-based authentication, no additional headers are needed.
    * 
-   * @returns HttpHeaders with Authorization Bearer token
+   * @returns HttpHeaders for authenticated requests
    * 
    * @example
    * const headers = this.getHeaders();
-   * // Returns: Authorization: Bearer <jwt_token>
+   * this.http.get('/api/protected', { headers, withCredentials: true });
    */
   private getHeaders(): HttpHeaders {
-    const token = this.authService.getToken();
-    return new HttpHeaders().set('Authorization', `Bearer ${token}`);
+    // With cookie-based auth, no additional headers needed
+    return new HttpHeaders();
   }
 
   // ============================================================================
@@ -132,7 +132,8 @@ export class UserService {
    */
   getUsers(): Observable<ApiResponse<UserWithProfile[]>> {
     return this.http.get<ApiResponse<UserWithProfile[]>>(`${this.API_URL}/users/list`, {
-      headers: this.getHeaders()
+      headers: this.getHeaders(),
+      withCredentials: true
     });
   }
 
@@ -161,7 +162,8 @@ export class UserService {
    */
   getUser(uuid: string): Observable<ApiResponse<UserWithProfile>> {
     return this.http.get<ApiResponse<UserWithProfile>>(`${this.API_URL}/users/${uuid}`, {
-      headers: this.getHeaders()
+      headers: this.getHeaders(),
+      withCredentials: true
     });
   }
 
@@ -195,7 +197,8 @@ export class UserService {
   deleteUser(email: string): Observable<ApiResponse<null>> {
     return this.http.delete<ApiResponse<null>>(`${this.API_URL}/users/delete`, {
       headers: this.getHeaders(),
-      body: {email}
+      body: {email},
+      withCredentials: true
     });
   }
 
@@ -225,7 +228,8 @@ export class UserService {
    */
   createUser(email: string): Observable<ApiResponse<UserWithProfile>> {
     return this.http.post<ApiResponse<UserWithProfile>>(`${this.API_URL}/users/create`, {email}, {
-      headers: this.getHeaders()
+      headers: this.getHeaders(),
+      withCredentials: true
     });
   }
 
@@ -265,7 +269,8 @@ export class UserService {
    */
   updateUser(email: string, data: UpdateProfileRequest): Observable<ApiResponse<UserWithProfile>> {
     return this.http.put<ApiResponse<UserWithProfile>>(`${this.API_URL}/users/update`, {email, data}, {
-      headers: this.getHeaders()
+      headers: this.getHeaders(),
+      withCredentials: true
     });
   }
 } 

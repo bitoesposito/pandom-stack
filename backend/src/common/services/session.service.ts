@@ -106,6 +106,7 @@ export class SessionService {
   async createSession(options: CreateSessionOptions): Promise<Session> {
     const { userId, deviceInfo, ipAddress, userAgent, rememberMe = false } = options;
 
+
     // Verify user exists
     const user = await this.userRepository.findOne({ where: { uuid: userId } });
     if (!user) {
@@ -164,17 +165,13 @@ export class SessionService {
       userAgent,
       details: {
         sessionId: sessionId,
+        userId: userId, // Store userId in details for debugging
         rememberMe: rememberMe,
         expiresAt: expiresAt.toISOString()
       },
     }));
 
-    this.logger.log('Session created successfully', { 
-      sessionId, 
-      userId, 
-      deviceInfo, 
-      rememberMe 
-    });
+    this.logger.log('Session created successfully', { sessionId, userId });
 
     return session;
   }
@@ -187,36 +184,36 @@ export class SessionService {
    */
   async validateSession(sessionId: string, token?: string): Promise<Session | null> {
     const session = this.sessions.get(sessionId);
-    
-    if (!session || !session.isActive) {
-      return null;
-    }
 
     // Check expiration
-    if (new Date() > session.expiresAt) {
+    if (session && new Date() > session.expiresAt) {
+      this.logger.warn('Session expired', { sessionId });
       await this.invalidateSession(sessionId, 'EXPIRED');
       return null;
     }
 
     // Update last activity
-    session.lastActivity = new Date();
-    this.sessions.set(sessionId, session);
+    if (session) {
+      session.lastActivity = new Date();
+      this.sessions.set(sessionId, session);
+    }
 
     // Validate JWT token if provided
     if (token) {
       try {
         const payload = this.jwtService.verify(token);
         if (payload.sessionId !== sessionId) {
+          this.logger.warn('SessionId mismatch in token', { sessionId, tokenSessionId: payload.sessionId });
           await this.invalidateSession(sessionId, 'TOKEN_MISMATCH');
           return null;
         }
       } catch (error) {
+        this.logger.warn('Token invalid during session validation', { sessionId, error });
         await this.invalidateSession(sessionId, 'INVALID_TOKEN');
         return null;
       }
     }
-
-    return session;
+    return session || null;
   }
 
   /**
@@ -282,11 +279,12 @@ export class SessionService {
       userAgent: session.userAgent,
       details: {
         sessionId: sessionId,
+        userId: session.userId, // Store userId in details for debugging
         previousTokenHash: crypto.createHash('sha256').update(refreshToken).digest('hex')
       },
     }));
 
-    this.logger.log('Session refreshed successfully', { sessionId, userId: session.userId });
+    this.logger.log('Session refreshed successfully', { sessionId });
 
     return session;
   }
@@ -316,11 +314,14 @@ export class SessionService {
         details: {
           sessionId: sessionId,
           reason: reason,
-          invalidatedAt: new Date().toISOString()
+          invalidatedAt: new Date().toISOString(),
+          userId: session.userId // Store userId in details for debugging
         },
       }));
 
       this.logger.log('Session invalidated', { sessionId, userId: session.userId, reason });
+    } else {
+      this.logger.warn('Session not found or already inactive during invalidation', { sessionId });
     }
   }
 
@@ -449,5 +450,27 @@ export class SessionService {
       active: sessions.filter(s => s.isActive).length,
       expired: sessions.filter(s => s.expiresAt < now).length
     };
+  }
+
+  /**
+   * Get all active sessions for debugging
+   */
+  getAllActiveSessions(): Array<{ sessionId: string; session: PublicSession }> {
+    return Array.from(this.sessions.entries())
+      .filter(([_, session]) => session.isActive)
+      .map(([sessionId, session]) => ({
+        sessionId,
+        session: {
+          id: session.id,
+          userId: session.userId,
+          createdAt: session.createdAt,
+          expiresAt: session.expiresAt,
+          lastActivity: session.lastActivity,
+          deviceInfo: session.deviceInfo,
+          ipAddress: session.ipAddress,
+          userAgent: session.userAgent,
+          isActive: session.isActive
+        }
+      }));
   }
 } 
