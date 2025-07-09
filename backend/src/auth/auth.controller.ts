@@ -148,7 +148,7 @@ export class AuthController {
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response
   ): Promise<ApiResponseDto<any>> {
-    return this.authService.login(loginDto, res);
+    return this.authService.login(loginDto, res, req);
   }
 
   /**

@@ -32,7 +32,7 @@ import { GuardsModule } from './auth/guards/guards.module';
         database: configService.get('POSTGRES_DB') || 'postgres',
         entities: [User, UserProfile, AuditLog, SecurityLog, SessionLog],
         synchronize: true, // Solo per sviluppo! In produzione usa migration
-        logging: true, // Abilita logging per debug
+        logging: ['error'], // Solo errori
         ssl: false,
       }),
       inject: [ConfigService],

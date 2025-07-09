@@ -11,6 +11,6 @@ export const authRedirectGuard: CanActivateFn = (route, state) => {
   }
 
   // Se l'utente è autenticato, reindirizza alla dashboard
-  router.navigate(['/private/dashboard']);
-  return false;
+      router.navigate(['/private/dashboard']);
+      return false;
 }; 

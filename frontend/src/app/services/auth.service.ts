@@ -22,6 +22,7 @@ import {
   ResendVerificationApiResponse,
   GetMeApiResponse
 } from '../models/auth.models';
+import { map, catchError, of } from 'rxjs';
 
 /**
  * Authentication Service
@@ -206,6 +207,18 @@ export class AuthService {
    * - Verification and configuration status
    */
   getCurrentUser(): Observable<GetMeApiResponse> {
+    return this.http.get<GetMeApiResponse>(`${this.API_URL}/auth/me`);
+  }
+
+  /**
+   * Force refresh user data from server
+   * 
+   * Forces a fresh request to get current user data from the server.
+   * This bypasses any cached data and ensures we have the latest information.
+   * 
+   * @returns Observable with fresh user profile and account information
+   */
+  forceRefreshUserData(): Observable<GetMeApiResponse> {
     return this.http.get<GetMeApiResponse>(`${this.API_URL}/auth/me`);
   }
 
@@ -511,6 +524,77 @@ export class AuthService {
     localStorage.removeItem('remember_me');
     // Remove any other auth-related data that might be stored
     localStorage.removeItem('user_data');
+  }
+
+  /**
+   * Force logout without server call
+   * 
+   * Immediately clears all authentication data without calling the server.
+   * Useful for client-side logout when server is unavailable.
+   */
+  forceLogout(): void {
+    this.logout();
+  }
+
+  /**
+   * Check if current user is admin
+   * 
+   * Verifies if the current authenticated user has admin role.
+   * This method makes a server call to get fresh user data.
+   * 
+   * @returns Observable with boolean indicating if user is admin
+   */
+  isAdmin(): Observable<boolean> {
+    return this.getCurrentUser().pipe(
+      map(response => {
+        if (response.success && response.data?.user?.role) {
+          return response.data.user.role === 'admin';
+        }
+        return false;
+      }),
+      catchError(() => of(false))
+    );
+  }
+
+  /**
+   * Get current user role
+   * 
+   * Retrieves the role of the current authenticated user.
+   * This method makes a server call to get fresh user data.
+   * 
+   * @returns Observable with user role or null if not authenticated
+   */
+  getUserRole(): Observable<string | null> {
+    return this.getCurrentUser().pipe(
+      map(response => {
+        if (response.success && response.data?.user?.role) {
+          return response.data.user.role;
+        }
+        return null;
+      }),
+      catchError(() => of(null))
+    );
+  }
+
+  /**
+   * Check if current user has specific role
+   * 
+   * Verifies if the current authenticated user has the specified role.
+   * This method makes a server call to get fresh user data.
+   * 
+   * @param role - Role to check for
+   * @returns Observable with boolean indicating if user has the role
+   */
+  hasRole(role: string): Observable<boolean> {
+    return this.getCurrentUser().pipe(
+      map(response => {
+        if (response.success && response.data?.user?.role) {
+          return response.data.user.role === role;
+        }
+        return false;
+      }),
+      catchError(() => of(false))
+    );
   }
 
   /**

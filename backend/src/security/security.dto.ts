@@ -145,5 +145,5 @@ export interface DownloadDataResponseDto {
   /** Size of the data file in bytes */
   file_size: number;
   /** Format of the exported data */
-  format: 'json' | 'csv' | 'xml';
+  format: 'json' | 'csv' | 'xml' | 'zip';
 } 

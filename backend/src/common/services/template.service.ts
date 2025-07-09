@@ -100,14 +100,14 @@ export class TemplateService {
       const templatesPath = this.getTemplatesPath();
       const templatePath = path.join(templatesPath, `${templateName}.template.html`);
       
-      this.logger.debug(`Loading template from: ${templatePath}`);
+  
       
       const templateContent = await fs.readFile(templatePath, 'utf-8');
       
       // Cache the template for future use
       this.templateCache.set(templateName, templateContent);
       
-      this.logger.debug(`Template loaded: ${templateName}`);
+  
       return templateContent;
     } catch (error) {
       this.logger.error(`Failed to load template: ${templateName}`, error);
@@ -169,7 +169,7 @@ export class TemplateService {
       const template = await this.loadTemplate(templateType);
       const processedTemplate = this.replaceVariables(template, data);
       
-      this.logger.debug(`Template processed: ${templateType}`);
+  
       return processedTemplate;
     } catch (error) {
       this.logger.error(`Failed to process template: ${templateType}`, error);
@@ -189,7 +189,7 @@ export class TemplateService {
    */
   clearCache(): void {
     this.templateCache.clear();
-    this.logger.debug('Template cache cleared');
+
   }
 
   /**

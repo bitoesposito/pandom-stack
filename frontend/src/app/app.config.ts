@@ -11,7 +11,6 @@ import { cookieAuthInterceptor } from './interceptors/cookie-auth.interceptor';
 import Aura from '@primeng/themes/aura';
 import { providePrimeNG } from 'primeng/config';
 import { MessageService } from 'primeng/api';
-import { provideServiceWorker } from '@angular/service-worker';
 import { provideAnimations } from '@angular/platform-browser/animations';
 
 const theme = definePreset(Aura, {
@@ -705,10 +704,7 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(
       withInterceptors([errorInterceptor, cookieAuthInterceptor])
     ),
-    MessageService, provideServiceWorker('ngsw-worker.js', {
-            enabled: !isDevMode(),
-            registrationStrategy: 'registerWhenStable:30000'
-          }),
+    MessageService,
     provideAnimations()
   ]
 };

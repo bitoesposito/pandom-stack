@@ -4,9 +4,11 @@ import { SecurityController } from './security.controller';
 import { SecurityService } from './security.service';
 import { User } from '../auth/entities/user.entity';
 import { UserProfile } from '../users/entities/user-profile.entity';
+import { SessionLog } from '../common/entities/session-log.entity';
 import { CommonModule } from '../common/modules/common.module';
 import { SessionModule } from '../common/modules/session.module';
 import { GuardsModule } from '../auth/guards/guards.module';
+import { MinioModule } from '../common/modules/minio.module';
 
 /**
  * Security Module
@@ -76,10 +78,11 @@ import { GuardsModule } from '../auth/guards/guards.module';
  */
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, UserProfile]),
+    TypeOrmModule.forFeature([User, UserProfile, SessionLog]),
     CommonModule, // For AuditService
     SessionModule, // For SessionService
     GuardsModule,
+    MinioModule, // For MinioService
   ],
   controllers: [SecurityController],
   providers: [SecurityService],

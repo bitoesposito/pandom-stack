@@ -43,14 +43,14 @@ export const cookieAuthInterceptor: HttpInterceptorFn = (req, next) => {
               return next(retryCloned);
             } else {
               // Refresh failed, redirect to login
-              cookieAuthService.clearAuthStatus();
+              cookieAuthService.clearAllAuthData();
               router.navigate(['/login']);
               return throwError(() => error);
             }
           }),
           catchError((refreshError) => {
             // Refresh token failed, redirect to login
-            cookieAuthService.clearAuthStatus();
+            cookieAuthService.forceLogout();
             router.navigate(['/login']);
             return throwError(() => refreshError);
           })

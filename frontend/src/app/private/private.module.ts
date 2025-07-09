@@ -16,7 +16,6 @@ import { ToastModule } from 'primeng/toast';
   imports: [
     CommonModule,
     PrivateRoutingModule,
-    DashboardComponent,
     ButtonModule,
     InputGroupModule,
     InputGroupAddonModule,
@@ -24,7 +23,8 @@ import { ToastModule } from 'primeng/toast';
     FormsModule,
     PaginatorModule,
     RouterModule,
-    ToastModule
+    ToastModule,
+    DashboardComponent
   ],
   providers: []
 })

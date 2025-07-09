@@ -40,7 +40,7 @@ export class SessionLog {
   /**
    * User reference
    */
-  @ManyToOne(() => User, { nullable: false })
+  @ManyToOne(() => User, { nullable: true })
   @JoinColumn({ name: 'user_uuid', referencedColumnName: 'uuid' })
   user: User;
 

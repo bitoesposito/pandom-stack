@@ -106,7 +106,7 @@ export class UsersService {
    */
   async getProfile(userId: string): Promise<ApiResponseDto<any>> {
     try {
-      this.logger.log('Getting user profile', { userId });
+  
 
       // Find user with profile relation
       const user = await this.userRepository.findOne({
@@ -131,7 +131,7 @@ export class UsersService {
         updated_at: user.profile.updated_at
       };
 
-      this.logger.log('Profile retrieved successfully', { userId, profileUuid: user.profile.uuid });
+              this.logger.log('Profile retrieved successfully', { userId });
       
       return ApiResponseDto.success(profileData, 'Profile retrieved successfully');
     } catch (error) {
@@ -188,7 +188,7 @@ export class UsersService {
    */
   async updateProfile(userId: string, updateProfileDto: UpdateProfileDto, req?: any): Promise<ApiResponseDto<any>> {
     try {
-      this.logger.log('Updating user profile', { userId, data: updateProfileDto });
+  
 
       // Find user with profile relation
       const user = await this.userRepository.findOne({
@@ -235,11 +235,7 @@ export class UsersService {
         updated_at: updatedProfile.updated_at
       };
 
-      this.logger.log('Profile updated successfully', { 
-        userId, 
-        profileUuid: updatedProfile.uuid,
-        updatedFields: Object.keys(updateProfileDto)
-      });
+      this.logger.log('Profile updated successfully', { userId });
       
       // Extract IP address from request for audit logging
       const clientIp = this.getClientIp(req);

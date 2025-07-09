@@ -71,7 +71,7 @@ export class AdminService {
     req?: any
   ): Promise<ApiResponseDto<UserManagementResponseDto>> {
     try {
-      this.logger.log('Getting users for admin management', { page, limit, search });
+  
 
       const skip = (page - 1) * limit;
 
@@ -118,7 +118,7 @@ export class AdminService {
         }
       };
 
-      this.logger.log('Users retrieved successfully', { total, page, totalPages });
+              this.logger.log('Users retrieved successfully', { total });
       return ApiResponseDto.success(response, 'Users retrieved successfully');
     } catch (error) {
       this.logger.error('Failed to get users', { error: error.message });
@@ -160,7 +160,7 @@ export class AdminService {
     req?: any
   ): Promise<ApiResponseDto<null>> {
     try {
-      this.logger.log('Deleting user account', { uuid, adminId });
+  
 
       // Step 1: Verify user exists and get profile information
       const user = await this.userRepository.findOne({
@@ -201,7 +201,37 @@ export class AdminService {
 
       // Step 4: Execute deletion in transaction for data consistency
       await this.userRepository.manager.transaction(async (transactionalEntityManager) => {
-        // First, remove the profile reference from the user
+        // First, delete all session logs for this user
+        await transactionalEntityManager
+          .createQueryBuilder()
+          .delete()
+          .from('session_logs')
+          .where('user_uuid = :userId', { userId: uuid })
+          .execute();
+        
+
+        
+        // Then delete all security logs for this user
+        await transactionalEntityManager
+          .createQueryBuilder()
+          .delete()
+          .from('security_logs')
+          .where('user_uuid = :userId', { userId: uuid })
+          .execute();
+        
+
+        
+        // Then delete all audit logs for this user
+        await transactionalEntityManager
+          .createQueryBuilder()
+          .delete()
+          .from('audit_logs')
+          .where('user_uuid = :userId', { userId: uuid })
+          .execute();
+        
+
+        
+        // Then remove the profile reference from the user
         await transactionalEntityManager
           .createQueryBuilder()
           .update('auth_users')
@@ -228,7 +258,7 @@ export class AdminService {
           .execute();
       });
 
-      this.logger.log('User deleted successfully', { uuid, adminId });
+              this.logger.log('User deleted successfully', { uuid });
       return ApiResponseDto.success(null, 'User deleted successfully');
     } catch (error) {
       this.logger.error('Failed to delete user', { uuid, error: error.message });

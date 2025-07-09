@@ -8,9 +8,12 @@ import {
   Res, 
   UseGuards,
   ParseIntPipe,
-  DefaultValuePipe
+  DefaultValuePipe,
+  Logger
 } from '@nestjs/common';
 import { Request, Response } from 'express';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { CookieAuthGuard } from '../auth/guards/cookie-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/auth.interface';
@@ -18,11 +21,12 @@ import { UserRole } from '../auth/auth.interface';
 import { SecurityService } from './security.service';
 import { SessionService } from '../common/services/session.service';
 import { ApiResponseDto } from '../common/common.interface';
+import { SessionLog } from '../common/entities/session-log.entity';
 
 // Interface for authenticated request
 interface AuthenticatedRequest extends Request {
   user: {
-    sub: string;
+    uuid: string;
     email: string;
     role: string;
     sessionId?: string;
@@ -57,9 +61,13 @@ interface AuthenticatedRequest extends Request {
 @Controller('security')
   @UseGuards(CookieAuthGuard, RolesGuard)
 export class SecurityController {
+  private readonly logger = new Logger(SecurityController.name);
+
   constructor(
     private readonly securityService: SecurityService,
     private readonly sessionService: SessionService,
+    @InjectRepository(SessionLog)
+    private readonly sessionLogRepository: Repository<SessionLog>,
   ) {}
 
   // ============================================================================
@@ -84,7 +92,7 @@ export class SecurityController {
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number
   ): Promise<ApiResponseDto<any>> {
-    const userId = req.user['sub'];
+    const userId = req.user['uuid'];
     return this.securityService.getSecurityLogs(userId, page, limit, req);
   }
 
@@ -100,8 +108,86 @@ export class SecurityController {
   @Get('sessions')
   @Roles(UserRole.user, UserRole.admin)
   async getSessions(@Req() req: AuthenticatedRequest): Promise<ApiResponseDto<any>> {
-    const userId = req.user['sub'];
+    const userId = req.user['uuid'];
     return this.securityService.getSessions(userId, req);
+  }
+
+  /**
+   * Get session logs for debugging
+   * 
+   * Retrieves session logs for debugging purposes.
+   * Only available for admin users.
+   * 
+   * @param req - Express request object
+   * @param limit - Number of logs to retrieve (default: 50)
+   * @returns Session logs for debugging
+   */
+  @Get('debug/session-logs')
+  @Roles(UserRole.admin)
+  async getSessionLogs(
+    @Req() req: AuthenticatedRequest,
+    @Query('limit', new DefaultValuePipe(50), ParseIntPipe) limit: number
+  ): Promise<ApiResponseDto<any>> {
+    const userId = req.user['uuid'];
+    
+    // Get recent session logs
+    const sessionLogs = await this.sessionLogRepository.find({
+      relations: ['user'],
+      order: { timestamp: 'DESC' },
+      take: limit
+    });
+
+    // Format logs for debugging
+    const formattedLogs = sessionLogs.map(log => ({
+      id: log.id,
+      timestamp: log.timestamp,
+      eventType: log.eventType,
+      userId: log.user?.uuid || 'NO_USER',
+      userEmail: log.user?.email || 'NO_EMAIL',
+      sessionId: log.details?.sessionId || 'NO_SESSION_ID',
+      details: log.details,
+      ipAddress: log.ipAddress,
+      userAgent: log.userAgent
+    }));
+
+    return ApiResponseDto.success(
+      { 
+        logs: formattedLogs,
+        total: formattedLogs.length,
+        currentUserId: userId
+      },
+      'Session logs retrieved successfully'
+    );
+  }
+
+  /**
+   * Get active sessions in memory for debugging
+   * 
+   * Retrieves all active sessions currently stored in memory.
+   * Only available for admin users.
+   * 
+   * @param req - Express request object
+   * @returns Active sessions in memory
+   */
+  @Get('debug/active-sessions')
+  @Roles(UserRole.admin)
+  async getActiveSessions(@Req() req: AuthenticatedRequest): Promise<ApiResponseDto<any>> {
+    const userId = req.user['uuid'];
+    
+    // Get session stats
+    const stats = this.sessionService.getSessionStats();
+    
+    // Get all active sessions
+    const activeSessions = this.sessionService.getAllActiveSessions();
+
+    return ApiResponseDto.success(
+      { 
+        stats,
+        activeSessions,
+        currentUserId: userId
+      },
+      'Active sessions retrieved successfully'
+    );
   }
 
   /**
@@ -120,7 +206,7 @@ export class SecurityController {
     @Param('sessionId') sessionId: string,
     @Req() req: AuthenticatedRequest
   ): Promise<ApiResponseDto<any>> {
-    const userId = req.user['sub'];
+    const userId = req.user['uuid'];
     
     // Verify the session belongs to the user
     const session = this.sessionService.getSession(sessionId);
@@ -149,7 +235,7 @@ export class SecurityController {
   @Delete('sessions/all')
   @Roles(UserRole.user, UserRole.admin)
   async terminateAllOtherSessions(@Req() req: AuthenticatedRequest): Promise<ApiResponseDto<any>> {
-    const userId = req.user['sub'];
+    const userId = req.user['uuid'];
     const currentSessionId = req.user['sessionId'];
     
     if (!currentSessionId) {
@@ -181,41 +267,13 @@ export class SecurityController {
   @Get('download-data')
   @Roles(UserRole.user, UserRole.admin)
   async downloadData(@Req() req: AuthenticatedRequest): Promise<ApiResponseDto<any>> {
-    const userId = req.user['sub'];
+    const userId = req.user['uuid'];
     return this.securityService.downloadData(userId, req);
   }
 
-  /**
-   * Download user data file
-   * 
-   * Downloads the actual data file for GDPR compliance.
-   * 
-   * @param userId - User ID
-   * @param timestamp - Export timestamp
-   * @param res - Express response object
-   */
-  @Get('download-data/:userId/:timestamp')
-  @Roles(UserRole.user, UserRole.admin)
-  async downloadUserDataFile(
-    @Param('userId') userId: string,
-    @Param('timestamp') timestamp: string,
-    @Res() res: Response,
-    @Req() req: AuthenticatedRequest
-  ): Promise<void> {
-    // Verify the user is requesting their own data or is admin
-    const requestingUserId = req.user['sub'];
-    const userRole = req.user['role'];
-    
-    if (userId !== requestingUserId && userRole !== UserRole.admin) {
-      res.status(403).json({
-        success: false,
-        message: 'Access denied'
-      });
-      return;
-    }
+  
 
-    await this.securityService.downloadUserDataFile(userId, timestamp, res);
-  }
+
 
   /**
    * Delete user account (GDPR compliance)
@@ -229,7 +287,23 @@ export class SecurityController {
   @Delete('account')
   @Roles(UserRole.user, UserRole.admin)
   async deleteAccount(@Req() req: AuthenticatedRequest): Promise<ApiResponseDto<any>> {
-    const userId = req.user['sub'];
-    return this.securityService.deleteAccount(userId);
+    const userId = req.user['uuid'];
+    return this.securityService.deleteAccount(userId, req);
+  }
+
+  /**
+   * Delete user account (GDPR compliance) - Alternative endpoint
+   * 
+   * Permanently deletes the user account and all associated data.
+   * Implements the "right to be forgotten" under GDPR.
+   * 
+   * @param req - Express request object
+   * @returns Confirmation of account deletion
+   */
+  @Delete('delete-account')
+  @Roles(UserRole.user, UserRole.admin)
+  async deleteAccountAlternative(@Req() req: AuthenticatedRequest): Promise<ApiResponseDto<any>> {
+    const userId = req.user['uuid'];
+    return this.securityService.deleteAccount(userId, req);
   }
 } 

@@ -73,11 +73,11 @@ export class DatabaseService implements OnModuleInit {
    */
   async onModuleInit() {
     try {
-      this.logger.log('Initializing database...');
+  
       
       // Verify database connection
       await this.dataSource.query('SELECT 1');
-      this.logger.log('Database connection established');
+      
       
       // Create UserRole enum if it doesn't exist
       await this.createUserRoleEnum();
@@ -90,7 +90,7 @@ export class DatabaseService implements OnModuleInit {
         AND table_name IN ('auth_users', 'user_profiles')
       `);
       
-      this.logger.log(`Found ${tables.length} tables: ${tables.map(t => t.table_name).join(', ')}`);
+      
       
       if (tables.length === 0) {
         this.logger.warn('No tables found. TypeORM should create them automatically with synchronize: true');
@@ -133,13 +133,13 @@ export class DatabaseService implements OnModuleInit {
       `);
       
       if (!enumExists[0].exists) {
-        this.logger.log('Creating UserRole enum...');
+
         await this.dataSource.query(`
           CREATE TYPE "userrole" AS ENUM ('admin', 'user')
         `);
-        this.logger.log('UserRole enum created successfully');
+        
       } else {
-        this.logger.log('UserRole enum already exists');
+
       }
     } catch (error) {
       this.logger.error('Failed to create UserRole enum:', error);
@@ -240,7 +240,7 @@ export class DatabaseService implements OnModuleInit {
    */
   async forceSync() {
     try {
-      this.logger.log('Forcing database synchronization...');
+      
       
       // Create UserRole enum before synchronization
       await this.createUserRoleEnum();
@@ -248,7 +248,7 @@ export class DatabaseService implements OnModuleInit {
       // Force entity synchronization
       await this.dataSource.synchronize(true);
       
-      this.logger.log('Database synchronization completed');
+      
       return true;
     } catch (error) {
       this.logger.error('Database synchronization failed:', error);

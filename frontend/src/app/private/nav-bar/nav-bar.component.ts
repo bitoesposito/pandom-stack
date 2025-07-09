@@ -9,7 +9,6 @@ import { TooltipModule } from 'primeng/tooltip';
 import { ThemeService } from '../../services/theme.service';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { CookieAuthService } from '../../services/cookie-auth.service';
-import { PwaService } from '../../services/pwa.service';
 import { PopoverModule } from 'primeng/popover';
 
 import { SelectModule } from 'primeng/select';
@@ -49,9 +48,6 @@ export class NavBarComponent implements OnInit, OnDestroy {
 
   // Observable streams for reactive UI updates
   isDarkMode$;
-  updateAvailable$;
-  isOnline$;
-  canInstallPwa$;
   currentLanguage$;
   
   // User data from JWT token
@@ -70,15 +66,11 @@ export class NavBarComponent implements OnInit, OnDestroy {
     private themeService: ThemeService,
     private translate: TranslateService,
     private authService: CookieAuthService,
-    private pwaService: PwaService,
     private languageService: LanguageService,
     private cdr: ChangeDetectorRef
   ) {
     // Initialize observable streams
     this.isDarkMode$ = this.themeService.isDarkMode$;
-    this.updateAvailable$ = this.pwaService.updateAvailable;
-    this.isOnline$ = this.pwaService.isOnline;
-    this.canInstallPwa$ = this.pwaService.canInstall;
     this.currentLanguage$ = this.languageService.currentLanguage$;
   }
 
@@ -98,10 +90,13 @@ export class NavBarComponent implements OnInit, OnDestroy {
    * Load user data from authentication service
    */
   private loadUserData(): void {
-    this.authService.getCurrentUser().subscribe({
+    // Handle user switching to ensure fresh data and proper cleanup
+    this.authService.handleUserSwitch().subscribe({
       next: (response) => {
         if (response.data) {
           this.user = response.data.user;
+          // Update authentication status
+          this.authService.setAuthStatus('authenticated');
         }
       },
       error: (error) => {
@@ -115,7 +110,9 @@ export class NavBarComponent implements OnInit, OnDestroy {
    * Handle authentication errors by logging out user
    */
   private handleAuthError(): void {
-    this.authService.logout();
+    // Immediately clear user data and authentication state
+    this.user = null;
+    this.authService.forceLogout();
     this.router.navigate(['/login']);
   }
 
@@ -149,28 +146,15 @@ export class NavBarComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Update PWA application
-   */
-  async updateApp(): Promise<void> {
-    try {
-      await this.pwaService.activateUpdate();
-      this.notificationService.handleSuccess(
-        this.translate.instant('pwa.update-success')
-      );
-    } catch (error) {
-      this.notificationService.handleError(
-        error, 
-        this.translate.instant('pwa.update-error')
-      );
-    }
-  }
-
-  /**
    * Logout user and redirect to login
    */
   disconnect(): void {
-    this.authService.logout();
-    this.router.navigate(['/login']);
+    this.user = null;
+    this.authService.forceLogout();
+    this.authService.logout().subscribe({
+      next: () => this.router.navigate(['/login']),
+      error: () => this.router.navigate(['/login'])
+    });
   }
 
   /**
@@ -178,19 +162,5 @@ export class NavBarComponent implements OnInit, OnDestroy {
    */
   toggleDarkMode(): void {
     this.themeService.toggleDarkMode();
-  }
-
-  /**
-   * Install PWA application
-   */
-  async installPwa(): Promise<void> {
-    try {
-      await this.pwaService.promptInstall();
-    } catch (error) {
-      this.notificationService.handleError(
-        error,
-        this.translate.instant('pwa.install-error')
-      );
-    }
   }
 }

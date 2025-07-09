@@ -49,13 +49,6 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
    */
   canActivate(context: ExecutionContext) {
     const request = context.switchToHttp().getRequest();
-    
-    // Log request details for debugging and monitoring
-    this.logger.debug('JWT Guard - Checking request', {
-      path: request.path,
-      method: request.method,
-      hasAuthHeader: !!request.headers.authorization
-    });
 
     // Delegate to parent class for actual JWT validation
     return super.canActivate(context);
@@ -95,12 +88,6 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
       // Throw the original error or a generic authentication error
       throw err || new Error('Authentication failed');
     }
-
-    // Log successful authentication
-    this.logger.debug('JWT Guard - Authentication successful', {
-      userId: user.uuid,
-      role: user.role
-    });
 
     // Return the user object for use in the route handler
     return user;

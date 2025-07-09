@@ -132,6 +132,9 @@ export class LoginComponent implements OnInit {
     // Disables all controls during loading
     this.form.disable();
     
+    // Clear any cached data from previous sessions before login
+    this.authService.clearAllAuthData();
+    
     const credentials = {
       email: this.email.value,
       password: this.password.value,
@@ -149,13 +152,21 @@ export class LoginComponent implements OnInit {
       .subscribe({
         next: (response: any) => {
           this.notificationService.handleApiResponse(response, this.translate.instant('auth.login.login-failed'));
-          
           if (response.success && response.data) {
             // Set authentication status (tokens are in httpOnly cookies)
             this.authService.setAuthStatus('authenticated');
-            
-            // Simple redirect with fallback
-            window.location.href = '/';
+            // Dopo login, aggiorna lo stato utente SOLO con la risposta di /auth/me
+            this.authService.forceRefreshUserData().subscribe({
+              next: (data) => {
+                // (opzionale) puoi salvare user/profile in uno stato globale se serve
+                // Poi redirect
+                window.location.href = '/';
+              },
+              error: () => {
+                // Anche in caso di errore, redirect per forzare reload
+                window.location.href = '/';
+              }
+            });
           }
         },
         error: (error: any) => {

@@ -19,27 +19,30 @@ export const roleGuard: CanActivateFn = (route, state) => {
     return true; // No roles required
   }
 
-  // For cookie-based auth, we need to get user data from the server
-  // This is a simplified check - in production you might want to cache user data
-  return authService.getCurrentUser().pipe(
+  // For cookie-based auth, we need to get fresh user data from the server
+  // This ensures we always have the latest user data and role information
+  return authService.handleUserSwitch().pipe(
     map(response => {
-      if (response.data?.user?.role) {
+      if (response.success && response.data?.user?.role) {
         const userRole = response.data.user.role;
         if (requiredRoles.includes(userRole)) {
           return true;
         } else {
-          router.navigate(['/dashboard']);
+          // User doesn't have required role, redirect to dashboard
+          router.navigate(['/']);
           return false;
         }
       } else {
+        // No user data or role, redirect to login
+        authService.clearAllAuthData();
         router.navigate(['/login']);
         return false;
       }
     }),
-    catchError(() => {
-      authService.logout().subscribe(() => {
-        router.navigate(['/login']);
-      });
+    catchError((error) => {
+      // Authentication error, clear data and redirect to login
+      authService.clearAllAuthData();
+      router.navigate(['/login']);
       return of(false);
     })
   );

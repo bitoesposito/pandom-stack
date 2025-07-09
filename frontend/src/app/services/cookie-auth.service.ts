@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { environment } from '../../environments/environment';
-import { Observable, throwError } from 'rxjs';
+import { Observable, throwError, of, BehaviorSubject, shareReplay, catchError, map } from 'rxjs';
 import { ApiResponse } from '../models/api-base.models';
 import { 
   LoginRequest, 
@@ -22,6 +22,7 @@ import {
   ResendVerificationApiResponse,
   GetMeApiResponse
 } from '../models/auth.models';
+
 
 /**
  * Cookie Authentication Service
@@ -53,6 +54,11 @@ export class CookieAuthService {
 
   private readonly API_URL = environment.apiUrl;
 
+  // Cache for user data to prevent multiple API calls
+  private userDataCache$: Observable<GetMeApiResponse> | null = null;
+  private cacheTimestamp: number = 0;
+  private readonly CACHE_DURATION = 30000; // 30 seconds
+
   constructor(private http: HttpClient) {}
 
   // ============================================================================
@@ -82,6 +88,9 @@ export class CookieAuthService {
    * @returns Observable with user data (tokens in httpOnly cookies)
    */
   login(credentials: LoginRequest): Observable<LoginApiResponse> {
+    // Clear any cached data on login
+    this.clearUserDataCache();
+    
     return this.http.post<LoginApiResponse>(`${this.API_URL}/auth/login`, credentials, {
       withCredentials: true // Important: enables cookie transmission
     });
@@ -96,9 +105,54 @@ export class CookieAuthService {
    * @returns Observable with user profile and account information
    */
   getCurrentUser(): Observable<GetMeApiResponse> {
-    return this.http.get<GetMeApiResponse>(`${this.API_URL}/auth/me`, {
+    // Check if we have a valid cached response
+    if (this.userDataCache$ && this.isCacheValid()) {
+      return this.userDataCache$;
+    }
+
+    // Create new cache if needed
+    this.userDataCache$ = this.http.get<GetMeApiResponse>(`${this.API_URL}/auth/me`, {
       withCredentials: true
-    });
+    }).pipe(
+      shareReplay(1), // Share the same response with all subscribers
+      catchError(error => {
+        // Clear cache on error
+        this.clearUserDataCache();
+        throw error;
+      })
+    );
+
+    this.cacheTimestamp = Date.now();
+    return this.userDataCache$;
+  }
+
+  /**
+   * Force refresh user data from server
+   * 
+   * Forces a fresh request to get current user data from the server.
+   * This bypasses any cached data and ensures we have the latest information.
+   * 
+   * @returns Observable with fresh user profile and account information
+   */
+  forceRefreshUserData(): Observable<GetMeApiResponse> {
+    // Clear cache and force fresh request
+    this.clearUserDataCache();
+    return this.getCurrentUser();
+  }
+
+  /**
+   * Check if cache is still valid
+   */
+  private isCacheValid(): boolean {
+    return Date.now() - this.cacheTimestamp < this.CACHE_DURATION;
+  }
+
+  /**
+   * Clear user data cache
+   */
+  private clearUserDataCache(): void {
+    this.userDataCache$ = null;
+    this.cacheTimestamp = 0;
   }
 
   /**
@@ -180,9 +234,22 @@ export class CookieAuthService {
    * @returns Observable with logout confirmation
    */
   logout(): Observable<ApiResponse<null>> {
+    this.clearAllAuthData();
+    this.clearUserDataCache();
     return this.http.post<ApiResponse<null>>(`${this.API_URL}/auth/logout`, {}, {
       withCredentials: true
     });
+  }
+
+  /**
+   * Force logout without server call
+   * 
+   * Immediately clears all authentication data without calling the server.
+   * Useful for client-side logout when server is unavailable.
+   */
+  forceLogout(): void {
+    this.clearAllAuthData();
+    this.clearUserDataCache();
   }
 
   // ============================================================================
@@ -248,5 +315,116 @@ export class CookieAuthService {
    */
   clearAuthStatus(): void {
     sessionStorage.removeItem('auth_status');
+    localStorage.removeItem('auth_status');
+  }
+
+  /**
+   * Clear all authentication data
+   * 
+   * Clears all authentication-related data from storage.
+   */
+  clearAllAuthData(): void {
+    this.clearAuthStatus();
+    // Clear any cached user data
+    sessionStorage.removeItem('user_data');
+    localStorage.removeItem('user_data');
+    // Clear any other auth-related cached data
+    sessionStorage.removeItem('cached_user');
+    localStorage.removeItem('cached_user');
+  }
+
+  /**
+   * Clear cached user data
+   * 
+   * Clears any cached user data to force fresh data retrieval.
+   * This is useful when switching between users or after logout.
+   */
+  clearCachedUserData(): void {
+    sessionStorage.removeItem('user_data');
+    localStorage.removeItem('user_data');
+    sessionStorage.removeItem('cached_user');
+    localStorage.removeItem('cached_user');
+  }
+
+  /**
+   * Handle user switching
+   * 
+   * Clears all cached data and forces a fresh authentication check.
+   * This is useful when switching between users or after logout/login.
+   * 
+   * @returns Observable with fresh user data
+   */
+  handleUserSwitch(): Observable<GetMeApiResponse> {
+    
+    // Clear all authentication data and cached information
+    this.clearAllAuthData();
+    this.clearCachedUserData();
+    
+    // Clear user data cache to force fresh request
+    this.clearUserDataCache();
+    
+    // Get fresh user data
+    return this.getCurrentUser();
+  }
+
+  /**
+   * Check if current user is admin
+   * 
+   * Verifies if the current authenticated user has admin role.
+   * This method uses cached user data when available.
+   * 
+   * @returns Observable with boolean indicating if user is admin
+   */
+  isAdmin(): Observable<boolean> {
+    return this.getCurrentUser().pipe(
+      map(response => {
+        if (response.success && response.data?.user?.role) {
+          return response.data.user.role === 'admin';
+        }
+        return false;
+      }),
+      catchError(() => of(false))
+    );
+  }
+
+  /**
+   * Get current user role
+   * 
+   * Retrieves the role of the current authenticated user.
+   * This method uses cached user data when available.
+   * 
+   * @returns Observable with user role or null if not authenticated
+   */
+  getUserRole(): Observable<string | null> {
+    return this.getCurrentUser().pipe(
+      map(response => {
+        if (response.success && response.data?.user?.role) {
+          return response.data.user.role;
+        }
+        return null;
+      }),
+      catchError(() => of(null))
+    );
+  }
+
+  /**
+   * Check if current user has specific role
+   * 
+   * Verifies if the current authenticated user has the specified role.
+   * This method uses cached user data when available.
+   * 
+   * @param role - Role to check for
+   * @returns Observable with boolean indicating if user has the role
+   */
+  hasRole(role: string): Observable<boolean> {
+    return this.getCurrentUser().pipe(
+      map(response => {
+        if (response.success && response.data?.user?.role) {
+          return response.data.user.role === role;
+        }
+        return false;
+      }),
+      catchError(() => of(false))
+    );
   }
 } 

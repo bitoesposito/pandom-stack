@@ -4,6 +4,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { CookieAuthGuard } from './cookie-auth.guard';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { RolesGuard } from './roles.guard';
+import { SessionModule } from '../../common/modules/session.module';
 
 /**
  * Guards Module
@@ -16,6 +17,7 @@ import { RolesGuard } from './roles.guard';
  * - JWT-based authentication guard
  * - Role-based authorization guard
  * - JWT service configuration
+ * - Session management integration
  * 
  * Exports:
  * - CookieAuthGuard: For cookie-based authentication
@@ -25,6 +27,7 @@ import { RolesGuard } from './roles.guard';
 @Module({
   imports: [
     ConfigModule,
+    SessionModule, // Import SessionModule to make SessionService available
     JwtModule.registerAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({

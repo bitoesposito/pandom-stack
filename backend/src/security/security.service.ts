@@ -8,6 +8,8 @@ import { SecurityLogsResponseDto, SessionsResponseDto, DownloadDataResponseDto, 
 import { AuditService, AuditEventType } from '../common/services/audit.service';
 import { Request, Response } from 'express';
 import { UserRole } from '../auth/auth.interface';
+import { MinioService } from '../common/services/minio.service';
+import * as archiver from 'archiver';
 
 /**
  * Security Service
@@ -69,7 +71,6 @@ import { UserRole } from '../auth/auth.interface';
 @Injectable()
 export class SecurityService {
   private readonly logger = new Logger(SecurityService.name);
-  private readonly downloadDataStorage = new Map<string, DownloadData>();
 
   constructor(
     @InjectRepository(User)
@@ -77,6 +78,7 @@ export class SecurityService {
     @InjectRepository(UserProfile)
     private readonly userProfileRepository: Repository<UserProfile>,
     private readonly auditService: AuditService,
+    private readonly minioService: MinioService,
   ) { }
 
   // ============================================================================
@@ -119,7 +121,7 @@ export class SecurityService {
    */
   async getSecurityLogs(userId: string, page: number = 1, limit: number = 10, req?: Request): Promise<ApiResponseDto<SecurityLogsResponseDto>> {
     try {
-      this.logger.log('Getting security logs for user', { userId, page, limit });
+  
 
       // Verify user exists in the system
       const user = await this.userRepository.findOne({
@@ -160,7 +162,7 @@ export class SecurityService {
         }
       };
 
-      this.logger.log('Security logs retrieved successfully', { userId, logCount: securityLogs.length, total, page, totalPages });
+              this.logger.log('Security logs retrieved successfully', { userId });
       
       return ApiResponseDto.success(response, 'Security logs retrieved successfully');
     } catch (error) {
@@ -203,7 +205,7 @@ export class SecurityService {
    */
   async getSessions(userId: string, req?: Request): Promise<ApiResponseDto<SessionsResponseDto>> {
     try {
-      this.logger.log('Getting user sessions', { userId });
+  
 
       // Verify user exists in the system
       const user = await this.userRepository.findOne({
@@ -221,18 +223,16 @@ export class SecurityService {
       // Initialize sessions array
       const sessions: any[] = [];
 
-      // Add current active session if refresh token exists and is valid
-      if (user.refresh_token && user.refresh_token_expires && user.refresh_token_expires > new Date()) {
-        sessions.push({
-          id: 'current',
-          device: 'Current Session',
-          ip_address: clientIp,
-          user_agent: userAgent,
-          created_at: user.last_login_at?.toISOString() || new Date().toISOString(),
-          expires_at: user.refresh_token_expires.toISOString(),
-          is_active: true
-        });
-      }
+      // Add current active session (user is authenticated via cookie)
+      sessions.push({
+        id: 'current',
+        device: 'Current Session',
+        ip_address: clientIp,
+        user_agent: userAgent,
+        created_at: user.last_login_at?.toISOString() || new Date().toISOString(),
+        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days from now
+        is_active: true
+      });
 
       // Get recent login activities from audit logs for historical context
       const loginLogs = await this.auditService.getAuditLogsByType(AuditEventType.USER_LOGIN_SUCCESS, 10);
@@ -256,7 +256,7 @@ export class SecurityService {
         sessions: sessions
       };
 
-      this.logger.log('User sessions retrieved successfully', { userId, sessionCount: sessions.length });
+              this.logger.log('User sessions retrieved successfully', { userId });
       
       return ApiResponseDto.success(response, 'Sessions retrieved successfully');
     } catch (error) {
@@ -309,8 +309,12 @@ export class SecurityService {
    * @throws Error if data preparation fails
    */
   async downloadData(userId: string, req: Request): Promise<ApiResponseDto<DownloadDataResponseDto>> {
+    // Extract user context for audit logging
+    const clientIp = this.getClientIp(req);
+    const userAgent = this.getUserAgent(req);
+    
     try {
-      this.logger.log('Initiating data download for user', { userId });
+  
 
       // Verify user exists and retrieve complete user data
       const user = await this.userRepository.findOne({
@@ -354,120 +358,235 @@ export class SecurityService {
       const timestamp = Date.now();
       const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
-      // Store the data temporarily in memory (should use Redis in production)
-      const downloadKey = `${userId}-${timestamp}`;
-      this.downloadDataStorage.set(downloadKey, {
-        userId,
-        data: userData,
-        expiresAt
+      // Convert data to CSV
+      const csvData = this.convertToCSV(userData);
+      const csvBuffer = Buffer.from(csvData, 'utf-8');
+      
+      // Create ZIP archive containing the CSV
+      const zipBuffer = await this.createZipArchive(user.uuid, csvBuffer);
+      
+      // Save ZIP file to MinIO in a dedicated directory
+      const filename = `user-data-${user.uuid}-${timestamp}.zip`;
+      const objectName = `exports/${filename}`;
+      
+
+      
+      try {
+        // Create a file-like object for upload
+        const fileObject = {
+          buffer: zipBuffer,
+          mimetype: 'application/zip',
+          originalname: filename,
+          size: zipBuffer.length
+        } as Express.Multer.File;
+
+        // Upload ZIP file to MinIO
+        await this.minioService.uploadFile(fileObject, objectName);
+        
+
+        
+        // Generate signed MinIO URL for direct download
+        const downloadUrl = await this.minioService.getSignedDownloadUrl(objectName, 24 * 60 * 60); // 24 hours
+
+      // Log the data download activity for audit compliance
+      await this.auditService.log({
+        event_type: AuditEventType.DATA_DOWNLOAD,
+        user_id: user.uuid,
+        user_email: user.email,
+        ip_address: clientIp,
+        user_agent: userAgent,
+        status: 'SUCCESS',
+        details: {
+          resource: 'user_data',
+          file_size: zipBuffer.length,
+          format: 'zip',
+          expires_at: expiresAt.toISOString(),
+          timestamp: new Date().toISOString()
+        }
       });
-
-      // Generate secure download URL using environment configuration
-      const baseUrl = process.env.BE_URL || 'http://localhost:3000';
-      const downloadUrl = `${baseUrl}/security/downloads/user-data-${userId}-${timestamp}.json`;
-
-      // Log the data export activity for audit compliance
-      const clientIp = this.getClientIp(req);
-      const userAgent = this.getUserAgent(req);
-      await this.auditService.logDataExport(user.uuid, user.email, 'user_data', clientIp, userAgent);
 
       const response: DownloadDataResponseDto = {
         download_url: downloadUrl,
         expires_at: expiresAt.toISOString(),
-        file_size: JSON.stringify(userData).length,
-        format: 'json'
+        file_size: zipBuffer.length,
+        format: 'zip'
       };
 
-      this.logger.log('Data download initiated successfully', { userId, downloadUrl });
+      this.logger.log('Data download initiated successfully', { userId: user.uuid });
       
       return ApiResponseDto.success(response, 'Data download initiated successfully');
+      } catch (error) {
+        this.logger.error('Failed to save file to MinIO', { userId: user.uuid, error: error.message });
+        
+        // Log the failed data download attempt
+        await this.auditService.log({
+          event_type: AuditEventType.DATA_DOWNLOAD,
+          user_id: user.uuid,
+          user_email: user.email,
+          ip_address: clientIp,
+          user_agent: userAgent,
+          status: 'FAILED',
+          details: {
+            resource: 'user_data',
+            error: error.message,
+            timestamp: new Date().toISOString()
+          }
+        });
+        
+        throw new Error('Failed to create download file');
+      }
     } catch (error) {
-      this.logger.error('Failed to initiate data download', { userId, error: error.message });
+      this.logger.error('Failed to initiate data download', { userId: userId || 'undefined', error: error.message });
+      
+      // Log the failed data download attempt (user might not be available in this context)
+      try {
+        const user = await this.userRepository.findOne({
+          where: { uuid: userId }
+        });
+        
+        if (user) {
+          await this.auditService.log({
+            event_type: AuditEventType.DATA_DOWNLOAD,
+            user_id: user.uuid,
+            user_email: user.email,
+            ip_address: clientIp,
+            user_agent: userAgent,
+            status: 'FAILED',
+            details: {
+              resource: 'user_data',
+              error: error.message,
+              timestamp: new Date().toISOString()
+            }
+          });
+        }
+      } catch (auditError) {
+        this.logger.error('Failed to log audit event for failed download', { auditError: auditError.message });
+      }
+      
       throw error;
     }
   }
 
+
+
   /**
-   * Serve user data file for GDPR export
-   * 
-   * Serves the actual user data file for GDPR export. This method handles
-   * file delivery with proper security headers and cleanup procedures.
-   * 
-   * Security:
-   * - File access is controlled by user ID and timestamp
-   * - Files expire automatically after 24 hours
-   * - Proper HTTP headers prevent caching
-   * - Data is cleaned up after download
-   * - Secure content disposition headers
-   * 
-   * Process:
-   * 1. Validates download key and retrieves stored data
-   * 2. Checks if download has expired
-   * 3. Sets secure HTTP headers for file download
-   * 4. Sends data as JSON file
-   * 5. Cleans up stored data after download
-   * 
-   * @param userId - User ID for the data file
-   * @param timestamp - Timestamp used to generate the file
-   * @param res - Express response object for file download
-   * @returns Promise<void> - Sends file directly to response
-   * 
-   * @example
-   * await securityService.downloadUserDataFile('user-uuid', '1234567890', response);
-   * // Sends JSON file directly to response with proper headers
-   * 
-   * @throws Error if file not found or expired
-   * @throws Error if download process fails
+   * Convert user data to CSV format
    */
-  async downloadUserDataFile(userId: string, timestamp: string, res: Response): Promise<void> {
-    try {
-      const downloadKey = `${userId}-${timestamp}`;
-      const downloadData = this.downloadDataStorage.get(downloadKey);
-
-      // Check if download data exists
-      if (!downloadData) {
-        res.status(404).json({
-          message: 'Download file not found or expired',
-          error: 'Not Found',
-          statusCode: 404
-        });
-        return;
-      }
-
-      // Check if download has expired
-      if (downloadData.expiresAt < new Date()) {
-        this.downloadDataStorage.delete(downloadKey);
-        res.status(410).json({
-          message: 'Download file has expired',
-          error: 'Gone',
-          statusCode: 410
-        });
-        return;
-      }
-
-      // Set secure HTTP headers for file download
-      res.setHeader('Content-Type', 'application/json');
-      res.setHeader('Content-Disposition', `attachment; filename="user-data-${userId}-${timestamp}.json"`);
-      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-      res.setHeader('Pragma', 'no-cache');
-      res.setHeader('Expires', '0');
-
-      // Send the data as JSON file
-      res.json(downloadData.data);
-
-      // Clean up the stored data after successful download
-      this.downloadDataStorage.delete(downloadKey);
-
-      this.logger.log('User data file downloaded successfully', { userId, timestamp });
-    } catch (error) {
-      this.logger.error('Failed to download user data file', { userId, timestamp, error: error.message });
-      res.status(500).json({
-        message: 'Internal server error',
-        error: 'Internal Server Error',
-        statusCode: 500
-      });
+  private convertToCSV(data: any): string {
+    const csvRows: string[] = [];
+    
+    // Add user information
+    csvRows.push('Section,Field,Value');
+    csvRows.push('User,UUID,' + this.escapeCSV(data.user.uuid));
+    csvRows.push('User,Email,' + this.escapeCSV(data.user.email));
+    csvRows.push('User,Role,' + this.escapeCSV(data.user.role));
+    csvRows.push('User,Is Active,' + this.escapeCSV(data.user.is_active.toString()));
+    csvRows.push('User,Is Verified,' + this.escapeCSV(data.user.is_verified.toString()));
+    csvRows.push('User,Is Configured,' + this.escapeCSV(data.user.is_configured.toString()));
+    csvRows.push('User,Created At,' + this.escapeCSV(data.user.created_at));
+    csvRows.push('User,Updated At,' + this.escapeCSV(data.user.updated_at));
+    csvRows.push('User,Last Login At,' + this.escapeCSV(data.user.last_login_at));
+    
+    // Add profile information
+    if (data.profile) {
+      csvRows.push('Profile,UUID,' + this.escapeCSV(data.profile.uuid));
+      csvRows.push('Profile,Tags,' + this.escapeCSV(data.profile.tags?.join(', ') || ''));
+      csvRows.push('Profile,Created At,' + this.escapeCSV(data.profile.created_at));
+      csvRows.push('Profile,Updated At,' + this.escapeCSV(data.profile.updated_at));
     }
+    
+    // Add security logs
+    if (data.security_logs && data.security_logs.length > 0) {
+      csvRows.push(''); // Empty row for separation
+      csvRows.push('Security Logs');
+      csvRows.push('ID,Event Type,Timestamp,Status,IP Address,User Agent,Details');
+      
+      data.security_logs.forEach((log: any) => {
+        const details = log.details ? JSON.stringify(log.details) : '';
+        csvRows.push([
+          this.escapeCSV(log.id),
+          this.escapeCSV(log.eventType),
+          this.escapeCSV(log.timestamp),
+          this.escapeCSV(log.status),
+          this.escapeCSV(log.ipAddress),
+          this.escapeCSV(log.userAgent),
+          this.escapeCSV(details)
+        ].join(','));
+      });
+      }
+
+    // Add export info
+    csvRows.push(''); // Empty row for separation
+    csvRows.push('Export Information');
+    csvRows.push('Exported At,' + this.escapeCSV(data.export_info.exported_at));
+    csvRows.push('Exported By,' + this.escapeCSV(data.export_info.exported_by));
+    csvRows.push('Format,' + this.escapeCSV(data.export_info.format));
+    
+    return csvRows.join('\n');
   }
+
+  /**
+   * Escape CSV values to handle commas, quotes, and newlines
+   */
+  private escapeCSV(value: string): string {
+    if (value === null || value === undefined) {
+      return '';
+    }
+    
+    const stringValue = String(value);
+    
+    // If the value contains comma, quote, or newline, wrap it in quotes
+    if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
+      // Escape quotes by doubling them
+      const escapedValue = stringValue.replace(/"/g, '""');
+      return `"${escapedValue}"`;
+    }
+    
+    return stringValue;
+  }
+
+  /**
+   * Create ZIP archive from file buffer
+   * 
+   * Creates a ZIP archive containing the specified file.
+   * 
+   * @param userId - User ID for filename generation
+   * @param fileBuffer - File content as buffer
+   * @returns Promise with ZIP buffer
+   */
+  private async createZipArchive(userId: string, fileBuffer: Buffer): Promise<Buffer> {
+    return new Promise((resolve, reject) => {
+      const archive = archiver('zip', {
+        zlib: { level: 9 } // Maximum compression
+      });
+      
+      const chunks: Buffer[] = [];
+      
+      archive.on('data', (chunk) => {
+        chunks.push(chunk);
+      });
+      
+      archive.on('end', () => {
+        const zipBuffer = Buffer.concat(chunks);
+        resolve(zipBuffer);
+      });
+      
+      archive.on('error', (err) => {
+        reject(err);
+      });
+      
+      // Create filename for the CSV inside the ZIP
+      const csvFilename = `user-data-${userId}.csv`;
+      
+      // Add file to archive
+      archive.append(fileBuffer, { name: csvFilename });
+      
+      // Finalize the archive
+      archive.finalize();
+    });
+  }
+
+
 
   // ============================================================================
   // ACCOUNT MANAGEMENT METHODS
@@ -500,6 +619,7 @@ export class SecurityService {
    * all user data including profile, security logs, and account information.
    * 
    * @param userId - Unique identifier of the user to delete
+   * @param req - Express request object for IP and user agent extraction
    * @returns Promise<ApiResponseDto<null>> Deletion confirmation
    * 
    * @example
@@ -510,9 +630,9 @@ export class SecurityService {
    * @throws BadRequestException if attempting to delete the last admin user
    * @throws Error if deletion process fails
    */
-  async deleteAccount(userId: string): Promise<ApiResponseDto<null>> {
+  async deleteAccount(userId: string, req?: Request): Promise<ApiResponseDto<null>> {
     try {
-      this.logger.log('Deleting user account', { userId });
+  
 
       // Verify user exists and retrieve complete user data
       const user = await this.userRepository.findOne({
@@ -530,17 +650,12 @@ export class SecurityService {
           where: { role: UserRole.admin }
         });
 
-        this.logger.log('Checking admin deletion safety', { 
-          userId, 
-          userEmail: user.email, 
-          adminCount, 
-          isLastAdmin: adminCount <= 1 
-        });
+
 
         // Prevent deletion of the last admin user
         if (adminCount <= 1) {
           this.logger.warn('Attempted to delete the last admin user', { 
-            userId, 
+            userId: user.uuid, 
             userEmail: user.email, 
             adminCount 
           });
@@ -548,10 +663,10 @@ export class SecurityService {
           // Log the failed deletion attempt for audit
           await this.auditService.log({
             event_type: AuditEventType.SUSPICIOUS_ACTIVITY,
-            user_id: userId,
+            user_id: user.uuid,
             user_email: user.email,
-            ip_address: this.getClientIp(undefined), // Assuming req is not available here
-            user_agent: this.getUserAgent(undefined), // Assuming req is not available here
+            ip_address: this.getClientIp(req),
+            user_agent: this.getUserAgent(req),
             status: 'WARNING',
             details: {
               activity: 'Attempted to delete last admin user',
@@ -563,13 +678,13 @@ export class SecurityService {
           throw new BadRequestException('Cannot delete the last admin user. At least one admin must remain in the system.');
         }
 
-        this.logger.log('Admin user deletion check passed', { userId, adminCount });
+
       }
 
       // Log the account deletion attempt for audit compliance
       await this.auditService.log({
         event_type: AuditEventType.USER_DELETED,
-        user_id: userId,
+        user_id: user.uuid,
         user_email: user.email,
         status: 'SUCCESS',
         details: {
@@ -580,40 +695,83 @@ export class SecurityService {
 
       // Use database transaction to handle foreign key constraints properly
       await this.userRepository.manager.transaction(async (transactionalEntityManager) => {
-        // First, update the user to remove the profile reference
+        // First, delete all session logs for this user
+        await transactionalEntityManager
+          .createQueryBuilder()
+          .delete()
+          .from('session_logs')
+          .where('user_uuid = :userId', { userId: user.uuid })
+          .execute();
+        
+
+        
+        // Then delete all security logs for this user
+        await transactionalEntityManager
+          .createQueryBuilder()
+          .delete()
+          .from('security_logs')
+          .where('user_uuid = :userId', { userId: user.uuid })
+          .execute();
+        
+
+        
+        // Then delete all audit logs for this user
+        await transactionalEntityManager
+          .createQueryBuilder()
+          .delete()
+          .from('audit_logs')
+          .where('user_uuid = :userId', { userId: user.uuid })
+          .execute();
+        
+
+        
+        // Then remove the profile reference from the user
         await transactionalEntityManager
           .createQueryBuilder()
           .update('auth_users')
           .set({ profile_uuid: null })
-          .where('uuid = :userId', { userId })
+          .where('uuid = :userId', { userId: user.uuid })
           .execute();
+        
 
+        
         // Then delete the profile if it exists
         if (user.profile) {
-          await transactionalEntityManager
-            .createQueryBuilder()
-            .delete()
-            .from('user_profiles')
-            .where('uuid = :profileUuid', { profileUuid: user.profile.uuid })
-            .execute();
-          
-          this.logger.log('User profile deleted', { userId, profileUuid: user.profile.uuid });
-        }
+          try {
+            await transactionalEntityManager
+              .createQueryBuilder()
+              .delete()
+              .from('user_profiles')
+              .where('uuid = :profileUuid', { profileUuid: user.profile.uuid })
+              .execute();
+            
 
+          } catch (profileError) {
+            // Profile might not exist, which is fine
+            this.logger.debug('Profile deletion skipped', { 
+              userId: user.uuid, 
+              profileUuid: user.profile.uuid,
+              error: profileError.message 
+            });
+          }
+        }
+        
         // Finally delete the user account
         await transactionalEntityManager
           .createQueryBuilder()
           .delete()
           .from('auth_users')
-          .where('uuid = :userId', { userId })
+          .where('uuid = :userId', { userId: user.uuid })
           .execute();
+        
+
       });
       
-      this.logger.log('User account deleted successfully', { userId, email: user.email });
+      this.logger.log('User account deleted successfully', { userId: user.uuid });
       
       return ApiResponseDto.success(null, 'Account deleted successfully');
     } catch (error) {
-      this.logger.error('Failed to delete user account', { userId, error: error.message });
+      this.logger.error('Failed to delete user account', { userId: userId || 'undefined', error: error.message });
       throw error;
     }
   }

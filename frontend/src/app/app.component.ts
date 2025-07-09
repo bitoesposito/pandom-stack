@@ -4,7 +4,6 @@ import { ImageModule } from 'primeng/image';
 import { MessageService } from 'primeng/api';
 import { ConfirmationService } from 'primeng/api';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { PwaService } from './services/pwa.service';
 
 @Component({
   selector: 'app-root',
@@ -25,8 +24,7 @@ export class AppComponent implements OnInit {
   title = 'frontend';
 
   constructor(
-    private translate: TranslateService,
-    private pwaService: PwaService
+    private translate: TranslateService
   ) {
     // Initialize translations - removed as it's now handled by LanguageService
     // translate.setDefaultLang('en-US');
@@ -35,6 +33,5 @@ export class AppComponent implements OnInit {
 
   async ngOnInit() {
     // PWA services are automatically initialized in the constructor
-    console.log('App component initialized');
   }
 }
