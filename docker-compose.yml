@@ -31,6 +31,8 @@ services:
       - SMTP_USER=${SMTP_USER}
       - SMTP_PASS=${SMTP_PASS}
       - SMTP_FROM=${SMTP_FROM}
+      # Frontend URL per CORS
+      - FE_URL=http://${FE_URL}
     ports:
       - "3000:3000"
     volumes:
@@ -62,6 +64,7 @@ services:
       - ADMIN_EMAIL=${ADMIN_EMAIL}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD}
       - ADMIN_ROLE=${ADMIN_ROLE}
+      - FE_URL=http://${FE_URL}
     depends_on:
       backend:
         condition: service_started

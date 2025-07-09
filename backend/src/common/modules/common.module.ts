@@ -15,6 +15,7 @@ import { AuditLog } from '../entities/audit-log.entity';
 import { SecurityLog } from '../entities/security-log.entity';
 import { SessionLog } from '../entities/session-log.entity';
 import { User } from '../../auth/entities/user.entity';
+import { GuardsModule } from '../../auth/guards/guards.module';
 
 /**
  * Common Module
@@ -62,6 +63,7 @@ import { User } from '../../auth/entities/user.entity';
     // MinioModule,          // Object storage (disabled)
     SessionModule,           // Session management
     ImageOptimizerModule,    // Image optimization
+    GuardsModule,            // Authentication and guards
   ],
   
   // Controllers for this module

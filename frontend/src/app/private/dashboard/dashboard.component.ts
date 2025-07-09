@@ -9,6 +9,7 @@ import { AuthService } from '../../services/auth.service';
 import { PwaService } from '../../services/pwa.service';
 import { NavBarComponent } from '../nav-bar/nav-bar.component';
 import { MessageService } from 'primeng/api';
+import { CookieAuthService } from '../../services/cookie-auth.service';
 
 /**
  * Dashboard Component

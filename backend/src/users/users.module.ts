@@ -5,6 +5,7 @@ import { UsersService } from './users.service';
 import { User } from '../auth/entities/user.entity';
 import { UserProfile } from './entities/user-profile.entity';
 import { CommonModule } from '../common/modules/common.module';
+import { GuardsModule } from '../auth/guards/guards.module';
 
 /**
  * Users Module
@@ -74,6 +75,7 @@ import { CommonModule } from '../common/modules/common.module';
   imports: [
     TypeOrmModule.forFeature([User, UserProfile]),
     CommonModule,
+    GuardsModule,
   ],
   controllers: [UsersController],
   providers: [UsersService],

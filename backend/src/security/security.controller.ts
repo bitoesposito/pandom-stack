@@ -11,7 +11,7 @@ import {
   DefaultValuePipe
 } from '@nestjs/common';
 import { Request, Response } from 'express';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CookieAuthGuard } from '../auth/guards/cookie-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/auth.interface';
 import { UserRole } from '../auth/auth.interface';
@@ -55,7 +55,7 @@ interface AuthenticatedRequest extends Request {
  * - Secure data handling and storage
  */
 @Controller('security')
-@UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(CookieAuthGuard, RolesGuard)
 export class SecurityController {
   constructor(
     private readonly securityService: SecurityService,

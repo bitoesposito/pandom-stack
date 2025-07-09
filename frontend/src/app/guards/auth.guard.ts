@@ -1,31 +1,34 @@
 import { CanActivateFn, Router } from '@angular/router';
 import { inject } from '@angular/core';
-import { jwtDecode } from 'jwt-decode';
-import { AuthService } from '../services/auth.service';
+import { CookieAuthService } from '../services/cookie-auth.service';
+import { map, catchError, of } from 'rxjs';
 
 export const authGuard: CanActivateFn = () => {
   const router = inject(Router);
-  const authService = inject(AuthService);
-  const token = authService.getToken();
+  const authService = inject(CookieAuthService);
 
-  if (!token) {
-    router.navigate(['/login']);
-    return false;
-  }
-
-  try {
-    const decoded: any = jwtDecode(token);
-    
-    if (!decoded.exp || Date.now() >= decoded.exp * 1000) {
-      authService.logout();
-      router.navigate(['/login']);
-      return false;
-    }
-
+  // First check local sessionStorage for immediate response
+  const localAuth = authService.isAuthenticated();
+  
+  if (localAuth) {
     return true;
-  } catch (error) {
-    authService.logout();
-    router.navigate(['/login']);
-    return false;
   }
+
+  // If no local auth, check with server (only once)
+  return authService.checkAuthStatus().pipe(
+    map(response => {
+      if (response.success && response.data?.authenticated) {
+        authService.setAuthStatus('authenticated');
+        return true;
+      } else {
+        router.navigate(['/login']);
+        return false;
+      }
+    }),
+    catchError(error => {
+      console.error('Auth check failed:', error);
+      router.navigate(['/login']);
+      return of(false);
+    })
+  );
 }; 

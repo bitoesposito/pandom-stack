@@ -6,6 +6,7 @@ import { User } from '../auth/entities/user.entity';
 import { UserProfile } from '../users/entities/user-profile.entity';
 import { CommonModule } from '../common/modules/common.module';
 import { SessionModule } from '../common/modules/session.module';
+import { GuardsModule } from '../auth/guards/guards.module';
 
 /**
  * Security Module
@@ -78,6 +79,7 @@ import { SessionModule } from '../common/modules/session.module';
     TypeOrmModule.forFeature([User, UserProfile]),
     CommonModule, // For AuditService
     SessionModule, // For SessionService
+    GuardsModule,
   ],
   controllers: [SecurityController],
   providers: [SecurityService],

@@ -13,7 +13,7 @@ import {
 import { Request } from 'express';
 
 // Local imports
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CookieAuthGuard } from '../auth/guards/cookie-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles, UserRole } from '../auth/auth.interface';
 import { ApiResponseDto } from '../common/common.interface';
@@ -56,7 +56,7 @@ interface AuthenticatedAdminRequest extends Request {
  * - GET /admin/audit-logs - View audit logs
  */
 @Controller('admin')
-@UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(CookieAuthGuard, RolesGuard)
 @Roles(UserRole.admin)
 export class AdminController {
   constructor(

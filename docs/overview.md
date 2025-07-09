@@ -1,6 +1,6 @@
 # 🏗️ Pandom Stack - Application Overview
 
-> **A comprehensive security-first boilerplate for modern web applications with advanced offline capabilities and GDPR compliance.**
+> **A comprehensive security-first boilerplate for modern web applications with cookie-based authentication and GDPR compliance.**
 
 ## 📋 Table of Contents
 
@@ -8,7 +8,6 @@
 - [Technology Stack](#technology-stack)
 - [Key Features](#key-features)
 - [Security Framework](#security-framework)
-- [Offline Capabilities](#offline-capabilities)
 - [Development Workflow](#development-workflow)
 - [Deployment Strategy](#deployment-strategy)
 
@@ -21,8 +20,8 @@ Pandom Stack follows a **layered architecture** pattern with clear separation of
 │                    CLIENT LAYER                             │
 ├─────────────────────────────────────────────────────────────┤
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐        │
-│  │   Angular   │  │   PWA/SW    │  │  IndexedDB  │        │
-│  │   Frontend  │  │   Offline   │  │   Storage   │        │
+│  │   Angular   │  │   PWA/SW    │  │   Cookie    │        │
+│  │   Frontend  │  │   Caching   │  │   Auth      │        │
 │  └─────────────┘  └─────────────┘  └─────────────┘        │
 └─────────────────────────────────────────────────────────────┘
                               │
@@ -71,7 +70,7 @@ Pandom Stack follows a **layered architecture** pattern with clear separation of
 
 | Layer | Components | Responsibilities |
 |-------|------------|------------------|
-| **Client** | Angular, PWA, IndexedDB | UI rendering, offline storage, user interaction |
+| **Client** | Angular, PWA, Cookie Auth | UI rendering, secure authentication, user interaction |
 | **Gateway** | API Gateway, Security | Security, traffic control |
 | **Application** | NestJS, Auth, Business Logic | API endpoints, authentication, business rules |
 | **Service** | Email, File Storage, Session | External services integration |
@@ -82,20 +81,19 @@ Pandom Stack follows a **layered architecture** pattern with clear separation of
 ### Frontend
 - **Angular 17** - Modern reactive framework
 - **TypeScript** - Type-safe development
-- **PWA (Progressive Web App)** - Offline capabilities
-- **IndexedDB** - Local data storage
-- **Service Workers** - Offline caching and sync
+- **PWA (Progressive Web App)** - App-like experience
+- **Cookie-based Authentication** - Secure httpOnly cookies
+- **Service Workers** - Caching and performance
 
 ### Backend
 - **NestJS** - Enterprise-grade Node.js framework
 - **TypeScript** - Type-safe backend development
 - **TypeORM** - Database ORM with migrations
-- **JWT** - Stateless authentication
+- **JWT** - Server-side token management
 - **Passport.js** - Authentication strategies
 
 ### Database & Storage
 - **PostgreSQL 17** - Primary relational database
-
 - **MinIO** - Object storage (S3-compatible)
 - **TypeORM** - Database migrations and seeding
 
@@ -133,55 +131,21 @@ Pandom Stack follows a **layered architecture** pattern with clear separation of
 │                   DATA SECURITY                             │
 ├─────────────────────────────────────────────────────────────┤
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐        │
-│  │   AES-GCM   │  │   Audit     │  │   GDPR      │        │
-│  │ Encryption  │  │  Logging    │  │ Compliance  │        │
+│  │   Cookie    │  │   Audit     │  │   GDPR      │        │
+│  │   Auth      │  │  Logging    │  │ Compliance  │        │
 │  └─────────────┘  └─────────────┘  └─────────────┘        │
 └─────────────────────────────────────────────────────────────┘
 ```
 
 - **Multi-layer security** with defense-in-depth strategy
-- **JWT authentication** with refresh token rotation
+- **Cookie-based authentication** with httpOnly cookies for XSS protection
+- **JWT tokens** managed securely on server-side
 - **Role-based access control** (RBAC) with fine-grained permissions
-- **AES-GCM encryption** for sensitive data at rest and in transit
 - **Complete audit logging** for compliance and security monitoring
 - **GDPR compliance** with data protection and user rights
 - **Security headers** (HSTS, CSP, X-Frame-Options, etc.)
 - **Input validation** and sanitization
-
-### 📱 **Offline-First Architecture**
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                   OFFLINE ARCHITECTURE                      │
-├─────────────────────────────────────────────────────────────┤
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐        │
-│  │   Service   │  │   IndexedDB │  │   Sync      │        │
-│  │   Worker    │  │   Storage   │  │  Queue      │        │
-│  └─────────────┘  └─────────────┘  └─────────────┘        │
-│         │                │                │               │
-│   Cache Strategy    Local Database   Conflict Resolution   │
-│   Background Sync   Encrypted Data   Offline Metrics      │
-│   Network Detection  Schema Version   Error Handling       │
-└─────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────┐
-│                   ONLINE SYNCHRONIZATION                    │
-├─────────────────────────────────────────────────────────────┤
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐        │
-│  │   Delta     │  │   Conflict  │  │   Data      │        │
-│  │   Sync      │  │ Resolution  │  │ Validation  │        │
-│  └─────────────┘  └─────────────┘  └─────────────┘        │
-└─────────────────────────────────────────────────────────────┘
-```
-
-- **Service Worker** for intelligent caching and offline functionality
-- **IndexedDB** for secure local data storage with encryption
-- **Delta synchronization** for efficient data transfer
-- **Conflict resolution** with automatic merge strategies
-- **Offline metrics** and error tracking
-- **Background synchronization** when connection is restored
-- **Network detection** and adaptive behavior
+- **CSRF protection** with secure cookies
 
 ### 🏗️ **Modern Development Experience**
 
@@ -200,79 +164,10 @@ Pandom Stack follows a **layered architecture** pattern with clear separation of
 │  │   Health    │  │   Metrics   │  │   Logging   │        │
 │  │   Checks    │  │ Collection  │  │   System    │        │
 │  └─────────────┘  └─────────────┘  └─────────────┘        │
-│         │                │                │               │
-│   System Status    Performance Data   Structured Logs      │
-│   Service Health   Business Metrics   Audit Trails         │
-│   Dependency Check  Custom KPIs       Error Tracking       │
-└─────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────┐
-│                   ALERTING & DASHBOARDS                     │
-├─────────────────────────────────────────────────────────────┤
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐        │
-│  │   Real-time │  │   Automated │  │   Custom    │        │
-│  │   Alerts    │  │   Reports   │  │ Dashboards  │        │
-│  └─────────────┘  └─────────────┘  └─────────────┘        │
 └─────────────────────────────────────────────────────────────┘
 ```
 
-- **Health checks** for all system components
-- **Real-time metrics** collection and monitoring
+- **Health checks** for system monitoring
+- **Real-time metrics** collection and analysis
 - **Structured logging** with correlation IDs
-- **Audit trails** for security and compliance
-- **Performance monitoring** with custom KPIs
-- **Automated alerting** for critical issues
-- **Custom dashboards** for business metrics
-
-## 🔄 Development Workflow
-
-### Local Development
-1. **Environment Setup** - Configure local development environment
-2. **Database Migration** - Run TypeORM migrations
-3. **Service Startup** - Start all services with Docker Compose
-4. **Development Server** - Hot reload for both frontend and backend
-5. **Testing** - Run unit and integration tests
-6. **Code Quality** - Linting and formatting checks
-
-### Development Workflow
-1. **Code Quality** - Linting and formatting
-2. **Build Process** - Docker image creation
-3. **Deployment** - Manual deployment with Docker Compose
-4. **Health Checks** - Post-deployment validation
-5. **Monitoring** - Basic health monitoring
-
-## 🚀 Deployment Strategy
-
-### Environment Strategy
-- **Development** - Local development with hot reload
-- **Staging** - Production-like environment for testing
-- **Production** - Optimized and secured deployment
-
-### Deployment Options
-- **Docker Compose** - Simple single-server deployment
-- **Cloud Platforms** - AWS, Azure, GCP deployment
-- **On-premises** - Self-hosted infrastructure
-
-### Scaling Strategy
-- **Horizontal Scaling** - Multiple application instances
-- **Database Scaling** - Read replicas and connection pooling
-
-
-## 📈 Performance & Scalability
-
-### Performance Optimizations
-- **Lazy Loading** - Angular route and module lazy loading
-- **Code Splitting** - Webpack optimization for smaller bundles
-- **Caching Strategy** - Browser and application caching
-- **Database Optimization** - Indexing and query optimization
-- **Image Optimization** - Automatic image compression and optimization
-
-### Scalability Features
-- **Stateless Architecture** - Horizontal scaling capability
-- **Microservices Ready** - Modular design for service decomposition
-- **Database Sharding** - Support for database partitioning
-
----
-
-**Pandom Stack** provides a solid foundation for building secure, scalable, and modern web applications with enterprise-grade features and best practices. 
+- **Performance monitoring** and alerting 

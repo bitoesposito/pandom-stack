@@ -2,9 +2,12 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { LoggerService } from './common/services/logger.service';
 import { MetricsInterceptor } from './common/interceptors/metrics.interceptor';
+import { CookieAuthInterceptor } from './auth/interceptors/cookie-auth.interceptor';
+import * as cookieParser from 'cookie-parser';
 import * as fs from 'fs';
 import * as path from 'path';
 import { Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 
 // Reindirizza console.log, console.error, ecc. verso il file
 const logFilePath = path.join(process.cwd(), 'logs', 'log.txt');
@@ -69,21 +72,27 @@ async function bootstrap() {
       logger: ['error', 'warn', 'log', 'debug', 'verbose'],
     });
     
-    // Enable CORS
+    // Enable cookie parser
+    app.use(cookieParser());
+    
+    // Get FE_URL from config
+    const configService = app.get(ConfigService);
+    const feUrl = configService.get<string>('FE_URL') || 'http://localhost:4200';
+    logger.log(`CORS allowed origin: ${feUrl}`, 'Bootstrap');
+
+    // Enable CORS with cookie support and allowed origin
     app.enableCors({
-      methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+      origin: feUrl,
       credentials: true,
-      allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With'],
-      exposedHeaders: ['Content-Range', 'X-Content-Range'],
-      maxAge: 3600
     });
     
     // Trust proxy for correct IP detection behind reverse proxy/Docker
     app.getHttpAdapter().getInstance().set('trust proxy', true);
     
-    // Apply global metrics interceptor
+    // Apply global interceptors
     const metricsInterceptor = app.get(MetricsInterceptor);
-    app.useGlobalInterceptors(metricsInterceptor);
+    const cookieAuthInterceptor = app.get(CookieAuthInterceptor);
+    app.useGlobalInterceptors(metricsInterceptor, cookieAuthInterceptor);
     
     // Set global prefix in case of SSL configuration with nginx
     // app.setGlobalPrefix('backend');

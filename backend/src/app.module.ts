@@ -14,6 +14,7 @@ import { SecurityLog } from './common/entities/security-log.entity';
 import { SessionLog } from './common/entities/session-log.entity';
 import { CommonModule } from './common/modules/common.module';
 import { MinioModule } from './common/modules/minio.module';
+import { GuardsModule } from './auth/guards/guards.module';
 
 @Module({
   imports: [
@@ -43,7 +44,8 @@ import { MinioModule } from './common/modules/minio.module';
     SecurityModule,
     ResilienceModule,
     AdminModule,
-    MinioModule
+    MinioModule,
+    GuardsModule
   ],
   controllers: [],
   providers: [],

@@ -1,6 +1,6 @@
 # 🛡️ Pandom Stack - Security-First Application Boilerplate
 
-> **A complete boilerplate for modern web applications focused on security, with advanced offline capabilities and GDPR compliance.**
+> **A complete boilerplate for modern web applications focused on security, with cookie-based authentication and GDPR compliance.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
@@ -21,26 +21,19 @@
 
 ## 🎯 Overview
 
-Pandom Stack is a comprehensive, security-first application boilerplate that provides a complete foundation for building modern web applications. It features advanced security measures, offline capabilities, and GDPR compliance out of the box.
+Pandom Stack is a comprehensive, security-first application boilerplate that provides a complete foundation for building modern web applications. It features advanced security measures, cookie-based authentication, and GDPR compliance out of the box.
 
 ## ✨ Key Features
 
 ### 🔒 **Advanced Security**
-- **JWT Authentication** with refresh tokens
+- **Cookie-based Authentication** with httpOnly cookies
+- **JWT tokens** managed securely on server-side
 - **Role-based authorization** (RBAC)
-- **AES-GCM encryption** for sensitive data
 - **Complete audit logging** for compliance
 - **Configured security headers**
 - **Rate limiting** and DDoS protection
 - **Integrated GDPR compliance**
-
-### 📱 **Offline Capabilities**
-- **Intelligent server-client synchronization**
-- **Secure local storage** with IndexedDB
-- **Offline encryption** of sensitive data
-- **Pending operations queue**
-- **Automatic conflict resolution**
-- **Offline metrics** and monitoring
+- **CSRF protection** with secure cookies
 
 ### 🏗️ **Modern Architecture**
 - **NestJS backend** with TypeScript
@@ -61,14 +54,13 @@ Pandom Stack is a comprehensive, security-first application boilerplate that pro
 ### Backend
 - **Framework**: NestJS 10+ with TypeScript
 - **Database**: PostgreSQL 17+ with TypeORM
-- **Authentication**: JWT with refresh tokens
+- **Authentication**: JWT with httpOnly cookies
 - **Storage**: MinIO for file storage
 - **Containerization**: Docker & Docker Compose
 
 ### Frontend
 - **Framework**: Angular 17+ with TypeScript
 - **PWA**: Progressive Web App capabilities
-- **Offline**: IndexedDB for local storage
 - **UI**: Modern, responsive design
 - **Internationalization**: Multi-language support
 
@@ -115,8 +107,6 @@ Pandom Stack is a comprehensive, security-first application boilerplate that pro
 - **Backup Strategies** for data protection
 - **Performance Monitoring** and optimization
 
-For detailed database documentation, see [Database Design](./docs/architecture/database-design.md).
-
 ## 🚀 Quick Start
 
 ### Prerequisites
@@ -147,7 +137,7 @@ docker-compose up -d
 
 ### Environment Configuration
 
-Key database environment variables:
+Key environment variables:
 ```bash
 # Database Configuration
 DATABASE_HOST=localhost
@@ -156,7 +146,12 @@ DATABASE_NAME=pandom_db
 DATABASE_USERNAME=pandom_user
 DATABASE_PASSWORD=secure_password
 
+# Frontend Configuration
+FE_URL=http://localhost:4200
 
+# JWT Configuration
+JWT_SECRET=your_jwt_secret
+JWT_EXPIRATION=1h
 
 # MinIO Configuration
 MINIO_ENDPOINT=localhost
@@ -179,9 +174,6 @@ MINIO_SECRET_KEY=your_secret_key
 ### 🔒 **Security & Compliance**
 - [**Security Overview**](./docs/security/security-overview.md) - Security framework and features
 
-### 📱 **Offline Features**
-- [**Offline Architecture**](./docs/offline/offline-architecture.md) - Offline-first design and implementation
-
 ### 🛠️ **Development & API**
 - [**API Reference**](./docs/api/api-reference.md) - Complete API documentation
 - [**Postman Collection**](./docs/api/pandom-postman-collection.json) - Complete Postman collection
@@ -197,5 +189,3 @@ This project is open source and accepts contributions! Please read our contribut
 This project is released under the MIT license. See the [LICENSE](./LICENSE) file for details.
 
 ---
-
-**Pandom Stack** - Build secure, modern, and scalable applications with this complete boilerplate.

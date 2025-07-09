@@ -8,10 +8,10 @@ import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
 import { ThemeService } from '../../services/theme.service';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { AuthService } from '../../services/auth.service';
+import { CookieAuthService } from '../../services/cookie-auth.service';
 import { PwaService } from '../../services/pwa.service';
 import { PopoverModule } from 'primeng/popover';
-import { jwtDecode } from 'jwt-decode';
+
 import { SelectModule } from 'primeng/select';
 import { FormsModule } from '@angular/forms';
 import { LanguageService } from '../../services/language.service';
@@ -27,6 +27,7 @@ import { Subject, takeUntil } from 'rxjs';
  */
 @Component({
   selector: 'app-nav-bar',
+  standalone: true,
   imports: [
     ButtonModule,
     CommonModule,
@@ -68,7 +69,7 @@ export class NavBarComponent implements OnInit, OnDestroy {
     private router: Router,
     private themeService: ThemeService,
     private translate: TranslateService,
-    private authService: AuthService,
+    private authService: CookieAuthService,
     private pwaService: PwaService,
     private languageService: LanguageService,
     private cdr: ChangeDetectorRef
@@ -94,31 +95,20 @@ export class NavBarComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Load and decode user data from JWT token
+   * Load user data from authentication service
    */
   private loadUserData(): void {
-    const token = this.authService.getToken();
-    if (!token) {
-      this.handleAuthError();
-      return;
-    }
-
-    try {
-      const decoded = jwtDecode(token) as UserData;
-      this.user = {
-        uuid: decoded.uuid,
-        email: decoded.email,
-        role: decoded.role,
-        is_active: decoded.is_active,
-        is_verified: decoded.is_verified,
-        is_configured: decoded.is_configured,
-        created_at: decoded.created_at,
-        updated_at: decoded.updated_at
-      };
-    } catch (error) {
-      console.error('Error decoding JWT token:', error);
-      this.handleAuthError();
-    }
+    this.authService.getCurrentUser().subscribe({
+      next: (response) => {
+        if (response.data) {
+          this.user = response.data.user;
+        }
+      },
+      error: (error) => {
+        console.error('Error loading user data:', error);
+        this.handleAuthError();
+      }
+    });
   }
 
   /**

@@ -9,7 +9,7 @@ import {
 } from '@nestjs/common';
 
 // Local imports
-import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { CookieAuthGuard } from '../../auth/guards/cookie-auth.guard';
 import { MailService } from '../services/mail.service';
 import { TemplateService, EmailTemplateData } from '../services/template.service';
 import { ApiResponseDto } from '../common.interface';
@@ -57,7 +57,7 @@ interface TestEmailDto {
  * - Email functionality validation
  */
 @Controller('email')
-@UseGuards(JwtAuthGuard)
+  @UseGuards(CookieAuthGuard)
 export class EmailController {
   constructor(
     private readonly mailService: MailService,

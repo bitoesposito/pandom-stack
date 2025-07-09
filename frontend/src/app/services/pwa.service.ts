@@ -2,8 +2,6 @@ import { Injectable } from '@angular/core';
 import { SwUpdate, VersionReadyEvent } from '@angular/service-worker';
 import { filter, map } from 'rxjs/operators';
 import { BehaviorSubject, Subscription } from 'rxjs';
-import { OfflineStorageService } from './offline-storage.service';
-import { SyncQueueService } from './sync-queue.service';
 import { NotificationService } from './notification.service';
 
 /**
@@ -32,23 +30,19 @@ interface WindowEventMap {
  * Progressive Web App (PWA) Service
  * 
  * Manages Progressive Web App functionality including service worker updates,
- * installation prompts, offline capabilities, and online/offline state monitoring.
- * This service provides comprehensive PWA features for enhanced user experience.
+ * installation prompts, and online/offline state monitoring.
+ * This service provides PWA features for enhanced user experience.
  * 
  * Features:
  * - Service worker update management
  * - PWA installation prompts
  * - Online/offline state monitoring
  * - Automatic update checks
- * - Offline service initialization
  * - Installation status detection
- * - Synchronization management
  * 
  * PWA Capabilities:
  * - Automatic update detection and activation
  * - Installation prompt handling
- * - Offline functionality support
- * - Background sync capabilities
  * - App-like experience
  * - Push notification support
  * 
@@ -63,12 +57,6 @@ interface WindowEventMap {
  * - Installation status detection
  * - Platform-specific installation
  * - Installation outcome tracking
- * 
- * Offline Support:
- * - Offline state detection
- * - Offline service initialization
- * - Data synchronization
- * - Offline capability detection
  * 
  * Usage:
  * - Inject service in components
@@ -90,7 +78,7 @@ interface WindowEventMap {
  *   if (online) {
  *     // Enable online features
  *   } else {
- *     // Enable offline mode
+ *     // Show offline message
  *   }
  * });
  * 
@@ -142,8 +130,6 @@ export class PwaService {
 
   constructor(
     private swUpdate: SwUpdate,
-    private offlineStorage: OfflineStorageService,
-    private syncQueue: SyncQueueService,
     private notification: NotificationService
   ) {
     this.initializePWA();
@@ -194,11 +180,11 @@ export class PwaService {
       this.notification.handleInfo('Sei tornato online');
       
       // Process sync queue when back online
-      this.syncQueue.processQueue().then(() => {
-        this.notification.handleSuccess('Sincronizzazione completata');
-      }).catch(() => {
-        this.notification.handleWarning('Errore durante la sincronizzazione');
-      });
+      // this.syncQueue.processQueue().then(() => {
+      //   this.notification.handleSuccess('Sincronizzazione completata');
+      // }).catch(() => {
+      //   this.notification.handleWarning('Errore durante la sincronizzazione');
+      // });
     });
 
     window.addEventListener('offline', () => {
@@ -436,60 +422,25 @@ export class PwaService {
     }
   }
 
-  // ============================================================================
-  // OFFLINE SERVICE METHODS
-  // ============================================================================
-
   /**
-   * Initialize offline services
+   * Get offline status information
    * 
-   * Sets up the offline storage database and prepares
-   * the application for offline functionality.
+   * Returns current online/offline status and offline capability.
+   * Note: Offline functionality has been removed from this application.
    * 
-   * @returns Promise<void>
-   * 
-   * @example
-   * this.pwaService.initializeOfflineServices().then(() => {
-   *   console.log('Offline services initialized');
-   * }).catch(error => {
-   *   console.error('Failed to initialize offline services:', error);
-   * });
-   * 
-   * Initialization process:
-   * 1. Sets up IndexedDB database
-   * 2. Prepares offline storage
-   * 3. Handles initialization errors
-   * 4. Shows appropriate notifications
-   */
-  async initializeOfflineServices(): Promise<void> {
-    try {
-      await this.offlineStorage.initializeDB();
-    } catch (error) {
-      this.notification.handleError(error, 'Errore inizializzazione servizi offline');
-    }
-  }
-
-  /**
-   * Get current offline status and capabilities
-   * 
-   * Returns the current online/offline status and whether
-   * the application can work offline.
-   * 
-   * @returns Object with isOnline and canWorkOffline properties
+   * @returns Object with online status
    * 
    * @example
    * const status = this.pwaService.getOfflineStatus();
    * console.log('Online:', status.isOnline);
-   * console.log('Can work offline:', status.canWorkOffline);
    * 
-   * Status information:
-   * - isOnline: Current connection status
-   * - canWorkOffline: Whether offline functionality is available
+   * @deprecated This method is deprecated as offline functionality has been removed
    */
   getOfflineStatus(): { isOnline: boolean; canWorkOffline: boolean } {
+    console.warn('getOfflineStatus is deprecated as offline functionality has been removed');
     return {
       isOnline: navigator.onLine,
-      canWorkOffline: 'serviceWorker' in navigator && 'indexedDB' in window
+      canWorkOffline: false // Offline functionality removed
     };
   }
 } 

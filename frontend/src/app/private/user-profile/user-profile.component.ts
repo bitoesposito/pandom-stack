@@ -23,6 +23,7 @@ import { SystemStatusResponse, BackupResponse } from '../../models/resilience.mo
 import { SystemMetricsResponse, DetailedSystemMetricsResponse } from '../../models/admin.models';
 import { Subject, takeUntil } from 'rxjs';
 import { PaginatorModule } from 'primeng/paginator';
+import { CookieAuthService } from '../../services/cookie-auth.service';
 
 /**
  * UserProfile Component
@@ -111,7 +112,7 @@ export class UserProfileComponent implements OnInit, OnDestroy {
   }
 
   constructor(
-    private authService: AuthService,
+    private authService: CookieAuthService,
     private securityService: SecurityService,
     private resilienceService: ResilienceService,
     private adminService: AdminService,
