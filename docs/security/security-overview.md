@@ -274,7 +274,7 @@ interface SecurityLog {
     outcome: 'success' | 'failure';
     metadata: Record<string, any>;
   };
-  source: 'frontend' | 'backend' | 'offline';
+  source: 'frontend' | 'backend';
 }
 ```
 

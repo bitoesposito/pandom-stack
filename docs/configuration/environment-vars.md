@@ -1,12 +1,12 @@
 # 🔧 Environment Variables
 
-## 📋 Panoramica
+## 📋 Overview
 
-**Pandom Stack** utilizza variabili d'ambiente per configurare tutti gli aspetti dell'applicazione. Questa documentazione fornisce una guida completa per tutte le variabili disponibili, i loro valori di default e le configurazioni raccomandate per diversi ambienti.
+**Pandom Stack** uses environment variables to configure all aspects of the application. This documentation provides a complete guide for all available variables, their default values, and recommended configurations for different environments.
 
-## 🏗️ **Struttura del File .env**
+## 🏗️ **.env File Structure**
 
-Il file `.env` è organizzato in sezioni logiche per facilitare la configurazione:
+The `.env` file is organized in logical sections to facilitate configuration:
 
 ```env
 # ============================================================================

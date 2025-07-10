@@ -34,7 +34,7 @@
     },
     {
       "key": "admin_password",
-      "value": "admin123",
+      "value": "Admin123!",
       "type": "secret",
       "enabled": true
     },
@@ -46,7 +46,19 @@
     },
     {
       "key": "test_user_password",
-      "value": "password123",
+      "value": "User123!",
+      "type": "secret",
+      "enabled": true
+    },
+    {
+      "key": "moderator_email",
+      "value": "moderator@example.com",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "moderator_password",
+      "value": "Moderator123!",
       "type": "secret",
       "enabled": true
     },
@@ -65,6 +77,192 @@
     {
       "key": "user_agent",
       "value": "Pandom-Stack-Postman/1.0.0",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "minio_endpoint",
+      "value": "http://localhost:9000",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "minio_access_key",
+      "value": "minioadmin",
+      "type": "secret",
+      "enabled": true
+    },
+    {
+      "key": "minio_secret_key",
+      "value": "minioadmin",
+      "type": "secret",
+      "enabled": true
+    },
+    {
+      "key": "minio_bucket",
+      "value": "pandom-stack",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "database_host",
+      "value": "localhost",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "database_port",
+      "value": "5432",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "database_name",
+      "value": "pandom_stack",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "database_user",
+      "value": "postgres",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "database_password",
+      "value": "postgres",
+      "type": "secret",
+      "enabled": true
+    },
+    {
+      "key": "jwt_secret",
+      "value": "your-super-secret-jwt-key-change-in-production",
+      "type": "secret",
+      "enabled": true
+    },
+    {
+      "key": "jwt_refresh_secret",
+      "value": "your-super-secret-refresh-key-change-in-production",
+      "type": "secret",
+      "enabled": true
+    },
+    {
+      "key": "cookie_secret",
+      "value": "your-super-secret-cookie-key-change-in-production",
+      "type": "secret",
+      "enabled": true
+    },
+    {
+      "key": "email_host",
+      "value": "smtp.gmail.com",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "email_port",
+      "value": "587",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "email_user",
+      "value": "your-email@gmail.com",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "email_password",
+      "value": "your-app-password",
+      "type": "secret",
+      "enabled": true
+    },
+    {
+      "key": "email_from",
+      "value": "noreply@pandom.com",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "app_name",
+      "value": "Pandom Stack",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "app_url",
+      "value": "http://localhost:4200",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "environment",
+      "value": "development",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "log_level",
+      "value": "debug",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "cors_origin",
+      "value": "http://localhost:4200",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "rate_limit_window",
+      "value": "900000",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "rate_limit_max",
+      "value": "100",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "session_secret",
+      "value": "your-super-secret-session-key-change-in-production",
+      "type": "secret",
+      "enabled": true
+    },
+    {
+      "key": "session_max_age",
+      "value": "86400000",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "jwt_access_expires_in",
+      "value": "15m",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "jwt_refresh_expires_in",
+      "value": "7d",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "password_salt_rounds",
+      "value": "12",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "otp_expires_in",
+      "value": "300000",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "verification_expires_in",
+      "value": "86400000",
       "type": "default",
       "enabled": true
     }

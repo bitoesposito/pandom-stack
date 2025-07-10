@@ -32,7 +32,7 @@ import { CookieAuthService } from '../../services/cookie-auth.service';
  * stato del sistema e gestione dei backup.
  */
 @Component({
-  selector: 'app-user-profile',
+  selector: 'app-control-panel',
   imports: [
     NavBarComponent,
     CommonModule,
@@ -49,10 +49,10 @@ import { CookieAuthService } from '../../services/cookie-auth.service';
     PaginatorModule
   ],
   providers: [MessageService, NotificationService],
-  templateUrl: './user-profile.component.html',
-  styleUrl: './user-profile.component.scss'
+  templateUrl: './control-panel.component.html',
+  styleUrl: './control-panel.component.scss'
 })
-export class UserProfileComponent implements OnInit, OnDestroy {
+export class ControlPanelComponent implements OnInit, OnDestroy {
   userProfile: any = null;
   user: any = null;
   sessions: SecuritySession[] = [];

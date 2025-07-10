@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "Pandom Stack API",
-    "description": "Complete API collection for Pandom Stack - Security-First Application Boilerplate",
+    "description": "Complete API collection for Pandom Stack - Security-First Application Boilerplate with cookie-based authentication",
     "version": "1.0.0",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
@@ -40,7 +40,7 @@
   "item": [
     {
       "name": "Authentication",
-      "description": "Authentication and authorization endpoints",
+      "description": "Authentication and authorization endpoints with cookie-based auth",
       "item": [
         {
           "name": "Register User",
@@ -54,7 +54,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"password123\",\n  \"confirmPassword\": \"password123\"\n}"
+              "raw": "{\n  \"email\": \"{{test_user_email}}\",\n  \"password\": \"{{test_user_password}}\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/auth/register",
@@ -73,11 +73,10 @@
                 "exec": [
                   "if (pm.response.code === 200) {",
                   "    const response = pm.response.json();",
-                  "    if (response.success && response.data.access_token) {",
-                  "        pm.collectionVariables.set('access_token', response.data.access_token);",
-                  "        pm.collectionVariables.set('refresh_token', response.data.refresh_token);",
+                  "    if (response.success && response.data) {",
                   "        pm.collectionVariables.set('user_uuid', response.data.user.uuid);",
-                  "        console.log('Tokens saved successfully');",
+                  "        console.log('User UUID saved:', response.data.user.uuid);",
+                  "        console.log('Login successful - cookies will be automatically sent');",
                   "    }",
                   "}"
                 ]
@@ -94,7 +93,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"password123\",\n  \"rememberMe\": true\n}"
+              "raw": "{\n  \"email\": \"{{test_user_email}}\",\n  \"password\": \"{{test_user_password}}\",\n  \"rememberMe\": true\n}"
             },
             "url": {
               "raw": "{{base_url}}/auth/login",
@@ -110,10 +109,14 @@
             "method": "POST",
             "header": [
               {
-                "key": "Authorization",
-                "value": "Bearer {{refresh_token}}"
+                "key": "Content-Type",
+                "value": "application/json"
               }
             ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh_token\": \"{{refresh_token}}\"\n}"
+            },
             "url": {
               "raw": "{{base_url}}/auth/refresh",
               "host": ["{{base_url}}"],
@@ -131,6 +134,32 @@
               "raw": "{{base_url}}/auth/me",
               "host": ["{{base_url}}"],
               "path": ["auth", "me"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Check Auth Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/auth/check",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "check"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/auth/logout",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "logout"]
             }
           },
           "response": []
@@ -169,7 +198,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"user@example.com\"\n}"
+              "raw": "{\n  \"email\": \"{{test_user_email}}\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/auth/forgot-password",
@@ -191,7 +220,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"user@example.com\",\n  \"otp\": \"123456\",\n  \"newPassword\": \"newpassword123\",\n  \"confirmPassword\": \"newpassword123\"\n}"
+              "raw": "{\n  \"otp\": \"123456\",\n  \"password\": \"{{test_user_password}}\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/auth/reset-password",
@@ -213,7 +242,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"user@example.com\"\n}"
+              "raw": "{\n  \"email\": \"{{test_user_email}}\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/auth/resend-verification",
@@ -226,8 +255,8 @@
       ]
     },
     {
-      "name": "User Management",
-      "description": "User profile and account management endpoints",
+      "name": "User Profile",
+      "description": "User profile management endpoints",
       "item": [
         {
           "name": "Get User Profile",
@@ -235,9 +264,9 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/users/profile",
+              "raw": "{{base_url}}/profile",
               "host": ["{{base_url}}"],
-              "path": ["users", "profile"]
+              "path": ["profile"]
             }
           },
           "response": []
@@ -254,34 +283,12 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"phone\": \"+1234567890\",\n  \"dateOfBirth\": \"1990-01-01\",\n  \"address\": {\n    \"street\": \"123 Main St\",\n    \"city\": \"New York\",\n    \"state\": \"NY\",\n    \"zipCode\": \"10001\",\n    \"country\": \"US\"\n  },\n  \"preferences\": {\n    \"language\": \"en\",\n    \"timezone\": \"America/New_York\",\n    \"notifications\": {\n      \"email\": true,\n      \"sms\": false,\n      \"push\": true\n    }\n  }\n}"
+              "raw": "{\n  \"tags\": [\"developer\", \"backend\", \"typescript\"],\n  \"metadata\": {\n    \"preferences\": {\n      \"theme\": \"dark\",\n      \"language\": \"en\"\n    },\n    \"bio\": \"Full-stack developer\",\n    \"location\": \"Milan, Italy\"\n  }\n}"
             },
             "url": {
-              "raw": "{{base_url}}/users/profile",
+              "raw": "{{base_url}}/profile",
               "host": ["{{base_url}}"],
-              "path": ["users", "profile"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Change Password",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"currentPassword\": \"oldpassword123\",\n  \"newPassword\": \"newpassword123\",\n  \"confirmPassword\": \"newpassword123\"\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/users/change-password",
-              "host": ["{{base_url}}"],
-              "path": ["users", "change-password"]
+              "path": ["profile"]
             }
           },
           "response": []
@@ -316,41 +323,6 @@
           "response": []
         },
         {
-          "name": "Get Security Logs with Filters",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/security/logs?page=1&limit=10&type=USER_LOGIN&startDate=2024-01-01T00:00:00.000Z&endDate=2024-01-31T23:59:59.999Z",
-              "host": ["{{base_url}}"],
-              "path": ["security", "logs"],
-              "query": [
-                {
-                  "key": "page",
-                  "value": "1"
-                },
-                {
-                  "key": "limit",
-                  "value": "10"
-                },
-                {
-                  "key": "type",
-                  "value": "USER_LOGIN"
-                },
-                {
-                  "key": "startDate",
-                  "value": "2024-01-01T00:00:00.000Z"
-                },
-                {
-                  "key": "endDate",
-                  "value": "2024-01-31T23:59:59.999Z"
-                }
-              ]
-            }
-          },
-          "response": []
-        },
-        {
           "name": "Get Active Sessions",
           "request": {
             "method": "GET",
@@ -377,14 +349,14 @@
           "response": []
         },
         {
-          "name": "Terminate All Sessions",
+          "name": "Terminate All Other Sessions",
           "request": {
             "method": "DELETE",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/security/sessions/all",
+              "raw": "{{base_url}}/security/sessions/others",
               "host": ["{{base_url}}"],
-              "path": ["security", "sessions", "all"]
+              "path": ["security", "sessions", "others"]
             }
           },
           "response": []
@@ -398,19 +370,6 @@
               "raw": "{{base_url}}/security/download-data",
               "host": ["{{base_url}}"],
               "path": ["security", "download-data"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Download User Data",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/security/downloads/user-data-user-uuid-timestamp.json",
-              "host": ["{{base_url}}"],
-              "path": ["security", "downloads", "user-data-user-uuid-timestamp.json"]
             }
           },
           "response": []
@@ -467,12 +426,12 @@
           "response": []
         },
         {
-          "name": "Get All Users with Filters",
+          "name": "Get All Users with Search",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/admin/users?page=1&limit=10&search=john&role=user&status=active&sort=createdAt&order=desc",
+              "raw": "{{base_url}}/admin/users?page=1&limit=10&search=john",
               "host": ["{{base_url}}"],
               "path": ["admin", "users"],
               "query": [
@@ -487,22 +446,6 @@
                 {
                   "key": "search",
                   "value": "john"
-                },
-                {
-                  "key": "role",
-                  "value": "user"
-                },
-                {
-                  "key": "status",
-                  "value": "active"
-                },
-                {
-                  "key": "sort",
-                  "value": "createdAt"
-                },
-                {
-                  "key": "order",
-                  "value": "desc"
                 }
               ]
             }
@@ -510,9 +453,9 @@
           "response": []
         },
         {
-          "name": "Get User Details",
+          "name": "Delete User",
           "request": {
-            "method": "GET",
+            "method": "DELETE",
             "header": [],
             "url": {
               "raw": "{{base_url}}/admin/users/{{user_uuid}}",
@@ -523,85 +466,48 @@
           "response": []
         },
         {
-          "name": "Update User Role",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"role\": \"moderator\"\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/admin/users/{{user_uuid}}/role",
-              "host": ["{{base_url}}"],
-              "path": ["admin", "users", "{{user_uuid}}", "role"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Update User Status",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"status\": \"suspended\",\n  \"reason\": \"Violation of terms of service\"\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/admin/users/{{user_uuid}}/status",
-              "host": ["{{base_url}}"],
-              "path": ["admin", "users", "{{user_uuid}}", "status"]
-            }
-          },
-          "response": []
-        },
-        {
           "name": "Get System Metrics",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/admin/metrics?period=month",
+              "raw": "{{base_url}}/admin/metrics",
               "host": ["{{base_url}}"],
-              "path": ["admin", "metrics"],
-              "query": [
-                {
-                  "key": "period",
-                  "value": "month"
-                }
-              ]
+              "path": ["admin", "metrics"]
             }
           },
           "response": []
         },
         {
-          "name": "Get System Metrics with Date Range",
+          "name": "Get Detailed Metrics",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/admin/metrics?startDate=2024-01-01T00:00:00.000Z&endDate=2024-01-31T23:59:59.999Z",
+              "raw": "{{base_url}}/admin/metrics/detailed",
               "host": ["{{base_url}}"],
-              "path": ["admin", "metrics"],
+              "path": ["admin", "metrics", "detailed"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Audit Logs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/audit-logs?page=1&limit=50",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "audit-logs"],
               "query": [
                 {
-                  "key": "startDate",
-                  "value": "2024-01-01T00:00:00.000Z"
+                  "key": "page",
+                  "value": "1"
                 },
                 {
-                  "key": "endDate",
-                  "value": "2024-01-31T23:59:59.999Z"
+                  "key": "limit",
+                  "value": "50"
                 }
               ]
             }
@@ -620,22 +526,58 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/health",
+              "raw": "{{base_url}}/resilience/status",
               "host": ["{{base_url}}"],
-              "path": ["health"]
+              "path": ["resilience", "status"]
             }
           },
           "response": []
         },
         {
-          "name": "System Metrics (Prometheus)",
+          "name": "Create Backup",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/resilience/backup",
+              "host": ["{{base_url}}"],
+              "path": ["resilience", "backup"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List Backups",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/metrics",
+              "raw": "{{base_url}}/resilience/backup?page=1&limit=10",
               "host": ["{{base_url}}"],
-              "path": ["metrics"]
+              "path": ["resilience", "backup"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Restore Backup",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/resilience/backup/backup-id/restore",
+              "host": ["{{base_url}}"],
+              "path": ["resilience", "backup", "backup-id", "restore"]
             }
           },
           "response": []
@@ -643,44 +585,59 @@
       ]
     },
     {
-      "name": "Offline",
-      "description": "Offline functionality and synchronization endpoints",
+      "name": "File Storage",
+      "description": "File storage and management endpoints",
       "item": [
         {
-          "name": "Get Sync Status",
+          "name": "Get Storage Health",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/offline/sync-status",
+              "raw": "{{base_url}}/storage/health",
               "host": ["{{base_url}}"],
-              "path": ["offline", "sync-status"]
+              "path": ["storage", "health"]
             }
           },
           "response": []
         },
         {
-          "name": "Force Sync",
+          "name": "Upload File",
           "request": {
             "method": "POST",
-            "header": [],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "multipart/form-data"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
             "url": {
-              "raw": "{{base_url}}/offline/sync",
+              "raw": "{{base_url}}/storage/upload",
               "host": ["{{base_url}}"],
-              "path": ["offline", "sync"]
+              "path": ["storage", "upload"]
             }
           },
           "response": []
         },
         {
-          "name": "Get Sync Progress",
+          "name": "List Files",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/offline/sync/sync-uuid",
+              "raw": "{{base_url}}/storage/files",
               "host": ["{{base_url}}"],
-              "path": ["offline", "sync", "sync-uuid"]
+              "path": ["storage", "files"]
             }
           },
           "response": []

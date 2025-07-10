@@ -2,7 +2,7 @@ import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { DashboardComponent } from './dashboard/dashboard.component';
 import { authGuard } from '../guards/auth.guard';
-import { UserProfileComponent } from './user-profile/user-profile.component';
+import { ControlPanelComponent } from './control-panel/control-panel.component';
 
 const routes: Routes = [
   {
@@ -11,8 +11,8 @@ const routes: Routes = [
     canActivate: [authGuard]
   },
   {
-    path: 'user-profile',
-    component: UserProfileComponent,
+    path: 'control-panel',
+    component: ControlPanelComponent,
     canActivate: [authGuard]
   },
   {

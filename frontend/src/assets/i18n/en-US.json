@@ -417,9 +417,10 @@
     "delete-account": "Delete account",
     "download-data": "Download your data",
     "edit-profile": "Edit profile",
+    "profile": "Profile",
     "last-login": "Last login:",
     "logged-in-as": "Logged in as",
-    "profile": "Your profile",
+    "control-panel": "Control Panel",
     "show-security-logs": "Show Security Logs",
     "user": "User",
     "verified": "verified profile"

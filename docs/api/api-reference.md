@@ -4,14 +4,6 @@
 
 **Pandom Stack** fornisce un'API REST completa e ben documentata per tutte le funzionalità dell'applicazione. L'API è progettata seguendo le best practices REST e include autenticazione JWT, validazione input, e gestione errori standardizzata.
 
-## 🔗 **Base URL**
-
-```
-Development:  http://localhost:3000
-Staging:      https://staging-api.pandom.com
-Production:   https://api.pandom.com
-```
-
 ## 🔐 **Autenticazione**
 
 ### **JWT Bearer Token**
@@ -931,11 +923,11 @@ http_request_duration_seconds_bucket{le="0.5"} 1500
 http_request_duration_seconds_bucket{le="1"} 1800
 ```
 
-## 📱 **Offline Endpoints**
+## 📱 **File Storage Endpoints**
 
-### **GET /offline/sync-status**
+### **GET /storage/health**
 
-Ottiene lo stato di sincronizzazione offline.
+Verifica lo stato del servizio di storage.
 
 **Headers:**
 ```http
@@ -947,28 +939,24 @@ Authorization: Bearer <access_token>
 {
   "http_status_code": 200,
   "success": true,
-  "message": "Sync status retrieved successfully",
+  "message": "Storage health check successful",
   "data": {
-    "lastSync": "2024-01-15T10:30:00.000Z",
-    "pendingOperations": 5,
-    "syncStatus": "syncing",
-    "dataFreshness": "fresh",
-    "storageUsage": {
-      "used": "2.5 MB",
-      "available": "50 MB",
-      "percentage": 5
-    }
+    "status": "healthy",
+    "bucket": "pandom-storage",
+    "availableSpace": "1.5 GB",
+    "totalFiles": 1250
   }
 }
 ```
 
-### **POST /offline/sync**
+### **POST /storage/upload**
 
-Forza la sincronizzazione offline.
+Carica un file nel sistema di storage.
 
 **Headers:**
 ```http
 Authorization: Bearer <access_token>
+Content-Type: multipart/form-data
 ```
 
 **Response:**
@@ -976,18 +964,20 @@ Authorization: Bearer <access_token>
 {
   "http_status_code": 200,
   "success": true,
-  "message": "Sync initiated successfully",
+  "message": "File uploaded successfully",
   "data": {
-    "syncId": "sync-uuid",
-    "status": "in_progress",
-    "estimatedTime": 30
+    "fileId": "file-uuid",
+    "filename": "document.pdf",
+    "size": 1024000,
+    "url": "https://storage.example.com/pandom-storage/uploads/document.pdf",
+    "uploadedAt": "2024-01-15T10:30:00.000Z"
   }
 }
 ```
 
-### **GET /offline/sync/{syncId}**
+### **GET /storage/files**
 
-Ottiene lo stato di una sincronizzazione specifica.
+Lista i file disponibili per l'utente.
 
 **Headers:**
 ```http
@@ -999,15 +989,20 @@ Authorization: Bearer <access_token>
 {
   "http_status_code": 200,
   "success": true,
-  "message": "Sync status retrieved successfully",
+  "message": "Files retrieved successfully",
   "data": {
-    "syncId": "sync-uuid",
-    "status": "completed",
-    "progress": 100,
-    "syncedItems": 25,
-    "conflicts": 2,
-    "errors": 0,
-    "completedAt": "2024-01-15T10:30:00.000Z"
+    "files": [
+      {
+        "fileId": "file-uuid",
+        "filename": "document.pdf",
+        "size": 1024000,
+        "url": "https://storage.example.com/pandom-storage/uploads/document.pdf",
+        "uploadedAt": "2024-01-15T10:30:00.000Z"
+      }
+    ],
+    "total": 25,
+    "page": 1,
+    "limit": 20
   }
 }
 ```

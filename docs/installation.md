@@ -206,8 +206,8 @@ SMTP_PASS=your-app-password
 # MinIO configuration
 MINIO_ENDPOINT=localhost
 MINIO_PORT=9000
-MINIO_ACCESS_KEY=minioadmin
-MINIO_SECRET_KEY=minioadmin
+MINIO_ROOT_USER=minioadmin
+MINIO_ROOT_PASSWORD=minioadmin
 MINIO_BUCKET=pandom-storage
 ```
 
@@ -262,8 +262,8 @@ DB_DATABASE=pandom_prod
 # Production MinIO
 MINIO_ENDPOINT=production-minio-host
 MINIO_PORT=9000
-MINIO_ACCESS_KEY=production_access_key
-MINIO_SECRET_KEY=production_secret_key
+MINIO_ROOT_USER=production_access_key
+MINIO_ROOT_PASSWORD=production_secret_key
 
 # Production security
 JWT_SECRET=very-long-production-jwt-secret
@@ -529,9 +529,8 @@ openssl s_client -connect yourdomain.com:443
 - [Deployment Guide](./deployment/deployment-guide.md)
 
 ### Support
-- [Troubleshooting Guide](./references/troubleshooting.md)
-- [FAQ](./references/faq.md)
-- [Contributing Guide](./references/contributing.md)
+
+
 
 ---
 

@@ -4,6 +4,8 @@
 
 Questa guida ti aiuterà a configurare Postman per testare tutte le API di **Pandom Stack**. Postman è uno strumento essenziale per testare, documentare e collaborare sulle API REST.
 
+**Nota**: Pandom Stack utilizza **autenticazione basata su cookie** con JWT tokens httpOnly per massima sicurezza.
+
 ## 🚀 **Setup Rapido**
 
 ### **1. Download Postman**
@@ -40,13 +42,25 @@ Questa guida ti aiuterà a configurare Postman per testare tutte le API di **Pan
 | Variabile | Descrizione | Valore Default |
 |-----------|-------------|----------------|
 | `base_url` | URL base dell'API | `http://localhost:3000` |
-| `access_token` | Token JWT per autenticazione | (vuoto - auto-popolato) |
-| `refresh_token` | Token di refresh | (vuoto - auto-popolato) |
 | `user_uuid` | UUID dell'utente corrente | (vuoto - auto-popolato) |
 | `admin_email` | Email amministratore | `admin@pandom.com` |
-| `admin_password` | Password amministratore | `admin123` |
+| `admin_password` | Password amministratore | `Admin123!` |
 | `test_user_email` | Email utente di test | `user@example.com` |
-| `test_user_password` | Password utente di test | `password123` |
+| `test_user_password` | Password utente di test | `User123!` |
+| `moderator_email` | Email moderatore | `moderator@example.com` |
+| `moderator_password` | Password moderatore | `Moderator123!` |
+
+### **Variabili di Configurazione**
+
+| Variabile | Descrizione | Valore Default |
+|-----------|-------------|----------------|
+| `minio_endpoint` | Endpoint MinIO | `http://localhost:9000` |
+| `minio_access_key` | Access key MinIO | `minioadmin` |
+| `minio_secret_key` | Secret key MinIO | `minioadmin` |
+| `database_host` | Host database | `localhost` |
+| `database_port` | Porta database | `5432` |
+| `email_host` | Host SMTP | `smtp.gmail.com` |
+| `email_port` | Porta SMTP | `587` |
 
 ### **Configurazione per Ambienti**
 
@@ -55,7 +69,9 @@ Questa guida ti aiuterà a configurare Postman per testare tutte le API di **Pan
 {
   "base_url": "http://localhost:3000",
   "admin_email": "admin@pandom.com",
-  "admin_password": "admin123"
+  "admin_password": "Admin123!",
+  "test_user_email": "user@example.com",
+  "test_user_password": "User123!"
 }
 ```
 
@@ -77,72 +93,81 @@ Questa guida ti aiuterà a configurare Postman per testare tutte le API di **Pan
 }
 ```
 
-## 🔐 **Autenticazione Automatica**
+## 🔐 **Autenticazione con Cookie**
 
-### **Login Automatico**
+### **Autenticazione Automatica**
 
-La collection include script automatici per:
+Pandom Stack utilizza **cookie httpOnly** per l'autenticazione:
 
-1. **Salvare i token** dopo il login
-2. **Auto-refresh** dei token scaduti
-3. **Gestione sessioni** automatica
+1. **Login** imposta automaticamente i cookie
+2. **Postman** invia automaticamente i cookie nelle richieste successive
+3. **Nessuna gestione manuale** dei token richiesta
 
 ### **Test Script per Login**
 
 ```javascript
-// Script automatico per salvare i token
+// Script automatico per salvare l'UUID utente
 if (pm.response.code === 200) {
     const response = pm.response.json();
-    if (response.success && response.data.access_token) {
-        pm.collectionVariables.set('access_token', response.data.access_token);
-        pm.collectionVariables.set('refresh_token', response.data.refresh_token);
+    if (response.success && response.data) {
         pm.collectionVariables.set('user_uuid', response.data.user.uuid);
-        console.log('Tokens saved successfully');
+        console.log('User UUID saved:', response.data.user.uuid);
+        console.log('Login successful - cookies will be automatically sent');
     }
 }
 ```
+
+### **Configurazione Cookie in Postman**
+
+1. **Vai su Settings** (⚙️ in alto a destra)
+2. **Seleziona "General"**
+3. **Abilita "Automatically follow redirects"**
+4. **Abilita "Send cookies with requests"**
 
 ## 📚 **Struttura della Collection**
 
 ### **1. Authentication**
 - **Register User**: Registrazione nuovo utente
-- **Login User**: Login con salvataggio automatico token
-- **Refresh Token**: Rinnovo token scaduto
+- **Login User**: Login con salvataggio automatico UUID
+- **Refresh Token**: Rinnovo token (con cookie)
 - **Get Current User**: Dati utente corrente
+- **Check Auth Status**: Verifica stato autenticazione
+- **Logout**: Logout con pulizia cookie
 - **Verify Email**: Verifica email
 - **Forgot Password**: Richiesta reset password
 - **Reset Password**: Reset password con OTP
 - **Resend Verification**: Rinvio email verifica
 
-### **2. User Management**
-- **Get User Profile**: Profilo utente
+### **2. User Profile**
+- **Get User Profile**: Profilo utente con tags e metadata
 - **Update User Profile**: Aggiornamento profilo
-- **Change Password**: Cambio password
 
 ### **3. Security**
-- **Get Security Logs**: Log di sicurezza
+- **Get Security Logs**: Log di sicurezza paginati
 - **Get Active Sessions**: Sessioni attive
 - **Terminate Session**: Termina sessione specifica
-- **Terminate All Sessions**: Termina tutte le sessioni
+- **Terminate All Other Sessions**: Termina altre sessioni
 - **Request Data Export**: Richiesta export dati (GDPR)
-- **Download User Data**: Download dati utente
 - **Delete Account**: Eliminazione account (GDPR)
 
 ### **4. Admin**
-- **Get All Users**: Lista utenti
-- **Get User Details**: Dettagli utente specifico
-- **Update User Role**: Cambio ruolo utente
-- **Update User Status**: Cambio status utente
+- **Get All Users**: Lista utenti con paginazione
+- **Get All Users with Search**: Ricerca utenti
+- **Delete User**: Eliminazione utente
 - **Get System Metrics**: Metriche sistema
+- **Get Detailed Metrics**: Metriche dettagliate
+- **Get Audit Logs**: Log di audit
 
 ### **5. System**
 - **Health Check**: Controllo salute sistema
-- **System Metrics**: Metriche Prometheus
+- **Create Backup**: Creazione backup sistema
+- **List Backups**: Lista backup disponibili
+- **Restore Backup**: Ripristino da backup
 
-### **6. Offline**
-- **Get Sync Status**: Stato sincronizzazione
-- **Force Sync**: Forza sincronizzazione
-- **Get Sync Progress**: Progresso sincronizzazione
+### **6. File Storage**
+- **Get Storage Health**: Stato servizio storage
+- **Upload File**: Carica file (multipart/form-data)
+- **List Files**: Lista file disponibili
 
 ## 🧪 **Workflow di Testing**
 
@@ -153,19 +178,20 @@ if (pm.response.code === 200) {
 docker-compose up -d
 
 # 2. Verifica che sia attiva
-curl http://localhost:3000/health
+curl http://localhost:3000/resilience/status
 ```
 
 ### **2. Test di Autenticazione**
 
 1. **Esegui "Login User"** con credenziali admin
-2. **Verifica** che i token siano salvati automaticamente
+2. **Verifica** che l'UUID sia salvato automaticamente
 3. **Esegui "Get Current User"** per verificare autenticazione
+4. **Esegui "Check Auth Status"** per verificare stato
 
 ### **3. Test Funzionalità Utente**
 
 1. **Get User Profile**: Verifica profilo
-2. **Update User Profile**: Aggiorna profilo
+2. **Update User Profile**: Aggiorna tags e metadata
 3. **Get Security Logs**: Verifica log sicurezza
 4. **Get Active Sessions**: Verifica sessioni
 
@@ -173,13 +199,18 @@ curl http://localhost:3000/health
 
 1. **Get All Users**: Lista utenti
 2. **Get System Metrics**: Metriche sistema
-3. **Update User Role**: Cambio ruolo
+3. **Get Audit Logs**: Log di audit
 
 ### **5. Test GDPR Compliance**
 
 1. **Request Data Export**: Richiesta export
-2. **Download User Data**: Download dati
-3. **Delete Account**: Eliminazione account
+2. **Delete Account**: Eliminazione account
+
+### **6. Test Sistema**
+
+1. **Health Check**: Verifica stato sistema
+2. **Create Backup**: Test backup
+3. **List Backups**: Verifica backup
 
 ## 🔍 **Testing Avanzato**
 
@@ -204,126 +235,73 @@ pm.test("Response has success field", function () {
     pm.expect(response).to.have.property('success');
     pm.expect(response.success).to.be.true;
 });
+```
 
-pm.test("Response has data field", function () {
+### **Test di Autenticazione**
+
+```javascript
+// Test script per verificare autenticazione
+pm.test("User is authenticated", function () {
     const response = pm.response.json();
-    pm.expect(response).to.have.property('data');
+    pm.expect(response.data).to.have.property('user');
+    pm.expect(response.data.user).to.have.property('uuid');
 });
 ```
 
-### **Test di Performance**
+## 🚨 **Risoluzione Problemi**
 
-```javascript
-// Test script per performance
-pm.test("Response time is less than 200ms", function () {
-    pm.expect(pm.response.responseTime).to.be.below(200);
-});
-```
+### **Cookie non inviati**
 
-## 🚨 **Troubleshooting**
+1. **Verifica impostazioni Postman**:
+   - Settings → General → "Send cookies with requests" = ON
+   - Settings → General → "Automatically follow redirects" = ON
 
-### **Problemi Comuni**
+2. **Verifica dominio**:
+   - Assicurati che `base_url` sia corretto
+   - Cookie sono specifici per dominio
 
-#### **1. Token Non Salvati**
-```javascript
-// Verifica script di login
-console.log('Response:', pm.response.json());
-console.log('Tokens saved:', pm.collectionVariables.get('access_token'));
-```
+### **Errore 401 Unauthorized**
 
-#### **2. CORS Errors**
-- **Verifica** che l'applicazione sia in esecuzione
-- **Controlla** la configurazione CORS nel backend
-- **Usa** Postman desktop invece di web
+1. **Esegui login** prima di testare endpoint protetti
+2. **Verifica** che i cookie siano presenti
+3. **Controlla** che l'utente abbia i permessi necessari
 
-#### **3. Rate Limiting**
-- **Aspetta** 15 minuti tra le richieste
-- **Verifica** headers di rate limiting
-- **Usa** credenziali diverse per test paralleli
+### **Errore 403 Forbidden**
 
-#### **4. Token Scaduti**
-```javascript
-// Auto-refresh script
-const token = pm.collectionVariables.get('access_token');
-if (token) {
-    try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        const now = Math.floor(Date.now() / 1000);
-        if (payload.exp < now) {
-            console.log('Token expired, attempting refresh...');
-        }
-    } catch (e) {
-        console.log('Invalid token format');
-    }
-}
-```
+1. **Verifica ruolo utente** (admin/user/moderator)
+2. **Controlla** che l'endpoint sia accessibile per il ruolo
+3. **Usa credenziali admin** per testare endpoint admin
 
-### **Debug Postman**
+### **Errore 500 Internal Server Error**
 
-1. **Console**: View → Show Postman Console
-2. **Network**: Monitor → Network
-3. **Logs**: View → Show Postman Console
+1. **Verifica** che il backend sia attivo
+2. **Controlla** i log del server
+3. **Verifica** configurazione database e MinIO
 
-## 📊 **Monitoraggio e Metriche**
+## 📝 **Note Importanti**
 
-### **Test Automation**
+### **Sicurezza**
 
-```javascript
-// Collection runner script
-const newman = require('newman');
+- **Non condividere** le credenziali in produzione
+- **Usa variabili segrete** per password e token
+- **Cambia** le password di default
 
-newman.run({
-    collection: require('./pandom-postman-collection.json'),
-    environment: require('./pandom-postman-environment.json'),
-    reporters: ['cli', 'json'],
-    iterationCount: 1
-}, function (err) {
-    if (err) { throw err; }
-    console.log('Collection run complete!');
-});
-```
+### **Performance**
 
-### **CI/CD Integration**
-
-```yaml
-# GitHub Actions example
-- name: Run API Tests
-  run: |
-    npm install -g newman
-    newman run docs/pandom-postman-collection.json \
-      -e docs/pandom-postman-environment.json \
-      --reporters cli,json \
-      --reporter-json-export results.json
-```
-
-## 🔒 **Sicurezza**
+- **Limita** il numero di richieste simultanee
+- **Usa paginazione** per liste grandi
+- **Monitora** i tempi di risposta
 
 ### **Best Practices**
 
-1. **Non committare** token nei repository
-2. **Usa environment** separati per ogni ambiente
-3. **Ruota** credenziali regolarmente
-4. **Monitora** accessi e tentativi di login
+- **Testa** sempre gli endpoint in ordine logico
+- **Verifica** le risposte con test script
+- **Documenta** eventuali problemi trovati
+- **Usa** dati di test realistici
 
-### **Credenziali Sicure**
+## 🔗 **Risorse Utili**
 
-```json
-{
-  "admin_password": "{{$randomPassword}}",
-  "test_user_password": "{{$randomPassword}}"
-}
-```
-
-## 📚 **Risorse Aggiuntive**
-
-### **Documentazione Postman**
-- [Postman Learning Center](https://learning.postman.com/)
-- [Postman API](https://www.postman.com/postman/workspace/postman-public-workspace/documentation/12959542-c8142d51-e97c-46b6-bd77-52bb66712c9a)
-
-### **Script Utili**
-- [Postman Scripts Collection](https://github.com/postmanlabs/newman)
-- [Postman Examples](https://www.postman.com/collection/detail/705-7d4b0e5c-5c5c-5c5c-5c5c-5c5c5c5c5c5c)
-
----
-
-**Pandom Stack Postman Collection** - Testa tutte le API in modo efficiente e sicuro. 
+- [Documentazione Postman](https://learning.postman.com/)
+- [API Reference Pandom Stack](./api-reference.md)
+- [Architettura Sistema](../architecture/system-architecture.md)
+- [Guida Sicurezza](../security/security-overview.md) 

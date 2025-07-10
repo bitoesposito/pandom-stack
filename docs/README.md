@@ -1,11 +1,11 @@
 # 🛡️ Pandom Stack - Security-First Application Boilerplate
 
-> **A complete boilerplate for modern web applications focused on security, with advanced offline capabilities and GDPR compliance.**
+> **A complete boilerplate for modern web applications focused on security, with cookie-based authentication and GDPR compliance.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
-[![Angular](https://img.shields.io/badge/Angular-17+-red.svg)](https://angular.io/)
-[![NestJS](https://img.shields.io/badge/NestJS-10+-red.svg)](https://nestjs.com/)
+[![Angular](https://img.shields.io/badge/Angular-19+-red.svg)](https://angular.io/)
+[![NestJS](https://img.shields.io/badge/NestJS-11+-red.svg)](https://nestjs.com/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17+-blue.svg)](https://www.postgresql.org/)
 
 ## 📋 Documentation Index
@@ -22,8 +22,8 @@
 ### 🔒 **Security & Compliance**
 - [**Security Overview**](./security/security-overview.md) - Security framework and features
 
-### 📱 **Offline Features**
-- [**Offline Architecture**](./offline/offline-architecture.md) - Offline-first design and implementation
+### 📱 **PWA Features**
+- [**PWA Architecture**](./architecture/system-architecture.md#pwa-architecture) - Progressive Web App design and features
 
 ### 🛠️ **Development & API**
 - [**API Reference**](./api/api-reference.md) - Complete API documentation
@@ -34,26 +34,24 @@
 ## 🎯 **Key Features**
 
 ### 🔒 **Advanced Security**
-- **JWT Authentication** with refresh tokens
+- **Cookie-based Authentication** with httpOnly cookies
+- **JWT tokens** managed securely on server-side
 - **Role-based authorization** (RBAC)
-- **AES-GCM encryption** for sensitive data
 - **Complete audit logging** for compliance
-- **Configured security headers**
-
+- **Configured security headers** (HSTS, CSP, X-Frame-Options)
 - **Integrated GDPR compliance**
 
-### 📱 **Offline Capabilities**
-- **Intelligent server-client synchronization**
-- **Secure local storage** with IndexedDB
-- **Offline encryption** of sensitive data
-- **Pending operations queue**
-- **Automatic conflict resolution**
-- **Offline metrics** and monitoring
+### 📱 **PWA Capabilities**
+- **Progressive Web App** ready structure
+- **Theme switching** (light/dark mode)
+- **Internationalization** (English/Italian)
+- **Responsive design** for all devices
+- **Cookie-based authentication** with automatic refresh
 
 ### 🏗️ **Modern Architecture**
-- **NestJS backend** with TypeScript
-- **Angular 17 frontend** with PWA
-- **PostgreSQL database** with TypeORM
+- **NestJS 11+ backend** with TypeScript
+- **Angular 19+ frontend** with PWA
+- **PostgreSQL 17+ database** with TypeORM
 - **Complete Docker containerization**
 - **Well-documented REST APIs**
 - **Microservices ready**
@@ -92,11 +90,11 @@ To get started, check the [**Application Overview**](./overview.md) for a comple
 
 ## 🤝 **Contributions**
 
-This project is open source and accepts contributions! Check the [**Contributing Guide**](./references/contributing.md) for more details.
+This project is open source and accepts contributions!
 
 ## 📄 **License**
 
-This project is released under the MIT license. See the [**LICENSE**](./references/license.md) file for details.
+This project is released under the MIT license.
 
 ---
 

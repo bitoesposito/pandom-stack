@@ -440,9 +440,10 @@
     "delete-account": "Elimina account",
     "download-data": "Scarica dati personali",
     "edit-profile": "Modifica profilo",
+    "profile": "Profilo",
     "last-login": "Ultimo accesso",
     "logged-in-as": "Connesso come",
-    "profile": "Il tuo profilo",
+    "control-panel": "Pannello di controllo",
     "show-security-logs": "Mostra log di sicurezza",
     "user": "Utente",
     "verified": "profilo verificato"
