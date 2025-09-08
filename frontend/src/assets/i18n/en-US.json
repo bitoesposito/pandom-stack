@@ -251,10 +251,10 @@
     },
     "download": {
       "confirm": "Download",
-      "description": "You can download a copy of your personal data.",
+      "description": "Download a copy of your personal data.",
       "error": "Error downloading data.",
-      "expires": "The link will expire after 10 minutes.",
-      "info": "The file will be available for a limited time.",
+      "expires": "The download will start automatically.",
+      "info": "Data will be downloaded in JSON format.",
       "success": "Data downloaded successfully."
     },
     "security-logs": {

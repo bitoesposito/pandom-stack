@@ -251,10 +251,10 @@
     },
     "download": {
       "confirm": "Scarica",
-      "description": "Puoi scaricare una copia dei tuoi dati personali.",
+      "description": "Scarica una copia dei tuoi dati personali.",
       "error": "Errore durante il download dei dati.",
-      "expires": "Il link scadrà dopo 10 minuti.",
-      "info": "Il file sarà disponibile per un tempo limitato.",
+      "expires": "Il download inizierà automaticamente.",
+      "info": "I dati verranno scaricati in formato JSON.",
       "success": "Dati scaricati con successo."
     },
     "security-logs": {
