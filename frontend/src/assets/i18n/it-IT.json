@@ -242,6 +242,7 @@
     },
     "dialogs": {
       "audit-logs": "Log di Audit",
+      "change-password": "Cambia Password",
       "delete-account": "Elimina Account",
       "download-data": "Scarica Dati",
       "edit-profile": "Modifica Profilo",
