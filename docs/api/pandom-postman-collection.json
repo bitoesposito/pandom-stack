@@ -1,19 +1,12 @@
 {
   "info": {
     "name": "Pandom Stack API",
-    "description": "Complete API collection for Pandom Stack - Security-First Application Boilerplate with cookie-based authentication",
-    "version": "1.0.0",
+    "description": "Complete API collection for Pandom Stack - Security-First Application Boilerplate with httpOnly cookie-based authentication",
+    "version": "2.0.0",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "auth": {
-    "type": "bearer",
-    "bearer": [
-      {
-        "key": "token",
-        "value": "{{access_token}}",
-        "type": "string"
-      }
-    ]
+    "type": "noauth"
   },
   "variable": [
     {
@@ -22,17 +15,12 @@
       "type": "string"
     },
     {
-      "key": "access_token",
-      "value": "",
-      "type": "string"
-    },
-    {
-      "key": "refresh_token",
-      "value": "",
-      "type": "string"
-    },
-    {
       "key": "user_uuid",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "session_id",
       "value": "",
       "type": "string"
     }
@@ -40,7 +28,7 @@
   "item": [
     {
       "name": "Authentication",
-      "description": "Authentication and authorization endpoints with cookie-based auth",
+      "description": "Authentication and authorization endpoints with httpOnly cookie-based auth",
       "item": [
         {
           "name": "Register User",
@@ -54,13 +42,14 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"{{test_user_email}}\",\n  \"password\": \"{{test_user_password}}\"\n}"
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"SecurePass123!\",\n  \"confirmPassword\": \"SecurePass123!\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/auth/register",
               "host": ["{{base_url}}"],
               "path": ["auth", "register"]
-            }
+            },
+            "description": "Register a new user account with email verification"
           },
           "response": []
         },
@@ -75,11 +64,11 @@
                   "    const response = pm.response.json();",
                   "    if (response.success && response.data) {",
                   "        pm.collectionVariables.set('user_uuid', response.data.user.uuid);",
-                  "        console.log('User UUID saved:', response.data.user.uuid);",
-                  "        console.log('Login successful - cookies will be automatically sent');",
+                  "        pm.collectionVariables.set('session_id', response.data.session_id);",
                   "    }",
                   "}"
-                ]
+                ],
+                "type": "text/javascript"
               }
             }
           ],
@@ -93,13 +82,14 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"{{test_user_email}}\",\n  \"password\": \"{{test_user_password}}\",\n  \"rememberMe\": true\n}"
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"SecurePass123!\",\n  \"rememberMe\": false\n}"
             },
             "url": {
               "raw": "{{base_url}}/auth/login",
               "host": ["{{base_url}}"],
               "path": ["auth", "login"]
-            }
+            },
+            "description": "Authenticate user and receive httpOnly cookies"
           },
           "response": []
         },
@@ -107,21 +97,13 @@
           "name": "Refresh Token",
           "request": {
             "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"refresh_token\": \"{{refresh_token}}\"\n}"
-            },
+            "header": [],
             "url": {
               "raw": "{{base_url}}/auth/refresh",
               "host": ["{{base_url}}"],
               "path": ["auth", "refresh"]
-            }
+            },
+            "description": "Refresh access token using httpOnly cookies"
           },
           "response": []
         },
@@ -134,33 +116,8 @@
               "raw": "{{base_url}}/auth/me",
               "host": ["{{base_url}}"],
               "path": ["auth", "me"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Check Auth Status",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/auth/check",
-              "host": ["{{base_url}}"],
-              "path": ["auth", "check"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Logout",
-          "request": {
-            "method": "POST",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/auth/logout",
-              "host": ["{{base_url}}"],
-              "path": ["auth", "logout"]
-            }
+            },
+            "description": "Get current authenticated user data"
           },
           "response": []
         },
@@ -176,13 +133,14 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"token\": \"verification-token\"\n}"
+              "raw": "{\n  \"token\": \"verification-token-from-email\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/auth/verify",
               "host": ["{{base_url}}"],
               "path": ["auth", "verify"]
-            }
+            },
+            "description": "Verify user email with token"
           },
           "response": []
         },
@@ -198,13 +156,14 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"{{test_user_email}}\"\n}"
+              "raw": "{\n  \"email\": \"user@example.com\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/auth/forgot-password",
               "host": ["{{base_url}}"],
               "path": ["auth", "forgot-password"]
-            }
+            },
+            "description": "Request password reset email"
           },
           "response": []
         },
@@ -220,13 +179,14 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"otp\": \"123456\",\n  \"password\": \"{{test_user_password}}\"\n}"
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"otp\": \"123456\",\n  \"newPassword\": \"NewSecurePass123!\",\n  \"confirmPassword\": \"NewSecurePass123!\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/auth/reset-password",
               "host": ["{{base_url}}"],
               "path": ["auth", "reset-password"]
-            }
+            },
+            "description": "Reset password with OTP"
           },
           "response": []
         },
@@ -242,13 +202,28 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"{{test_user_email}}\"\n}"
+              "raw": "{\n  \"email\": \"user@example.com\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/auth/resend-verification",
               "host": ["{{base_url}}"],
               "path": ["auth", "resend-verification"]
-            }
+            },
+            "description": "Resend email verification"
+          },
+          "response": []
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/auth/logout",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "logout"]
+            },
+            "description": "Logout user and clear httpOnly cookies"
           },
           "response": []
         }
@@ -259,7 +234,7 @@
       "description": "User profile management endpoints",
       "item": [
         {
-          "name": "Get User Profile",
+          "name": "Get Profile",
           "request": {
             "method": "GET",
             "header": [],
@@ -267,12 +242,13 @@
               "raw": "{{base_url}}/profile",
               "host": ["{{base_url}}"],
               "path": ["profile"]
-            }
+            },
+            "description": "Get current user profile"
           },
           "response": []
         },
         {
-          "name": "Update User Profile",
+          "name": "Update Profile",
           "request": {
             "method": "PUT",
             "header": [
@@ -283,13 +259,14 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"tags\": [\"developer\", \"backend\", \"typescript\"],\n  \"metadata\": {\n    \"preferences\": {\n      \"theme\": \"dark\",\n      \"language\": \"en\"\n    },\n    \"bio\": \"Full-stack developer\",\n    \"location\": \"Milan, Italy\"\n  }\n}"
+              "raw": "{\n  \"tags\": [\"developer\", \"fullstack\", \"typescript\"],\n  \"metadata\": {\n    \"role\": \"admin\",\n    \"preferences\": {\n      \"theme\": \"dark\",\n      \"language\": \"en\",\n      \"notifications\": true\n    }\n  }\n}"
             },
             "url": {
               "raw": "{{base_url}}/profile",
               "host": ["{{base_url}}"],
               "path": ["profile"]
-            }
+            },
+            "description": "Update user profile"
           },
           "response": []
         }
@@ -297,7 +274,7 @@
     },
     {
       "name": "Security",
-      "description": "Security monitoring and GDPR compliance endpoints",
+      "description": "Security and GDPR compliance endpoints",
       "item": [
         {
           "name": "Get Security Logs",
@@ -318,7 +295,8 @@
                   "value": "10"
                 }
               ]
-            }
+            },
+            "description": "Get user security logs with pagination"
           },
           "response": []
         },
@@ -331,7 +309,8 @@
               "raw": "{{base_url}}/security/sessions",
               "host": ["{{base_url}}"],
               "path": ["security", "sessions"]
-            }
+            },
+            "description": "Get user active sessions"
           },
           "response": []
         },
@@ -341,28 +320,30 @@
             "method": "DELETE",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/security/sessions/session-uuid",
+              "raw": "{{base_url}}/security/sessions/{{session_id}}",
               "host": ["{{base_url}}"],
-              "path": ["security", "sessions", "session-uuid"]
-            }
+              "path": ["security", "sessions", "{{session_id}}"]
+            },
+            "description": "Terminate specific session"
           },
           "response": []
         },
         {
-          "name": "Terminate All Other Sessions",
+          "name": "Terminate All Sessions",
           "request": {
             "method": "DELETE",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/security/sessions/others",
+              "raw": "{{base_url}}/security/sessions/all",
               "host": ["{{base_url}}"],
-              "path": ["security", "sessions", "others"]
-            }
+              "path": ["security", "sessions", "all"]
+            },
+            "description": "Terminate all sessions except current"
           },
           "response": []
         },
         {
-          "name": "Request Data Export",
+          "name": "Download User Data",
           "request": {
             "method": "GET",
             "header": [],
@@ -370,7 +351,8 @@
               "raw": "{{base_url}}/security/download-data",
               "host": ["{{base_url}}"],
               "path": ["security", "download-data"]
-            }
+            },
+            "description": "Request user data export (GDPR)"
           },
           "response": []
         },
@@ -392,7 +374,8 @@
               "raw": "{{base_url}}/security/delete-account",
               "host": ["{{base_url}}"],
               "path": ["security", "delete-account"]
-            }
+            },
+            "description": "Delete user account (GDPR Right to Erasure)"
           },
           "response": []
         }
@@ -403,35 +386,12 @@
       "description": "Administrative endpoints (admin role required)",
       "item": [
         {
-          "name": "Get All Users",
+          "name": "Get Users",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/admin/users?page=1&limit=10",
-              "host": ["{{base_url}}"],
-              "path": ["admin", "users"],
-              "query": [
-                {
-                  "key": "page",
-                  "value": "1"
-                },
-                {
-                  "key": "limit",
-                  "value": "10"
-                }
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Get All Users with Search",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/admin/users?page=1&limit=10&search=john",
+              "raw": "{{base_url}}/admin/users?page=1&limit=10&search=",
               "host": ["{{base_url}}"],
               "path": ["admin", "users"],
               "query": [
@@ -445,10 +405,11 @@
                 },
                 {
                   "key": "search",
-                  "value": "john"
+                  "value": ""
                 }
               ]
-            }
+            },
+            "description": "Get users list with pagination and search"
           },
           "response": []
         },
@@ -461,7 +422,8 @@
               "raw": "{{base_url}}/admin/users/{{user_uuid}}",
               "host": ["{{base_url}}"],
               "path": ["admin", "users", "{{user_uuid}}"]
-            }
+            },
+            "description": "Delete user account (admin only)"
           },
           "response": []
         },
@@ -474,7 +436,8 @@
               "raw": "{{base_url}}/admin/metrics",
               "host": ["{{base_url}}"],
               "path": ["admin", "metrics"]
-            }
+            },
+            "description": "Get system metrics overview"
           },
           "response": []
         },
@@ -487,7 +450,8 @@
               "raw": "{{base_url}}/admin/metrics/detailed",
               "host": ["{{base_url}}"],
               "path": ["admin", "metrics", "detailed"]
-            }
+            },
+            "description": "Get detailed system metrics"
           },
           "response": []
         },
@@ -510,18 +474,19 @@
                   "value": "50"
                 }
               ]
-            }
+            },
+            "description": "Get system audit logs"
           },
           "response": []
         }
       ]
     },
     {
-      "name": "System",
-      "description": "System health and monitoring endpoints",
+      "name": "Resilience",
+      "description": "System resilience and backup management endpoints",
       "item": [
         {
-          "name": "Health Check",
+          "name": "Get System Status",
           "request": {
             "method": "GET",
             "header": [],
@@ -529,7 +494,8 @@
               "raw": "{{base_url}}/resilience/status",
               "host": ["{{base_url}}"],
               "path": ["resilience", "status"]
-            }
+            },
+            "description": "Get system health status"
           },
           "response": []
         },
@@ -542,7 +508,8 @@
               "raw": "{{base_url}}/resilience/backup",
               "host": ["{{base_url}}"],
               "path": ["resilience", "backup"]
-            }
+            },
+            "description": "Create system backup"
           },
           "response": []
         },
@@ -565,7 +532,8 @@
                   "value": "10"
                 }
               ]
-            }
+            },
+            "description": "List available backups"
           },
           "response": []
         },
@@ -578,67 +546,8 @@
               "raw": "{{base_url}}/resilience/backup/backup-id/restore",
               "host": ["{{base_url}}"],
               "path": ["resilience", "backup", "backup-id", "restore"]
-            }
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "File Storage",
-      "description": "File storage and management endpoints",
-      "item": [
-        {
-          "name": "Get Storage Health",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/storage/health",
-              "host": ["{{base_url}}"],
-              "path": ["storage", "health"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Upload File",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "multipart/form-data"
-              }
-            ],
-            "body": {
-              "mode": "formdata",
-              "formdata": [
-                {
-                  "key": "file",
-                  "type": "file",
-                  "src": []
-                }
-              ]
             },
-            "url": {
-              "raw": "{{base_url}}/storage/upload",
-              "host": ["{{base_url}}"],
-              "path": ["storage", "upload"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "List Files",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/storage/files",
-              "host": ["{{base_url}}"],
-              "path": ["storage", "files"]
-            }
+            "description": "Restore system from backup"
           },
           "response": []
         }
@@ -651,22 +560,34 @@
       "script": {
         "type": "text/javascript",
         "exec": [
-          "// Auto-refresh token if expired",
-          "const token = pm.collectionVariables.get('access_token');",
-          "if (token) {",
-          "    try {",
-          "        const payload = JSON.parse(atob(token.split('.')[1]));",
-          "        const now = Math.floor(Date.now() / 1000);",
-          "        if (payload.exp < now) {",
-          "            console.log('Token expired, attempting refresh...');",
-          "            // Could implement auto-refresh here",
-          "        }",
-          "    } catch (e) {",
-          "        console.log('Invalid token format');",
-          "    }",
+          "// Auto-set base URL if not set",
+          "if (!pm.collectionVariables.get('base_url')) {",
+          "    pm.collectionVariables.set('base_url', 'http://localhost:3000');",
           "}"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Global test script for all requests",
+          "pm.test('Response time is less than 5000ms', function () {",
+          "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+          "});",
+          "",
+          "pm.test('Response has success field', function () {",
+          "    const response = pm.response.json();",
+          "    pm.expect(response).to.have.property('success');",
+          "});",
+          "",
+          "pm.test('Response has http_status_code field', function () {",
+          "    const response = pm.response.json();",
+          "    pm.expect(response).to.have.property('http_status_code');",
+          "});"
         ]
       }
     }
   ]
-} 
+}

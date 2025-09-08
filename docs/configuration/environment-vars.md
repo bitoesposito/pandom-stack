@@ -30,7 +30,7 @@ The `.env` file is organized in logical sections to facilitate configuration:
 # ============================================================================
 
 # ============================================================================
-# CONFIGURAZIONE JWT
+# CONFIGURAZIONE JWT E SESSIONI
 # ============================================================================
 
 # ============================================================================
@@ -42,7 +42,7 @@ The `.env` file is organized in logical sections to facilitate configuration:
 # ============================================================================
 
 # ============================================================================
-# CONFIGURAZIONE SICUREZZA
+# CONFIGURAZIONE SICUREZZA E COOKIE
 # ============================================================================
 
 # ============================================================================
@@ -235,7 +235,7 @@ ADMIN_HASHED_PASSWORD=
 - **Generazione**: `npm run generate-password-hash`
 - **Sicurezza**: Priorità su ADMIN_PASSWORD se presente
 
-## 🔐 **Configurazione JWT**
+## 🔐 **Configurazione JWT e Sessioni**
 
 ### **JWT Authentication**
 
@@ -244,7 +244,20 @@ ADMIN_HASHED_PASSWORD=
 JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
 
 # Scadenza token JWT
-JWT_EXPIRATION=1h
+JWT_EXPIRATION=15m
+
+# Scadenza refresh token
+JWT_REFRESH_EXPIRATION=7d
+
+# Cookie Configuration
+COOKIE_SECRET=your-cookie-secret-here
+COOKIE_DOMAIN=yourdomain.com
+COOKIE_SECURE=true
+COOKIE_SAME_SITE=strict
+
+# Session Configuration
+SESSION_TIMEOUT=3600000
+SESSION_CLEANUP_INTERVAL=300000
 ```
 
 #### **JWT_SECRET**
@@ -257,11 +270,59 @@ JWT_EXPIRATION=1h
 
 #### **JWT_EXPIRATION**
 - **Tipo**: String
-- **Default**: `1h`
+- **Default**: `15m`
 - **Descrizione**: Tempo di scadenza dei token JWT
 - **Formato**: `Xs` (secondi), `Xm` (minuti), `Xh` (ore), `Xd` (giorni)
-- **Esempi**: `30m`, `2h`, `7d`
-- **Sicurezza**: Più breve = più sicuro
+- **Esempi**: `15m`, `1h`, `7d`
+- **Sicurezza**: Breve per ridurre i rischi
+
+#### **JWT_REFRESH_EXPIRATION**
+- **Tipo**: String
+- **Default**: `7d`
+- **Descrizione**: Tempo di scadenza dei refresh token
+- **Formato**: `Xs` (secondi), `Xm` (minuti), `Xh` (ore), `Xd` (giorni)
+- **Esempi**: `7d`, `30d`
+- **Sicurezza**: Più lungo del token di accesso
+
+#### **COOKIE_SECRET**
+- **Tipo**: String
+- **Default**: `your-cookie-secret-here`
+- **Descrizione**: Chiave segreta per firmare i cookie
+- **Sicurezza**: Diversa da JWT_SECRET
+- **Generazione**: `openssl rand -base64 32`
+
+#### **COOKIE_DOMAIN**
+- **Tipo**: String
+- **Default**: `yourdomain.com`
+- **Descrizione**: Dominio per i cookie
+- **Sviluppo**: `localhost`
+- **Produzione**: Dominio reale
+
+#### **COOKIE_SECURE**
+- **Tipo**: Boolean
+- **Default**: `true`
+- **Descrizione**: Cookie solo su HTTPS
+- **Sviluppo**: `false`
+- **Produzione**: `true`
+
+#### **COOKIE_SAME_SITE**
+- **Tipo**: String
+- **Default**: `strict`
+- **Descrizione**: Protezione CSRF
+- **Valori**: `strict`, `lax`, `none`
+- **Sicurezza**: `strict` per massima protezione
+
+#### **SESSION_TIMEOUT**
+- **Tipo**: Number
+- **Default**: `3600000` (1 ora)
+- **Descrizione**: Timeout sessione in millisecondi
+- **Sicurezza**: Breve per ridurre i rischi
+
+#### **SESSION_CLEANUP_INTERVAL**
+- **Tipo**: Number
+- **Default**: `300000` (5 minuti)
+- **Descrizione**: Intervallo pulizia sessioni scadute
+- **Performance**: Evita accumulo sessioni
 
 ## 📧 **Configurazione Email**
 

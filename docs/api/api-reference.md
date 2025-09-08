@@ -2,17 +2,18 @@
 
 ## 📋 Panoramica API
 
-**Pandom Stack** fornisce un'API REST completa e ben documentata per tutte le funzionalità dell'applicazione. L'API è progettata seguendo le best practices REST e include autenticazione JWT, validazione input, e gestione errori standardizzata.
+**Pandom Stack** fornisce un'API REST completa e ben documentata per tutte le funzionalità dell'applicazione. L'API è progettata seguendo le best practices REST e include autenticazione basata su **httpOnly cookies**, validazione input, e gestione errori standardizzata.
 
 ## 🔐 **Autenticazione**
 
-### **JWT Bearer Token**
+### **httpOnly Cookies Authentication**
 
-Tutte le API protette richiedono un token JWT nell'header Authorization:
+L'applicazione utilizza un sistema di autenticazione basato su **httpOnly cookies** per massima sicurezza:
 
-```http
-Authorization: Bearer <jwt_token>
-```
+- **Access Token**: Cookie `access_token` (15 minuti)
+- **Refresh Token**: Cookie `refresh_token` (7-30 giorni)
+- **Automatic Refresh**: Gestione automatica del refresh token
+- **CSRF Protection**: Protezione integrata contro attacchi CSRF
 
 ### **Ottenere un Token**
 
@@ -22,7 +23,8 @@ Content-Type: application/json
 
 {
   "email": "user@example.com",
-  "password": "password123"
+  "password": "password123",
+  "rememberMe": false
 }
 ```
 
@@ -33,16 +35,31 @@ Content-Type: application/json
   "success": true,
   "message": "Login successful",
   "data": {
-    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    "expires_in": 3600,
+    "session_id": "session-uuid-123",
+    "expires_in": 900,
     "user": {
       "uuid": "user-uuid",
       "email": "user@example.com",
-      "role": "user"
+      "role": "user",
+      "is_verified": true,
+      "is_active": true,
+      "created_at": "2024-01-15T10:30:00.000Z",
+      "updated_at": "2024-01-15T10:30:00.000Z",
+      "last_login_at": "2024-01-15T10:30:00.000Z"
+    },
+    "profile": {
+      "uuid": "profile-uuid",
+      "tags": ["user"],
+      "metadata": {}
     }
   }
 }
+```
+
+**Cookies impostati automaticamente:**
+```
+Set-Cookie: access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...; HttpOnly; Secure; SameSite=Strict; Max-Age=900
+Set-Cookie: refresh_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...; HttpOnly; Secure; SameSite=Strict; Max-Age=604800
 ```
 
 ## 📊 **Formato Response Standard**
@@ -124,7 +141,9 @@ Registra un nuovo utente.
       "uuid": "user-uuid",
       "email": "user@example.com",
       "role": "user",
-      "status": "pending_verification"
+      "is_verified": false,
+      "is_active": true,
+      "created_at": "2024-01-15T10:30:00.000Z"
     }
   }
 }
@@ -132,14 +151,14 @@ Registra un nuovo utente.
 
 ### **POST /auth/login**
 
-Autentica un utente esistente.
+Autentica un utente esistente. Imposta automaticamente i cookie httpOnly.
 
 **Request:**
 ```json
 {
   "email": "user@example.com",
   "password": "password123",
-  "rememberMe": true
+  "rememberMe": false
 }
 ```
 
@@ -150,14 +169,22 @@ Autentica un utente esistente.
   "success": true,
   "message": "Login successful",
   "data": {
-    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
     "session_id": "session-uuid-123",
-    "expires_in": 2592000,
+    "expires_in": 900,
     "user": {
       "uuid": "user-uuid",
       "email": "user@example.com",
-      "role": "user"
+      "role": "user",
+      "is_verified": true,
+      "is_active": true,
+      "created_at": "2024-01-15T10:30:00.000Z",
+      "updated_at": "2024-01-15T10:30:00.000Z",
+      "last_login_at": "2024-01-15T10:30:00.000Z"
+    },
+    "profile": {
+      "uuid": "profile-uuid",
+      "tags": ["user"],
+      "metadata": {}
     }
   }
 }
@@ -165,12 +192,7 @@ Autentica un utente esistente.
 
 ### **POST /auth/refresh**
 
-Rinnova un token JWT scaduto.
-
-**Headers:**
-```http
-Authorization: Bearer <refresh_token>
-```
+Rinnova automaticamente i token usando i cookie httpOnly.
 
 **Response:**
 ```json
@@ -179,20 +201,15 @@ Authorization: Bearer <refresh_token>
   "success": true,
   "message": "Token refreshed successfully",
   "data": {
-    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    "expires_in": 3600
+    "session_id": "session-uuid-123",
+    "expires_in": 900
   }
 }
 ```
 
 ### **GET /auth/me**
 
-Ottiene i dati dell'utente corrente.
-
-**Headers:**
-```http
-Authorization: Bearer <access_token>
-```
+Ottiene i dati dell'utente corrente. Utilizza automaticamente i cookie per l'autenticazione.
 
 **Response:**
 ```json
@@ -205,14 +222,18 @@ Authorization: Bearer <access_token>
       "uuid": "user-uuid",
       "email": "user@example.com",
       "role": "user",
-      "status": "active",
-      "createdAt": "2024-01-15T10:30:00.000Z",
-      "lastLogin": "2024-01-15T10:30:00.000Z"
+      "is_verified": true,
+      "is_active": true,
+      "created_at": "2024-01-15T10:30:00.000Z",
+      "updated_at": "2024-01-15T10:30:00.000Z",
+      "last_login_at": "2024-01-15T10:30:00.000Z"
     },
     "profile": {
-      "firstName": "John",
-      "lastName": "Doe",
-      "avatar": "https://example.com/avatar.jpg"
+      "uuid": "profile-uuid",
+      "tags": ["user"],
+      "metadata": {},
+      "created_at": "2024-01-15T10:30:00.000Z",
+      "updated_at": "2024-01-15T10:30:00.000Z"
     }
   }
 }
@@ -239,7 +260,7 @@ Verifica l'email dell'utente.
     "user": {
       "uuid": "user-uuid",
       "email": "user@example.com",
-      "status": "active"
+      "is_verified": true
     }
   }
 }
@@ -320,16 +341,25 @@ Rinvia l'email di verifica.
 }
 ```
 
-## 👤 **User Management Endpoints**
+### **POST /auth/logout**
 
-### **GET /users/profile**
+Effettua il logout dell'utente. Invalida i cookie automaticamente.
+
+**Response:**
+```json
+{
+  "http_status_code": 200,
+  "success": true,
+  "message": "Logout successful",
+  "data": null
+}
+```
+
+## 👤 **User Profile Endpoints**
+
+### **GET /profile**
 
 Ottiene il profilo dell'utente corrente.
-
-**Headers:**
-```http
-Authorization: Bearer <access_token>
-```
 
 **Response:**
 ```json
@@ -338,67 +368,35 @@ Authorization: Bearer <access_token>
   "success": true,
   "message": "Profile retrieved successfully",
   "data": {
-    "profile": {
-      "uuid": "profile-uuid",
-      "firstName": "John",
-      "lastName": "Doe",
-      "avatar": "https://example.com/avatar.jpg",
-      "phone": "+1234567890",
-      "dateOfBirth": "1990-01-01",
-      "address": {
-        "street": "123 Main St",
-        "city": "New York",
-        "state": "NY",
-        "zipCode": "10001",
-        "country": "US"
-      },
+    "uuid": "profile-uuid",
+    "tags": ["developer", "backend"],
+    "metadata": {
+      "role": "admin",
       "preferences": {
-        "language": "en",
-        "timezone": "America/New_York",
-        "notifications": {
-          "email": true,
-          "sms": false,
-          "push": true
-        }
-      },
-      "createdAt": "2024-01-15T10:30:00.000Z",
-      "updatedAt": "2024-01-15T10:30:00.000Z"
-    }
+        "theme": "dark",
+        "language": "en"
+      }
+    },
+    "created_at": "2024-01-15T10:30:00.000Z",
+    "updated_at": "2024-01-15T10:30:00.000Z"
   }
 }
 ```
 
-### **PUT /users/profile**
+### **PUT /profile**
 
 Aggiorna il profilo dell'utente.
-
-**Headers:**
-```http
-Authorization: Bearer <access_token>
-Content-Type: application/json
-```
 
 **Request:**
 ```json
 {
-  "firstName": "John",
-  "lastName": "Doe",
-  "phone": "+1234567890",
-  "dateOfBirth": "1990-01-01",
-  "address": {
-    "street": "123 Main St",
-    "city": "New York",
-    "state": "NY",
-    "zipCode": "10001",
-    "country": "US"
-  },
-  "preferences": {
-    "language": "en",
-    "timezone": "America/New_York",
-    "notifications": {
-      "email": true,
-      "sms": false,
-      "push": true
+  "tags": ["developer", "fullstack", "typescript"],
+  "metadata": {
+    "role": "admin",
+    "preferences": {
+      "theme": "dark",
+      "language": "en",
+      "notifications": true
     }
   }
 }
@@ -411,46 +409,18 @@ Content-Type: application/json
   "success": true,
   "message": "Profile updated successfully",
   "data": {
-    "profile": {
-      "uuid": "profile-uuid",
-      "firstName": "John",
-      "lastName": "Doe",
-      "updatedAt": "2024-01-15T10:30:00.000Z"
-    }
-  }
-}
-```
-
-### **POST /users/change-password**
-
-Cambia la password dell'utente.
-
-**Headers:**
-```http
-Authorization: Bearer <access_token>
-Content-Type: application/json
-```
-
-**Request:**
-```json
-{
-  "currentPassword": "oldpassword123",
-  "newPassword": "newpassword123",
-  "confirmPassword": "newpassword123"
-}
-```
-
-**Response:**
-```json
-{
-  "http_status_code": 200,
-  "success": true,
-  "message": "Password changed successfully",
-  "data": {
-    "user": {
-      "uuid": "user-uuid",
-      "email": "user@example.com"
-    }
+    "uuid": "profile-uuid",
+    "tags": ["developer", "fullstack", "typescript"],
+    "metadata": {
+      "role": "admin",
+      "preferences": {
+        "theme": "dark",
+        "language": "en",
+        "notifications": true
+      }
+    },
+    "created_at": "2024-01-15T10:30:00.000Z",
+    "updated_at": "2024-01-15T11:45:00.000Z"
   }
 }
 ```
@@ -461,17 +431,9 @@ Content-Type: application/json
 
 Ottiene i log di sicurezza dell'utente.
 
-**Headers:**
-```http
-Authorization: Bearer <access_token>
-```
-
 **Query Parameters:**
 - `page` (number): Numero di pagina (default: 1)
 - `limit` (number): Elementi per pagina (default: 10)
-- `type` (string): Tipo di log (opzionale)
-- `startDate` (string): Data inizio (ISO 8601)
-- `endDate` (string): Data fine (ISO 8601)
 
 **Response:**
 ```json
@@ -483,16 +445,18 @@ Authorization: Bearer <access_token>
     "logs": [
       {
         "id": "log-uuid",
-        "action": "USER_LOGIN_SUCCESS",
+        "eventType": "USER_LOGIN_SUCCESS",
+        "severity": "INFO",
+        "userEmail": "user@example.com",
         "ipAddress": "192.168.1.100",
         "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
         "timestamp": "2024-01-15T10:30:00.000Z",
-        "success": true,
         "details": {
           "device": "Desktop",
-          "location": "New York, US",
-          "browser": "Chrome"
-        }
+          "browser": "Chrome",
+          "sessionId": "session-uuid-123"
+        },
+        "metadata": {}
       }
     ],
     "pagination": {
@@ -509,11 +473,6 @@ Authorization: Bearer <access_token>
 
 Ottiene le sessioni attive dell'utente.
 
-**Headers:**
-```http
-Authorization: Bearer <access_token>
-```
-
 **Response:**
 ```json
 {
@@ -524,12 +483,23 @@ Authorization: Bearer <access_token>
     "sessions": [
       {
         "id": "session-uuid",
-        "device": "Desktop",
-        "browser": "Chrome",
+        "eventType": "CREATED",
+        "user": {
+          "uuid": "user-uuid",
+          "email": "user@example.com"
+        },
+        "sessionTokenHash": "hashed-token",
+        "refreshTokenHash": "hashed-refresh-token",
+        "deviceInfo": "Desktop - Chrome",
         "ipAddress": "192.168.1.100",
-        "location": "New York, US",
-        "lastActivity": "2024-01-15T10:30:00.000Z",
-        "isCurrent": true
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        "timestamp": "2024-01-15T10:30:00.000Z",
+        "details": {
+          "sessionId": "session-uuid",
+          "userId": "user-uuid",
+          "rememberMe": false,
+          "expiresAt": "2024-01-22T10:30:00.000Z"
+        }
       }
     ]
   }
@@ -539,11 +509,6 @@ Authorization: Bearer <access_token>
 ### **DELETE /security/sessions/{sessionId}**
 
 Termina una sessione specifica.
-
-**Headers:**
-```http
-Authorization: Bearer <access_token>
-```
 
 **Response:**
 ```json
@@ -561,11 +526,6 @@ Authorization: Bearer <access_token>
 
 Termina tutte le sessioni tranne quella corrente.
 
-**Headers:**
-```http
-Authorization: Bearer <access_token>
-```
-
 **Response:**
 ```json
 {
@@ -581,11 +541,6 @@ Authorization: Bearer <access_token>
 ### **GET /security/download-data**
 
 Richiede l'export dei dati utente (GDPR).
-
-**Headers:**
-```http
-Authorization: Bearer <access_token>
-```
 
 **Response:**
 ```json
@@ -607,54 +562,9 @@ Authorization: Bearer <access_token>
 }
 ```
 
-### **GET /security/downloads/user-data-{userId}-{timestamp}.json**
-
-Scarica i dati utente esportati.
-
-**Headers:**
-```http
-Authorization: Bearer <access_token>
-```
-
-**Response:**
-```json
-{
-  "user": {
-    "uuid": "user-uuid",
-    "email": "user@example.com",
-    "role": "user",
-    "status": "active",
-    "createdAt": "2024-01-15T10:30:00.000Z"
-  },
-  "profile": {
-    "firstName": "John",
-    "lastName": "Doe",
-    "phone": "+1234567890"
-  },
-  "security_logs": [
-    {
-      "action": "USER_LOGIN_SUCCESS",
-      "timestamp": "2024-01-15T10:30:00.000Z",
-      "ipAddress": "192.168.1.100"
-    }
-  ],
-  "export_info": {
-    "exportedAt": "2024-01-15T10:30:00.000Z",
-    "requestedBy": "user-uuid",
-    "format": "JSON"
-  }
-}
-```
-
 ### **DELETE /security/delete-account**
 
 Elimina l'account utente (GDPR Right to Erasure).
-
-**Headers:**
-```http
-Authorization: Bearer <access_token>
-Content-Type: application/json
-```
 
 **Request:**
 ```json
@@ -683,17 +593,10 @@ Content-Type: application/json
 
 Ottiene la lista degli utenti (solo admin).
 
-**Headers:**
-```http
-Authorization: Bearer <access_token>
-```
-
 **Query Parameters:**
 - `page` (number): Numero di pagina (default: 1)
 - `limit` (number): Elementi per pagina (default: 10)
-- `search` (string): Ricerca per email o nome
-- `role` (string): Filtra per ruolo
-- `status` (string): Filtra per status
+- `search` (string): Ricerca per email
 
 **Response:**
 ```json
@@ -707,13 +610,11 @@ Authorization: Bearer <access_token>
         "uuid": "user-uuid",
         "email": "user@example.com",
         "role": "user",
-        "status": "active",
-        "createdAt": "2024-01-15T10:30:00.000Z",
-        "lastLogin": "2024-01-15T10:30:00.000Z",
-        "profile": {
-          "firstName": "John",
-          "lastName": "Doe"
-        }
+        "is_verified": true,
+        "is_active": true,
+        "created_at": "2024-01-15T10:30:00.000Z",
+        "updated_at": "2024-01-15T10:30:00.000Z",
+        "last_login_at": "2024-01-15T10:30:00.000Z"
       }
     ],
     "pagination": {
@@ -726,113 +627,19 @@ Authorization: Bearer <access_token>
 }
 ```
 
-### **GET /admin/users/{userId}**
+### **DELETE /admin/users/{uuid}**
 
-Ottiene i dettagli di un utente specifico.
-
-**Headers:**
-```http
-Authorization: Bearer <access_token>
-```
+Elimina un utente (solo admin).
 
 **Response:**
 ```json
 {
   "http_status_code": 200,
   "success": true,
-  "message": "User details retrieved successfully",
+  "message": "User deleted successfully",
   "data": {
-    "user": {
-      "uuid": "user-uuid",
-      "email": "user@example.com",
-      "role": "user",
-      "status": "active",
-      "createdAt": "2024-01-15T10:30:00.000Z",
-      "lastLogin": "2024-01-15T10:30:00.000Z"
-    },
-    "profile": {
-      "firstName": "John",
-      "lastName": "Doe",
-      "phone": "+1234567890",
-      "address": {
-        "street": "123 Main St",
-        "city": "New York"
-      }
-    },
-    "securityLogs": [
-      {
-        "action": "USER_LOGIN_SUCCESS",
-        "timestamp": "2024-01-15T10:30:00.000Z",
-        "ipAddress": "192.168.1.100"
-      }
-    ]
-  }
-}
-```
-
-### **PUT /admin/users/{userId}/role**
-
-Cambia il ruolo di un utente.
-
-**Headers:**
-```http
-Authorization: Bearer <access_token>
-Content-Type: application/json
-```
-
-**Request:**
-```json
-{
-  "role": "moderator"
-}
-```
-
-**Response:**
-```json
-{
-  "http_status_code": 200,
-  "success": true,
-  "message": "User role updated successfully",
-  "data": {
-    "user": {
-      "uuid": "user-uuid",
-      "email": "user@example.com",
-      "role": "moderator"
-    }
-  }
-}
-```
-
-### **PUT /admin/users/{userId}/status**
-
-Cambia lo status di un utente.
-
-**Headers:**
-```http
-Authorization: Bearer <access_token>
-Content-Type: application/json
-```
-
-**Request:**
-```json
-{
-  "status": "suspended",
-  "reason": "Violation of terms of service"
-}
-```
-
-**Response:**
-```json
-{
-  "http_status_code": 200,
-  "success": true,
-  "message": "User status updated successfully",
-  "data": {
-    "user": {
-      "uuid": "user-uuid",
-      "email": "user@example.com",
-      "status": "suspended"
-    }
+    "uuid": "user-uuid",
+    "email": "user@example.com"
   }
 }
 ```
@@ -840,16 +647,6 @@ Content-Type: application/json
 ### **GET /admin/metrics**
 
 Ottiene le metriche del sistema.
-
-**Headers:**
-```http
-Authorization: Bearer <access_token>
-```
-
-**Query Parameters:**
-- `period` (string): Periodo (day, week, month, year)
-- `startDate` (string): Data inizio (ISO 8601)
-- `endDate` (string): Data fine (ISO 8601)
 
 **Response:**
 ```json
@@ -879,130 +676,179 @@ Authorization: Bearer <access_token>
 }
 ```
 
-## 🔧 **System Endpoints**
+### **GET /admin/metrics/detailed**
 
-### **GET /health**
-
-Health check del sistema.
+Ottiene metriche dettagliate del sistema.
 
 **Response:**
 ```json
 {
   "http_status_code": 200,
   "success": true,
-  "message": "System is healthy",
+  "message": "Detailed metrics retrieved successfully",
+  "data": {
+    "totalRequests": 15000,
+    "successfulRequests": 14850,
+    "failedRequests": 150,
+    "avgResponseTime": 150,
+    "topEndpoints": [
+      {
+        "endpoint": "/auth/me",
+        "requests": 5000,
+        "avgResponseTime": 120
+      }
+    ],
+    "errorBreakdown": [
+      {
+        "statusCode": 400,
+        "count": 100,
+        "percentage": 0.67
+      }
+    ]
+  }
+}
+```
+
+### **GET /admin/audit-logs**
+
+Ottiene i log di audit del sistema.
+
+**Query Parameters:**
+- `page` (number): Numero di pagina (default: 1)
+- `limit` (number): Elementi per pagina (default: 50)
+
+**Response:**
+```json
+{
+  "http_status_code": 200,
+  "success": true,
+  "message": "Audit logs retrieved successfully",
+  "data": {
+    "logs": [
+      {
+        "id": "audit-uuid",
+        "eventType": "USER_LOGIN_SUCCESS",
+        "status": "SUCCESS",
+        "user": {
+          "uuid": "user-uuid",
+          "email": "user@example.com"
+        },
+        "sessionId": "session-uuid-123",
+        "ipAddress": "192.168.1.100",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        "resource": "/auth/login",
+        "action": "POST",
+        "timestamp": "2024-01-15T10:30:00.000Z",
+        "details": {
+          "device": "Desktop",
+          "browser": "Chrome"
+        }
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "limit": 50,
+      "total": 5000,
+      "totalPages": 100
+    }
+  }
+}
+```
+
+## 🔧 **Resilience Endpoints**
+
+### **GET /resilience/status**
+
+Verifica lo stato del sistema.
+
+**Response:**
+```json
+{
+  "http_status_code": 200,
+  "success": true,
+  "message": "System status retrieved successfully",
   "data": {
     "status": "healthy",
     "timestamp": "2024-01-15T10:30:00.000Z",
     "version": "1.0.0",
+    "uptime": 86400,
     "services": {
       "database": "healthy",
-      
-      "minio": "healthy"
-    },
-    "uptime": 86400
+      "storage": "healthy",
+      "email": "degraded"
+    }
   }
 }
 ```
 
-### **GET /metrics**
+### **POST /resilience/backup**
 
-Metriche del sistema (Prometheus format).
+Crea un backup del sistema.
 
 **Response:**
+```json
+{
+  "http_status_code": 201,
+  "success": true,
+  "message": "System backup created and uploaded to MinIO successfully",
+  "data": {
+    "backup_id": "2024-01-15T10-30-00-000Z",
+    "backup_file": "backup-2024-01-15T10-30-00-000Z.sql",
+    "backup_size": 1048576,
+    "created_at": "2024-01-15T10:30:00.000Z",
+    "status": "completed"
+  }
+}
 ```
-# HELP http_requests_total Total number of HTTP requests
-# TYPE http_requests_total counter
-http_requests_total{method="GET",endpoint="/auth/me"} 1250
-http_requests_total{method="POST",endpoint="/auth/login"} 850
 
-# HELP http_request_duration_seconds Duration of HTTP requests
-# TYPE http_request_duration_seconds histogram
-http_request_duration_seconds_bucket{le="0.1"} 1000
-http_request_duration_seconds_bucket{le="0.5"} 1500
-http_request_duration_seconds_bucket{le="1"} 1800
-```
+### **GET /resilience/backup**
 
-## 📱 **File Storage Endpoints**
+Lista i backup disponibili.
 
-### **GET /storage/health**
-
-Verifica lo stato del servizio di storage.
-
-**Headers:**
-```http
-Authorization: Bearer <access_token>
-```
+**Query Parameters:**
+- `page` (number): Numero di pagina (default: 1)
+- `limit` (number): Elementi per pagina (default: 10)
 
 **Response:**
 ```json
 {
   "http_status_code": 200,
   "success": true,
-  "message": "Storage health check successful",
+  "message": "Backups retrieved successfully",
   "data": {
-    "status": "healthy",
-    "bucket": "pandom-storage",
-    "availableSpace": "1.5 GB",
-    "totalFiles": 1250
-  }
-}
-```
-
-### **POST /storage/upload**
-
-Carica un file nel sistema di storage.
-
-**Headers:**
-```http
-Authorization: Bearer <access_token>
-Content-Type: multipart/form-data
-```
-
-**Response:**
-```json
-{
-  "http_status_code": 200,
-  "success": true,
-  "message": "File uploaded successfully",
-  "data": {
-    "fileId": "file-uuid",
-    "filename": "document.pdf",
-    "size": 1024000,
-    "url": "https://storage.example.com/pandom-storage/uploads/document.pdf",
-    "uploadedAt": "2024-01-15T10:30:00.000Z"
-  }
-}
-```
-
-### **GET /storage/files**
-
-Lista i file disponibili per l'utente.
-
-**Headers:**
-```http
-Authorization: Bearer <access_token>
-```
-
-**Response:**
-```json
-{
-  "http_status_code": 200,
-  "success": true,
-  "message": "Files retrieved successfully",
-  "data": {
-    "files": [
+    "backups": [
       {
-        "fileId": "file-uuid",
-        "filename": "document.pdf",
-        "size": 1024000,
-        "url": "https://storage.example.com/pandom-storage/uploads/document.pdf",
-        "uploadedAt": "2024-01-15T10:30:00.000Z"
+        "backup_id": "2024-01-15T10-30-00-000Z",
+        "backup_file": "backup-2024-01-15T10-30-00-000Z.sql",
+        "backup_size": 1048576,
+        "created_at": "2024-01-15T10:30:00.000Z",
+        "status": "completed"
       }
     ],
-    "total": 25,
-    "page": 1,
-    "limit": 20
+    "pagination": {
+      "page": 1,
+      "limit": 10,
+      "total": 25,
+      "totalPages": 3
+    }
+  }
+}
+```
+
+### **POST /resilience/backup/{backupId}/restore**
+
+Ripristina il sistema da un backup.
+
+**Response:**
+```json
+{
+  "http_status_code": 200,
+  "success": true,
+  "message": "System restored from backup successfully",
+  "data": {
+    "backup_id": "2024-01-15T10-30-00-000Z",
+    "restored_at": "2024-01-15T11:00:00.000Z",
+    "status": "completed"
   }
 }
 ```
@@ -1067,32 +913,27 @@ GET /admin/users?sort=createdAt&order=desc
 GET /admin/users?page=2&limit=20
 ```
 
-## 📊 **Webhooks (Futuro)**
+## 🔒 **Sicurezza**
 
-L'API supporterà webhooks per eventi importanti:
+### **httpOnly Cookies**
+- I token sono memorizzati in cookie httpOnly per prevenire attacchi XSS
+- I cookie sono marcati come Secure e SameSite=Strict
+- Refresh automatico dei token
 
-### **Eventi Supportati**
-- `user.registered`
-- `user.login`
-- `user.profile_updated`
-- `security.alert`
-- `admin.action`
+### **CSRF Protection**
+- Protezione integrata contro attacchi CSRF
+- Validazione dei token CSRF per operazioni sensibili
 
-### **Formato Webhook**
-```json
-{
-  "event": "user.registered",
-  "timestamp": "2024-01-15T10:30:00.000Z",
-  "data": {
-    "user": {
-      "uuid": "user-uuid",
-      "email": "user@example.com"
-    }
-  },
-  "signature": "sha256=..."
-}
-```
+### **Audit Logging**
+- Tutte le operazioni sono registrate nei log di audit
+- Tracciamento IP e User Agent
+- Log di sicurezza per eventi importanti
+
+### **Session Management**
+- Gestione avanzata delle sessioni
+- Possibilità di terminare sessioni specifiche
+- Monitoraggio delle sessioni attive
 
 ---
 
-**Pandom Stack API** - API REST completa, sicura e ben documentata per applicazioni enterprise. 
+**Pandom Stack API** - API REST completa, sicura e ben documentata per applicazioni enterprise con autenticazione basata su httpOnly cookies.

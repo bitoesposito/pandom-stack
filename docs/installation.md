@@ -8,9 +8,11 @@
 - [Quick Installation](#quick-installation)
 - [Detailed Setup](#detailed-setup)
 - [Environment Configuration](#environment-configuration)
+- [Security Setup](#security-setup)
 - [Production Setup](#production-setup)
 - [Development Workflow](#development-workflow)
 - [Troubleshooting](#troubleshooting)
+- [Related Documentation](#related-documentation)
 
 ## ✅ Prerequisites
 
@@ -189,19 +191,29 @@ DB_PORT=5432
 DB_USERNAME=pandom_user
 DB_PASSWORD=secure_password
 DB_DATABASE=pandom_db
+DATABASE_URL=postgres://pandom_user:secure_password@localhost:5432/pandom_db
 
-
-
-# JWT configuration
+# JWT and Session configuration
 JWT_SECRET=your-super-secret-jwt-key
-JWT_EXPIRES_IN=15m
-JWT_REFRESH_EXPIRES_IN=7d
+JWT_EXPIRATION=15m
+JWT_REFRESH_EXPIRATION=7d
+
+# Cookie configuration
+COOKIE_SECRET=your-cookie-secret-here
+COOKIE_DOMAIN=localhost
+COOKIE_SECURE=false
+COOKIE_SAME_SITE=strict
+
+# Session configuration
+SESSION_TIMEOUT=3600000
+SESSION_CLEANUP_INTERVAL=300000
 
 # Email configuration
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USER=your-email@gmail.com
 SMTP_PASS=your-app-password
+SMTP_FROM=noreply@pandom.com
 
 # MinIO configuration
 MINIO_ENDPOINT=localhost
@@ -222,6 +234,14 @@ CORS_ORIGIN=http://localhost:4200
 GDPR_ENABLED=true
 DATA_RETENTION_DAYS=730
 AUDIT_LOG_ENABLED=true
+
+# Rate limiting
+RATE_LIMIT_WINDOW_MS=900000
+RATE_LIMIT_MAX_ATTEMPTS=5
+
+# Security headers
+SECURITY_HEADERS_ENABLED=true
+HTTPS_ENABLED=false
 ```
 
 ### Development Configuration
@@ -229,6 +249,89 @@ AUDIT_LOG_ENABLED=true
 ```bash
 # Development settings
 DEBUG=true
+LOG_LEVEL=debug
+SECURITY_HEADERS_ENABLED=false
+HTTPS_ENABLED=false
+SMTP_ENABLED=false
+RATE_LIMIT_MAX_REQUESTS=1000
+```
+
+## 🔐 **Security Setup**
+
+### **1. Generate Secure Keys**
+
+```bash
+# Generate JWT secret
+openssl rand -base64 64
+
+# Generate cookie secret
+openssl rand -base64 32
+
+# Generate encryption key
+openssl rand -base64 32
+```
+
+### **2. Configure httpOnly Cookies**
+
+```bash
+# Development (localhost)
+COOKIE_DOMAIN=localhost
+COOKIE_SECURE=false
+COOKIE_SAME_SITE=strict
+
+# Production
+COOKIE_DOMAIN=yourdomain.com
+COOKIE_SECURE=true
+COOKIE_SAME_SITE=strict
+```
+
+### **3. Setup Session Management**
+
+```bash
+# Session timeout (1 hour)
+SESSION_TIMEOUT=3600000
+
+# Cleanup interval (5 minutes)
+SESSION_CLEANUP_INTERVAL=300000
+```
+
+### **4. Configure Rate Limiting**
+
+```bash
+# Rate limiting for authentication
+RATE_LIMIT_WINDOW_MS=900000  # 15 minutes
+RATE_LIMIT_MAX_ATTEMPTS=5    # 5 attempts per window
+```
+
+## 🛡️ **Security Best Practices**
+
+### **1. Environment Variables**
+
+- ✅ **Never commit secrets** to version control
+- ✅ **Use strong passwords** (min 32 characters)
+- ✅ **Rotate secrets regularly** in production
+- ✅ **Use different secrets** for each environment
+
+### **2. Database Security**
+
+- ✅ **Use strong database passwords**
+- ✅ **Enable SSL connections** in production
+- ✅ **Restrict database access** to application only
+- ✅ **Regular security updates** for PostgreSQL
+
+### **3. Cookie Security**
+
+- ✅ **httpOnly cookies** prevent XSS attacks
+- ✅ **Secure flag** for HTTPS only
+- ✅ **SameSite=Strict** prevents CSRF
+- ✅ **Short expiration times** reduce risk
+
+### **4. Network Security**
+
+- ✅ **HTTPS in production** (required for secure cookies)
+- ✅ **CORS properly configured**
+- ✅ **Security headers enabled**
+- ✅ **Rate limiting active**
 LOG_LEVEL=debug
 HOT_RELOAD=true
 AUTO_MIGRATION=true
@@ -524,13 +627,38 @@ openssl s_client -connect yourdomain.com:443
 
 ### Documentation
 - [Application Overview](./overview.md)
-- [API Reference](./development/api-reference.md)
+- [API Reference](./api/api-reference.md)
 - [Security Guide](./security/security-overview.md)
-- [Deployment Guide](./deployment/deployment-guide.md)
+- [Docker Deployment](./configuration/docker-deployment.md)
 
 ### Support
 
+- **GitHub Issues**: Report bugs and request features
+- **Documentation**: Complete guides and references
+- **Community**: Join discussions and get help
 
+## 📚 Related Documentation
+
+### 🚀 **Getting Started**
+- [**Application Overview**](./overview.md) - General overview and architecture
+- [**Environment Configuration**](./configuration/environment-vars.md) - Environment variables and configurations
+
+### 🏗️ **Architecture & Design**
+- [**System Architecture**](./architecture/system-architecture.md) - Detailed system architecture
+- [**Database Design**](./architecture/database-design.md) - Database schema and management
+
+### 🐳 **Deployment & Configuration**
+- [**Docker Deployment**](./configuration/docker-deployment.md) - Docker configuration and deployment
+- [**Production Deployment**](./deployment/production-deployment-guide.md) - Production deployment guide
+
+### 🔒 **Security & Compliance**
+- [**Security Overview**](./security/security-overview.md) - Security framework and features
+- [**Security Implementation Guide**](./security/security-implementation-guide.md) - Complete security implementation guide
+
+### 🛠️ **Development & API**
+- [**API Reference**](./api/api-reference.md) - Complete API documentation
+- [**Postman Collection**](./api/pandom-postman-collection.json) - Complete Postman collection
+- [**Postman Setup Guide**](./api/postman-setup-guide.md) - Postman configuration guide
 
 ---
 

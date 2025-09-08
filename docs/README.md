@@ -19,8 +19,13 @@
 - [**System Architecture**](./architecture/system-architecture.md) - System architecture overview
 - [**Database Design**](./architecture/database-design.md) - Database schema and management
 
+### 🐳 **Deployment & Configuration**
+- [**Docker Deployment**](./configuration/docker-deployment.md) - Docker configuration and deployment
+- [**Production Deployment**](./deployment/production-deployment-guide.md) - Production deployment guide
+
 ### 🔒 **Security & Compliance**
 - [**Security Overview**](./security/security-overview.md) - Security framework and features
+- [**Security Implementation Guide**](./security/security-implementation-guide.md) - Complete security implementation guide
 
 ### 📱 **PWA Features**
 - [**PWA Architecture**](./architecture/system-architecture.md#pwa-architecture) - Progressive Web App design and features

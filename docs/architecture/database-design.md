@@ -1,606 +1,621 @@
-# 🗄️ Database Design & Schema
+# 🗄️ Database Design
 
-> **Complete database architecture documentation including schema design, table structures, relationships, and management for Pandom Stack.**
+## 📋 Panoramica
 
-## 📋 Table of Contents
+**Pandom Stack** utilizza PostgreSQL come database principale con un design ottimizzato per sicurezza, performance e scalabilità. Il database è progettato seguendo le best practices per applicazioni enterprise con focus su audit logging, sicurezza e compliance GDPR.
 
-- [Database Overview](#database-overview)
-- [Schema Design](#schema-design)
-- [Table Structures](#table-structures)
-- [Relationships](#relationships)
-- [Data Types & Constraints](#data-types--constraints)
-- [Indexes & Performance](#indexes--performance)
-- [Migrations & Seeding](#migrations--seeding)
-- [Database Management](#database-management)
-- [Security Considerations](#security-considerations)
+## 🏗️ **Architettura Database**
 
-## 🏗️ Database Overview
+### **Tecnologie Utilizzate**
 
-### Technology Stack
-- **Database**: PostgreSQL 17+
-- **ORM**: TypeORM with TypeScript
-- **Connection**: Connection pooling with automatic retry
-- **Migrations**: TypeORM migrations for schema versioning
-- **Seeding**: Automated data seeding for development
+- **Database**: PostgreSQL 17
+- **ORM**: TypeORM
+- **Migrazioni**: TypeORM Migrations
+- **Backup**: pg_dump + MinIO
+- **Monitoring**: Health checks integrati
 
-### Database Architecture
+### **Caratteristiche Principali**
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                   DATABASE LAYER                            │
-├─────────────────────────────────────────────────────────────┤
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐        │
-│  │ PostgreSQL  │  │   MinIO     │                          │
-│  │  Database   │  │   Cache     │  │   Storage   │        │
-│  └─────────────┘  └─────────────┘  └─────────────┘        │
-│         │                │                                 │
-│   Relational Data   File Storage                           │
-│   User Management   Document Storage                       │
-│   Audit Logging     Media Files                            │
-└─────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────┐
-│                   ORM LAYER                                 │
-├─────────────────────────────────────────────────────────────┤
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐        │
-│  │   TypeORM   │  │  Entities   │  │ Migrations  │        │
-│  │   ORM       │  │   Models    │  │   Schema    │        │
-│  └─────────────┘  └─────────────┘  └─────────────┘        │
-└─────────────────────────────────────────────────────────────┘
-```
+- ✅ **UUID Primary Keys** per sicurezza
+- ✅ **Audit Logging** completo
+- ✅ **Security Logging** per compliance
+- ✅ **Session Management** avanzato
+- ✅ **JSONB** per metadati flessibili
+- ✅ **Indici ottimizzati** per performance
+- ✅ **Foreign Key constraints** per integrità
 
-## 📊 Schema Design
+## 📊 **Schema Database**
 
-### Core Tables
+### **Diagramma ER**
 
-| Table | Purpose | Records | Growth |
-|-------|---------|---------|--------|
-| `auth_users` | User authentication and management | ~10K | Medium |
-| `user_profiles` | Extended user profile data | ~10K | Medium |
-| `audit_logs` | Security and activity logging | ~1M | High |
-| `sessions` | User session management | ~1K | High |
-
-### Schema Diagram
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    DATABASE SCHEMA                          │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│  ┌─────────────────┐        ┌─────────────────┐            │
-│  │   auth_users    │        │  user_profiles  │            │
-│  │                 │        │                 │            │
-│  │ uuid (PK)       │◄───────┤ uuid (PK)       │            │
-│  │ email (UQ)      │        │ tags[]          │            │
-│  │ password_hash   │        │ metadata (JSONB)│            │
-│  │ role (ENUM)     │        │ created_at      │            │
-│  │ is_active       │        │ updated_at      │            │
-│  │ is_verified     │        └─────────────────┘            │
-│  │ is_configured   │                                      │
-│  │ verification_   │        ┌─────────────────┐            │
-│  │   token         │        │   audit_logs    │            │
-│  │ reset_token     │        │                 │            │
-│  │ refresh_token   │        │ id (PK)         │            │
-│  │ last_login_at   │        │ user_uuid (FK)  │            │
-│  │ created_at      │        │ event_type      │            │
-│  │ updated_at      │        │ timestamp       │            │
-│  └─────────────────┘        │ details (JSONB) │            │
-│                             │ ip_address      │            │
-│  ┌─────────────────┐        │ user_agent      │            │
-│  │    sessions     │        └─────────────────┘            │
-│  │                 │                                      │
-│  │ id (PK)         │        ┌─────────────────┐            │
-│  │ user_uuid (FK)  │        │   security_logs │            │
-│  │ token           │        │                 │            │
-│  │ expires_at      │        │ id (PK)         │            │
-│  │ created_at      │        │ user_uuid (FK)  │            │
-│  │ ip_address      │        │ event_type      │            │
-│  │ user_agent      │        │ severity        │            │
-│  └─────────────────┘        │ details (JSONB) │            │
-│                             │ timestamp       │            │
-│                             └─────────────────┘            │
-└─────────────────────────────────────────────────────────────┘
+```mermaid
+erDiagram
+    AUTH_USERS {
+        uuid UUID PK
+        email VARCHAR UNIQUE
+        password_hash VARCHAR
+        role ENUM
+        is_verified BOOLEAN
+        is_active BOOLEAN
+        last_login_at TIMESTAMP
+        created_at TIMESTAMP
+        updated_at TIMESTAMP
+        profile_uuid UUID FK
+    }
+    
+    USER_PROFILES {
+        uuid UUID PK
+        tags TEXT[]
+        metadata JSONB
+        created_at TIMESTAMP
+        updated_at TIMESTAMP
+    }
+    
+    AUDIT_LOGS {
+        id UUID PK
+        event_type VARCHAR
+        status VARCHAR
+        user_uuid UUID FK
+        session_id VARCHAR
+        ip_address VARCHAR
+        user_agent VARCHAR
+        resource VARCHAR
+        action VARCHAR
+        timestamp TIMESTAMP
+        details JSONB
+    }
+    
+    SECURITY_LOGS {
+        id UUID PK
+        event_type VARCHAR
+        severity VARCHAR
+        user_uuid UUID FK
+        ip_address VARCHAR
+        user_agent VARCHAR
+        timestamp TIMESTAMP
+        details JSONB
+        metadata JSONB
+    }
+    
+    SESSION_LOGS {
+        id UUID PK
+        event_type VARCHAR
+        user_uuid UUID FK
+        session_token_hash VARCHAR
+        refresh_token_hash VARCHAR
+        device_info VARCHAR
+        ip_address VARCHAR
+        user_agent VARCHAR
+        timestamp TIMESTAMP
+        details JSONB
+    }
+    
+    AUTH_USERS ||--|| USER_PROFILES : "has profile"
+    AUTH_USERS ||--o{ AUDIT_LOGS : "generates"
+    AUTH_USERS ||--o{ SECURITY_LOGS : "generates"
+    AUTH_USERS ||--o{ SESSION_LOGS : "generates"
 ```
 
-## 🗂️ Table Structures
+## 🗃️ **Entità Database**
 
-### 1. `auth_users` Table
+### **1. AUTH_USERS**
 
-**Purpose**: Core user authentication and account management
+Tabella principale per l'autenticazione e autorizzazione degli utenti.
 
 ```sql
 CREATE TABLE auth_users (
     uuid UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     email VARCHAR(255) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
-    role userrole DEFAULT 'user',
-    is_active BOOLEAN DEFAULT true,
+    role user_role_enum DEFAULT 'user',
     is_verified BOOLEAN DEFAULT false,
-    is_configured BOOLEAN DEFAULT false,
-    verification_token TEXT,
-    verification_expires TIMESTAMP,
-    reset_token TEXT,
-    reset_token_expiry TIMESTAMP,
-    refresh_token TEXT,
-    refresh_token_expires TIMESTAMP,
-    last_login_at TIMESTAMP,
-    profile_uuid UUID UNIQUE REFERENCES user_profiles(uuid),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    is_active BOOLEAN DEFAULT true,
+    last_login_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    profile_uuid UUID REFERENCES user_profiles(uuid)
 );
 ```
 
-**Key Features**:
-- **UUID Primary Key**: Secure, globally unique identifiers
-- **Email Uniqueness**: Enforced at database level
-- **Role Enum**: Type-safe role management
-- **Token Management**: Verification and reset tokens
-- **Session Tracking**: Last login and refresh tokens
-- **Profile Relationship**: One-to-one with user profiles
+#### **Campi Principali**
 
-### 2. `user_profiles` Table
+| Campo | Tipo | Descrizione |
+|-------|------|-------------|
+| `uuid` | UUID | Chiave primaria univoca |
+| `email` | VARCHAR(255) | Email utente (univoca) |
+| `password_hash` | VARCHAR(255) | Hash password bcrypt |
+| `role` | ENUM | Ruolo utente (user, admin) |
+| `is_verified` | BOOLEAN | Email verificata |
+| `is_active` | BOOLEAN | Account attivo |
+| `last_login_at` | TIMESTAMP | Ultimo accesso |
+| `profile_uuid` | UUID | Riferimento al profilo |
 
-**Purpose**: Extended user profile information and metadata
+#### **Indici**
+
+```sql
+-- Indice per email (univoco)
+CREATE UNIQUE INDEX idx_auth_users_email ON auth_users(email);
+
+-- Indice per ruolo
+CREATE INDEX idx_auth_users_role ON auth_users(role);
+
+-- Indice per stato attivo
+CREATE INDEX idx_auth_users_active ON auth_users(is_active);
+
+-- Indice per ultimo login
+CREATE INDEX idx_auth_users_last_login ON auth_users(last_login_at);
+```
+
+### **2. USER_PROFILES**
+
+Tabella per informazioni estese del profilo utente.
 
 ```sql
 CREATE TABLE user_profiles (
     uuid UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tags TEXT[] DEFAULT '{}',
     metadata JSONB DEFAULT '{}',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 ```
 
-**Key Features**:
-- **Flexible Tags**: PostgreSQL text array for categorization
-- **JSONB Metadata**: Flexible schema for additional data
-- **Automatic Timestamps**: Creation and update tracking
-- **UUID Primary Key**: Consistent with user table
+#### **Campi Principali**
 
-### 3. `audit_logs` Table
+| Campo | Tipo | Descrizione |
+|-------|------|-------------|
+| `uuid` | UUID | Chiave primaria univoca |
+| `tags` | TEXT[] | Array di tag utente |
+| `metadata` | JSONB | Metadati flessibili |
+| `created_at` | TIMESTAMP | Data creazione |
+| `updated_at` | TIMESTAMP | Data ultimo aggiornamento |
 
-**Purpose**: Comprehensive audit trail for security and compliance
+#### **Indici**
+
+```sql
+-- Indice GIN per tags
+CREATE INDEX idx_user_profiles_tags ON user_profiles USING GIN(tags);
+
+-- Indice GIN per metadata JSONB
+CREATE INDEX idx_user_profiles_metadata ON user_profiles USING GIN(metadata);
+```
+
+### **3. AUDIT_LOGS**
+
+Tabella per il logging completo delle operazioni di sistema.
 
 ```sql
 CREATE TABLE audit_logs (
-    id SERIAL PRIMARY KEY,
-    user_uuid UUID REFERENCES auth_users(uuid),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     event_type VARCHAR(100) NOT NULL,
-    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    details JSONB DEFAULT '{}',
+    status VARCHAR(20) NOT NULL,
+    user_uuid UUID REFERENCES auth_users(uuid),
+    session_id VARCHAR(255),
     ip_address INET,
     user_agent TEXT,
-    severity VARCHAR(20) DEFAULT 'info'
+    resource VARCHAR(255),
+    action VARCHAR(10),
+    timestamp TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    details JSONB DEFAULT '{}'
 );
 ```
 
-**Key Features**:
-- **Comprehensive Logging**: All user actions tracked
-- **IP Tracking**: Security monitoring
-- **JSONB Details**: Flexible event data storage
-- **Severity Levels**: Info, warning, error, critical
+#### **Campi Principali**
 
-### 4. `sessions` Table
+| Campo | Tipo | Descrizione |
+|-------|------|-------------|
+| `id` | UUID | Chiave primaria univoca |
+| `event_type` | VARCHAR(100) | Tipo di evento |
+| `status` | VARCHAR(20) | Stato operazione |
+| `user_uuid` | UUID | Riferimento utente |
+| `session_id` | VARCHAR(255) | ID sessione |
+| `ip_address` | INET | Indirizzo IP |
+| `user_agent` | TEXT | User agent browser |
+| `resource` | VARCHAR(255) | Risorsa accessata |
+| `action` | VARCHAR(10) | Azione HTTP |
+| `details` | JSONB | Dettagli aggiuntivi |
 
-**Purpose**: User session management and tracking
+#### **Indici**
 
 ```sql
-CREATE TABLE sessions (
-    id SERIAL PRIMARY KEY,
+-- Indice per timestamp (per query temporali)
+CREATE INDEX idx_audit_logs_timestamp ON audit_logs(timestamp);
+
+-- Indice per utente
+CREATE INDEX idx_audit_logs_user ON audit_logs(user_uuid);
+
+-- Indice per tipo evento
+CREATE INDEX idx_audit_logs_event_type ON audit_logs(event_type);
+
+-- Indice per status
+CREATE INDEX idx_audit_logs_status ON audit_logs(status);
+
+-- Indice composito per query comuni
+CREATE INDEX idx_audit_logs_user_timestamp ON audit_logs(user_uuid, timestamp);
+```
+
+### **4. SECURITY_LOGS**
+
+Tabella per il logging degli eventi di sicurezza.
+
+```sql
+CREATE TABLE security_logs (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    event_type VARCHAR(100) NOT NULL,
+    severity VARCHAR(20) NOT NULL,
     user_uuid UUID REFERENCES auth_users(uuid),
-    token TEXT NOT NULL,
-    expires_at TIMESTAMP NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     ip_address INET,
-    user_agent TEXT
+    user_agent TEXT,
+    timestamp TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    details JSONB DEFAULT '{}',
+    metadata JSONB DEFAULT '{}'
 );
 ```
 
-**Key Features**:
-- **Session Tokens**: Secure session management
-- **Expiration Tracking**: Automatic session cleanup
-- **Security Monitoring**: IP and user agent tracking
+#### **Campi Principali**
 
-## 🔗 Relationships
+| Campo | Tipo | Descrizione |
+|-------|------|-------------|
+| `id` | UUID | Chiave primaria univoca |
+| `event_type` | VARCHAR(100) | Tipo evento sicurezza |
+| `severity` | VARCHAR(20) | Livello di gravità |
+| `user_uuid` | UUID | Riferimento utente |
+| `ip_address` | INET | Indirizzo IP |
+| `user_agent` | TEXT | User agent browser |
+| `details` | JSONB | Dettagli evento |
+| `metadata` | JSONB | Metadati aggiuntivi |
 
-### Primary Relationships
+#### **Indici**
+
+```sql
+-- Indice per timestamp
+CREATE INDEX idx_security_logs_timestamp ON security_logs(timestamp);
+
+-- Indice per severità
+CREATE INDEX idx_security_logs_severity ON security_logs(severity);
+
+-- Indice per tipo evento
+CREATE INDEX idx_security_logs_event_type ON security_logs(event_type);
+
+-- Indice per utente
+CREATE INDEX idx_security_logs_user ON security_logs(user_uuid);
+
+-- Indice composito per alerting
+CREATE INDEX idx_security_logs_severity_timestamp ON security_logs(severity, timestamp);
+```
+
+### **5. SESSION_LOGS**
+
+Tabella per il tracking delle sessioni utente.
+
+```sql
+CREATE TABLE session_logs (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    event_type VARCHAR(100) NOT NULL,
+    user_uuid UUID REFERENCES auth_users(uuid),
+    session_token_hash VARCHAR(255),
+    refresh_token_hash VARCHAR(255),
+    device_info VARCHAR(255),
+    ip_address INET,
+    user_agent TEXT,
+    timestamp TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    details JSONB DEFAULT '{}'
+);
+```
+
+#### **Campi Principali**
+
+| Campo | Tipo | Descrizione |
+|-------|------|-------------|
+| `id` | UUID | Chiave primaria univoca |
+| `event_type` | VARCHAR(100) | Tipo evento sessione |
+| `user_uuid` | UUID | Riferimento utente |
+| `session_token_hash` | VARCHAR(255) | Hash token sessione |
+| `refresh_token_hash` | VARCHAR(255) | Hash refresh token |
+| `device_info` | VARCHAR(255) | Info dispositivo |
+| `ip_address` | INET | Indirizzo IP |
+| `user_agent` | TEXT | User agent browser |
+| `details` | JSONB | Dettagli sessione |
+
+#### **Indici**
+
+```sql
+-- Indice per timestamp
+CREATE INDEX idx_session_logs_timestamp ON session_logs(timestamp);
+
+-- Indice per utente
+CREATE INDEX idx_session_logs_user ON session_logs(user_uuid);
+
+-- Indice per tipo evento
+CREATE INDEX idx_session_logs_event_type ON session_logs(event_type);
+
+-- Indice per hash token (per lookup sessioni)
+CREATE INDEX idx_session_logs_token_hash ON session_logs(session_token_hash);
+```
+
+## 🔧 **Enums e Tipi Personalizzati**
+
+### **UserRole Enum**
+
+```sql
+CREATE TYPE user_role_enum AS ENUM ('user', 'admin');
+```
+
+### **Event Types**
+
+```sql
+-- Audit Event Types
+CREATE TYPE audit_event_type AS ENUM (
+    'USER_LOGIN_SUCCESS',
+    'USER_LOGIN_FAILED',
+    'USER_LOGOUT',
+    'USER_REGISTRATION',
+    'USER_EMAIL_VERIFICATION',
+    'USER_PASSWORD_RESET',
+    'USER_PROFILE_UPDATE',
+    'ADMIN_USER_DELETE',
+    'ADMIN_USER_UPDATE',
+    'SYSTEM_BACKUP_CREATED',
+    'SYSTEM_BACKUP_RESTORED'
+);
+
+-- Security Event Types
+CREATE TYPE security_event_type AS ENUM (
+    'USER_LOGIN_SUCCESS',
+    'USER_LOGIN_FAILED',
+    'BRUTE_FORCE_ATTEMPT',
+    'SUSPICIOUS_ACTIVITY',
+    'ACCOUNT_LOCKED',
+    'PASSWORD_CHANGED',
+    'EMAIL_VERIFIED',
+    'SESSION_CREATED',
+    'SESSION_TERMINATED',
+    'DATA_EXPORT_REQUESTED',
+    'ACCOUNT_DELETION_REQUESTED'
+);
+
+-- Session Event Types
+CREATE TYPE session_event_type AS ENUM (
+    'CREATED',
+    'REFRESHED',
+    'TERMINATED',
+    'EXPIRED',
+    'INVALIDATED'
+);
+```
+
+## 📈 **Performance e Ottimizzazioni**
+
+### **Indici Compositi**
+
+```sql
+-- Indice per query di audit per utente e periodo
+CREATE INDEX idx_audit_logs_user_time_range ON audit_logs(user_uuid, timestamp DESC);
+
+-- Indice per query di sicurezza per severità e periodo
+CREATE INDEX idx_security_logs_severity_time ON security_logs(severity, timestamp DESC);
+
+-- Indice per sessioni attive
+CREATE INDEX idx_session_logs_active_sessions ON session_logs(user_uuid, event_type, timestamp DESC);
+```
+
+### **Partitioning (Futuro)**
+
+```sql
+-- Partitioning per audit_logs per mese
+CREATE TABLE audit_logs_y2024m01 PARTITION OF audit_logs
+FOR VALUES FROM ('2024-01-01') TO ('2024-02-01');
+
+-- Partitioning per security_logs per mese
+CREATE TABLE security_logs_y2024m01 PARTITION OF security_logs
+FOR VALUES FROM ('2024-01-01') TO ('2024-02-01');
+```
+
+### **VACUUM e Maintenance**
+
+```sql
+-- Configurazione automatica VACUUM
+ALTER TABLE audit_logs SET (autovacuum_vacuum_scale_factor = 0.1);
+ALTER TABLE security_logs SET (autovacuum_vacuum_scale_factor = 0.1);
+ALTER TABLE session_logs SET (autovacuum_vacuum_scale_factor = 0.1);
+
+-- Configurazione per tabelle di log
+ALTER TABLE audit_logs SET (fillfactor = 90);
+ALTER TABLE security_logs SET (fillfactor = 90);
+ALTER TABLE session_logs SET (fillfactor = 90);
+```
+
+## 🔒 **Sicurezza Database**
+
+### **Row Level Security (RLS)**
+
+```sql
+-- Abilita RLS per audit_logs
+ALTER TABLE audit_logs ENABLE ROW LEVEL SECURITY;
+
+-- Policy per utenti: possono vedere solo i propri log
+CREATE POLICY user_audit_logs_policy ON audit_logs
+FOR SELECT TO authenticated_user
+USING (user_uuid = current_setting('app.current_user_uuid')::UUID);
+
+-- Policy per admin: possono vedere tutti i log
+CREATE POLICY admin_audit_logs_policy ON audit_logs
+FOR ALL TO admin_role
+USING (true);
+```
+
+### **Crittografia**
+
+```sql
+-- Estensione per crittografia
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+-- Funzione per hash sicuro
+CREATE OR REPLACE FUNCTION secure_hash(input TEXT)
+RETURNS TEXT AS $$
+BEGIN
+    RETURN encode(digest(input, 'sha256'), 'hex');
+END;
+$$ LANGUAGE plpgsql;
+```
+
+## 📊 **Monitoring e Health Checks**
+
+### **Health Check Queries**
+
+```sql
+-- Controllo connessioni attive
+SELECT count(*) as active_connections 
+FROM pg_stat_activity 
+WHERE state = 'active';
+
+-- Controllo dimensioni tabelle
+SELECT 
+    schemaname,
+    tablename,
+    pg_size_pretty(pg_total_relation_size(schemaname||'.'||tablename)) as size
+FROM pg_tables 
+WHERE schemaname = 'public'
+ORDER BY pg_total_relation_size(schemaname||'.'||tablename) DESC;
+
+-- Controllo performance query
+SELECT 
+    query,
+    calls,
+    total_time,
+    mean_time,
+    rows
+FROM pg_stat_statements 
+ORDER BY total_time DESC 
+LIMIT 10;
+```
+
+### **Alerting Queries**
+
+```sql
+-- Controllo errori recenti
+SELECT count(*) as error_count
+FROM audit_logs 
+WHERE status = 'FAILED' 
+AND timestamp > NOW() - INTERVAL '1 hour';
+
+-- Controllo tentativi di login falliti
+SELECT count(*) as failed_logins
+FROM security_logs 
+WHERE event_type = 'USER_LOGIN_FAILED' 
+AND timestamp > NOW() - INTERVAL '15 minutes';
+
+-- Controllo sessioni attive
+SELECT count(DISTINCT user_uuid) as active_users
+FROM session_logs 
+WHERE event_type = 'CREATED' 
+AND timestamp > NOW() - INTERVAL '1 hour';
+```
+
+## 🔄 **Backup e Recovery**
+
+### **Backup Strategy**
+
+```bash
+# Backup completo
+pg_dump -h localhost -U pandom_user -d pandom_db > backup_$(date +%Y%m%d_%H%M%S).sql
+
+# Backup solo schema
+pg_dump -h localhost -U pandom_user -d pandom_db --schema-only > schema_backup.sql
+
+# Backup solo dati
+pg_dump -h localhost -U pandom_user -d pandom_db --data-only > data_backup.sql
+
+# Backup compresso
+pg_dump -h localhost -U pandom_user -d pandom_db | gzip > backup_$(date +%Y%m%d_%H%M%S).sql.gz
+```
+
+### **Recovery Procedures**
+
+```bash
+# Restore completo
+psql -h localhost -U pandom_user -d pandom_db < backup_20240115_120000.sql
+
+# Restore da backup compresso
+gunzip -c backup_20240115_120000.sql.gz | psql -h localhost -U pandom_user -d pandom_db
+
+# Restore selettivo
+psql -h localhost -U pandom_user -d pandom_db -c "DELETE FROM audit_logs WHERE timestamp < '2024-01-01';"
+```
+
+## 📋 **Migration Strategy**
+
+### **TypeORM Migrations**
 
 ```typescript
-// User -> UserProfile (One-to-One)
-@Entity('auth_users')
-export class User {
-  @OneToOne(() => UserProfile, profile => profile.user)
-  @JoinColumn({ name: 'profile_uuid', referencedColumnName: 'uuid' })
-  profile: UserProfile;
-}
-
-// UserProfile -> User (One-to-One)
-@Entity('user_profiles')
-export class UserProfile {
-  @OneToOne(() => User, user => user.profile)
-  user: User;
-}
-```
-
-### Audit Relationships
-
-```typescript
-// Audit Logs -> User (Many-to-One)
-@Entity('audit_logs')
-export class AuditLog {
-  @ManyToOne(() => User, { nullable: true })
-  @JoinColumn({ name: 'user_uuid', referencedColumnName: 'uuid' })
-  user: User;
-}
-
-// Sessions -> User (Many-to-One)
-@Entity('sessions')
-export class Session {
-  @ManyToOne(() => User)
-  @JoinColumn({ name: 'user_uuid', referencedColumnName: 'uuid' })
-  user: User;
-}
-```
-
-### Relationship Diagram
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    RELATIONSHIPS                            │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│  ┌─────────────┐    1:1    ┌─────────────┐                │
-│  │   User      │◄─────────►│UserProfile  │                │
-│  │             │           │             │                │
-│  │ uuid (PK)   │           │ uuid (PK)   │                │
-│  │ email       │           │ tags[]      │                │
-│  │ role        │           │ metadata    │                │
-│  └─────────────┘           └─────────────┘                │
-│         │                           │                      │
-│         │ 1:N                       │ 1:N                  │
-│         ▼                           ▼                      │
-│  ┌─────────────┐           ┌─────────────┐                │
-│  │ AuditLogs   │           │  Sessions   │                │
-│  │             │           │             │                │
-│  │ user_uuid   │           │ user_uuid   │                │
-│  │ event_type  │           │ token       │                │
-│  │ timestamp   │           │ expires_at  │                │
-│  └─────────────┘           └─────────────┘                │
-└─────────────────────────────────────────────────────────────┘
-```
-
-## 📝 Data Types & Constraints
-
-### PostgreSQL Data Types
-
-| Type | Usage | Example | Benefits |
-|------|-------|---------|----------|
-| **UUID** | Primary keys | `123e4567-e89b-12d3-a456-426614174000` | Security, uniqueness |
-| **VARCHAR(255)** | Email, names | `user@example.com` | Length validation |
-| **TEXT** | Long content | `Long description...` | Unlimited length |
-| **TEXT[]** | Tags array | `['tag1', 'tag2']` | Array operations |
-| **JSONB** | Metadata | `{"key": "value"}` | Flexible schema |
-| **TIMESTAMP** | Dates | `2024-01-15 10:30:00` | Timezone support |
-| **BOOLEAN** | Flags | `true/false` | Simple boolean logic |
-| **ENUM** | Roles | `'admin'/'user'` | Type safety |
-
-### Custom Types
-
-```sql
--- User Role Enum
-CREATE TYPE userrole AS ENUM ('admin', 'user');
-
--- Usage in tables
-role userrole DEFAULT 'user'
-```
-
-### Constraints
-
-```sql
--- Primary Key Constraints
-PRIMARY KEY (uuid)
-
--- Unique Constraints
-UNIQUE (email)
-UNIQUE (profile_uuid)
-
--- Foreign Key Constraints
-FOREIGN KEY (profile_uuid) REFERENCES user_profiles(uuid)
-FOREIGN KEY (user_uuid) REFERENCES auth_users(uuid)
-
--- Check Constraints
-CHECK (email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$')
-CHECK (role IN ('admin', 'user'))
-```
-
-## ⚡ Indexes & Performance
-
-### Primary Indexes
-
-```sql
--- Primary Key Indexes (automatic)
-CREATE INDEX ON auth_users (uuid);
-CREATE INDEX ON user_profiles (uuid);
-
--- Unique Indexes (automatic)
-CREATE UNIQUE INDEX ON auth_users (email);
-CREATE UNIQUE INDEX ON auth_users (profile_uuid);
-```
-
-### Performance Indexes
-
-```sql
--- Email lookup for authentication
-CREATE INDEX idx_auth_users_email ON auth_users (email);
-
--- Role-based queries
-CREATE INDEX idx_auth_users_role ON auth_users (role);
-
--- Active user queries
-CREATE INDEX idx_auth_users_active ON auth_users (is_active) WHERE is_active = true;
-
--- Verification token lookup
-CREATE INDEX idx_auth_users_verification ON auth_users (verification_token) WHERE verification_token IS NOT NULL;
-
--- Reset token lookup
-CREATE INDEX idx_auth_users_reset ON auth_users (reset_token) WHERE reset_token IS NOT NULL;
-
--- Audit logs by user and time
-CREATE INDEX idx_audit_logs_user_time ON audit_logs (user_uuid, timestamp DESC);
-
--- Sessions by user and expiration
-CREATE INDEX idx_sessions_user_expires ON sessions (user_uuid, expires_at);
-
--- Tags search (GIN index for array operations)
-CREATE INDEX idx_user_profiles_tags ON user_profiles USING GIN (tags);
-
--- Metadata search (GIN index for JSONB)
-CREATE INDEX idx_user_profiles_metadata ON user_profiles USING GIN (metadata);
-```
-
-### Query Optimization
-
-```sql
--- Efficient user lookup with profile
-SELECT u.*, p.tags, p.metadata
-FROM auth_users u
-LEFT JOIN user_profiles p ON u.profile_uuid = p.uuid
-WHERE u.email = $1 AND u.is_active = true;
-
--- Efficient audit log queries
-SELECT * FROM audit_logs
-WHERE user_uuid = $1
-ORDER BY timestamp DESC
-LIMIT 100;
-
--- Tag-based user search
-SELECT u.* FROM auth_users u
-JOIN user_profiles p ON u.profile_uuid = p.uuid
-WHERE 'developer' = ANY(p.tags);
-```
-
-## 🔄 Migrations & Seeding
-
-### TypeORM Migrations
-
-```typescript
-// Example migration: Add user profile table
-export class CreateUserProfiles1234567890123 implements MigrationInterface {
-    name = 'CreateUserProfiles1234567890123'
+// Esempio migrazione
+export class CreateAuditLogsTable1234567890123 implements MigrationInterface {
+    name = 'CreateAuditLogsTable1234567890123'
 
     public async up(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.query(`
-            CREATE TABLE "user_profiles" (
-                "uuid" uuid NOT NULL DEFAULT uuid_generate_v4(),
-                "tags" text array NOT NULL DEFAULT '{}',
-                "metadata" jsonb NOT NULL DEFAULT '{}',
-                "created_at" TIMESTAMP NOT NULL DEFAULT now(),
-                "updated_at" TIMESTAMP NOT NULL DEFAULT now(),
-                CONSTRAINT "PK_user_profiles" PRIMARY KEY ("uuid")
-            )
-        `);
+        await queryRunner.createTable(
+            new Table({
+                name: 'audit_logs',
+                columns: [
+                    {
+                        name: 'id',
+                        type: 'uuid',
+                        isPrimary: true,
+                        generationStrategy: 'uuid',
+                        default: 'gen_random_uuid()',
+                    },
+                    {
+                        name: 'event_type',
+                        type: 'varchar',
+                        length: '100',
+                        isNullable: false,
+                    },
+                    // ... altri campi
+                ],
+                indices: [
+                    {
+                        name: 'idx_audit_logs_timestamp',
+                        columnNames: ['timestamp'],
+                    },
+                ],
+            }),
+            true
+        );
     }
 
     public async down(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.query(`DROP TABLE "user_profiles"`);
+        await queryRunner.dropTable('audit_logs');
     }
 }
 ```
 
-### Database Seeding
+## 🎯 **Best Practices**
 
-```typescript
-// Admin user seeding
-export class SeedAdminUser implements DataSource {
-    async run(dataSource: DataSource): Promise<void> {
-        const userRepository = dataSource.getRepository(User);
-        const profileRepository = dataSource.getRepository(UserProfile);
+### **Design Patterns**
 
-        // Create admin profile
-        const profile = profileRepository.create({
-            tags: ['admin', 'system'],
-            metadata: {
-                role: 'administrator',
-                permissions: ['all']
-            }
-        });
-        await profileRepository.save(profile);
+1. **UUID Primary Keys**: Per sicurezza e distribuzione
+2. **Soft Deletes**: Per audit trail completo
+3. **Audit Logging**: Per compliance e debugging
+4. **JSONB**: Per metadati flessibili
+5. **Indici Ottimizzati**: Per performance query
+6. **Foreign Key Constraints**: Per integrità dati
 
-        // Create admin user
-        const user = userRepository.create({
-            email: 'admin@pandom.com',
-            password_hash: await bcrypt.hash('admin123', 12),
-            role: UserRole.admin,
-            is_active: true,
-            is_verified: true,
-            is_configured: true,
-            profile_uuid: profile.uuid
-        });
-        await userRepository.save(user);
-    }
-}
-```
+### **Performance Guidelines**
 
-### Migration Commands
+1. **Indici**: Solo su campi utilizzati nelle query
+2. **Partitioning**: Per tabelle di log grandi
+3. **VACUUM**: Configurazione automatica
+4. **Connection Pooling**: Per gestione connessioni
+5. **Query Optimization**: Analisi regolare delle query
 
-```bash
-# Generate new migration
-npm run migration:generate -- src/database/migrations/NewMigration
+### **Security Guidelines**
 
-# Run migrations
-npm run migration:run
-
-# Revert last migration
-npm run migration:revert
-
-# Show migration status
-npm run migration:show
-```
-
-## 🛠️ Database Management
-
-### Connection Configuration
-
-```typescript
-// TypeORM configuration
-TypeOrmModule.forRootAsync({
-    imports: [ConfigModule],
-    useFactory: (configService: ConfigService) => ({
-        type: 'postgres',
-        host: configService.get('DB_HOST'),
-        port: configService.get('DB_PORT'),
-        username: configService.get('DB_USERNAME'),
-        password: configService.get('DB_PASSWORD'),
-        database: configService.get('DB_DATABASE'),
-        entities: [User, UserProfile],
-        synchronize: false, // Use migrations in production
-        logging: configService.get('NODE_ENV') === 'development',
-        ssl: configService.get('NODE_ENV') === 'production',
-        extra: {
-            max: 20, // Connection pool size
-            connectionTimeoutMillis: 5000,
-            idleTimeoutMillis: 30000,
-        }
-    }),
-    inject: [ConfigService],
-})
-```
-
-### Health Checks
-
-```typescript
-// Database health check
-async checkDatabaseHealth(): Promise<boolean> {
-    try {
-        await this.dataSource.query('SELECT 1');
-        return true;
-    } catch (error) {
-        this.logger.error('Database health check failed:', error);
-        return false;
-    }
-}
-
-// Table existence check
-async checkTables(): Promise<boolean> {
-    try {
-        const result = await this.dataSource.query(`
-            SELECT COUNT(*) FROM information_schema.tables 
-            WHERE table_schema = 'public' 
-            AND table_name IN ('auth_users', 'user_profiles')
-        `);
-        return parseInt(result[0].count) === 2;
-    } catch (error) {
-        return false;
-    }
-}
-```
-
-### Backup & Recovery
-
-```bash
-# Database backup
-pg_dump -h localhost -U pandom_user -d pandom_db > backup.sql
-
-# Database restore
-psql -h localhost -U pandom_user -d pandom_db < backup.sql
-
-# Automated backup script
-#!/bin/bash
-BACKUP_DIR="/backups"
-DATE=$(date +%Y%m%d_%H%M%S)
-pg_dump -h $DB_HOST -U $DB_USER -d $DB_NAME > $BACKUP_DIR/backup_$DATE.sql
-```
-
-## 🔒 Security Considerations
-
-### Data Protection
-
-```sql
--- Encrypt sensitive columns
-ALTER TABLE auth_users 
-ADD COLUMN password_hash_encrypted BYTEA;
-
--- Row Level Security (RLS)
-ALTER TABLE auth_users ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY user_isolation ON auth_users
-    FOR ALL USING (uuid = current_user_id());
-
--- Audit triggers
-CREATE OR REPLACE FUNCTION audit_trigger_function()
-RETURNS TRIGGER AS $$
-BEGIN
-    INSERT INTO audit_logs (user_uuid, event_type, details)
-    VALUES (current_user_id(), TG_OP, row_to_json(NEW));
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER audit_users_trigger
-    AFTER INSERT OR UPDATE OR DELETE ON auth_users
-    FOR EACH ROW EXECUTE FUNCTION audit_trigger_function();
-```
-
-### Access Control
-
-```sql
--- Create application user with limited privileges
-CREATE USER pandom_app WITH PASSWORD 'secure_password';
-
--- Grant necessary permissions
-GRANT CONNECT ON DATABASE pandom_db TO pandom_app;
-GRANT USAGE ON SCHEMA public TO pandom_app;
-GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO pandom_app;
-GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO pandom_app;
-
--- Revoke unnecessary permissions
-REVOKE CREATE ON SCHEMA public FROM pandom_app;
-REVOKE DROP ON SCHEMA public FROM pandom_app;
-```
-
-### Monitoring & Alerts
-
-```sql
--- Monitor failed login attempts
-SELECT COUNT(*) as failed_logins
-FROM audit_logs 
-WHERE event_type = 'login_failed' 
-AND timestamp > NOW() - INTERVAL '1 hour';
-
--- Monitor suspicious activity
-SELECT user_uuid, COUNT(*) as activity_count
-FROM audit_logs 
-WHERE timestamp > NOW() - INTERVAL '1 hour'
-GROUP BY user_uuid 
-HAVING COUNT(*) > 100;
-
--- Clean up expired sessions
-DELETE FROM sessions 
-WHERE expires_at < NOW();
-```
+1. **RLS**: Row Level Security per isolamento dati
+2. **Crittografia**: Per dati sensibili
+3. **Audit Trail**: Logging completo delle operazioni
+4. **Access Control**: Ruoli e permessi granulari
+5. **Backup Encryption**: Per backup sicuri
 
 ---
 
-**Pandom Stack Database** provides a robust, secure, and scalable foundation for user management and data storage with comprehensive audit trails and performance optimization. 
+**Pandom Stack Database** - Design database enterprise-grade con focus su sicurezza, performance e compliance.
