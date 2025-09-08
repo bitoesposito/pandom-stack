@@ -21,7 +21,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { FormsModule } from '@angular/forms';
 import { SystemStatusResponse, BackupResponse } from '../../models/resilience.models';
 import { SystemMetricsResponse, DetailedSystemMetricsResponse } from '../../models/admin.models';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, takeUntil, debounceTime, distinctUntilChanged } from 'rxjs';
 import { PaginatorModule } from 'primeng/paginator';
 import { CookieAuthService } from '../../services/cookie-auth.service';
 
@@ -108,6 +108,9 @@ export class ControlPanelComponent implements OnInit, OnDestroy {
 
   // Destroy subject for proper cleanup
   private destroy$ = new Subject<void>();
+  
+  // Search subject for reactive search
+  private searchSubject$ = new Subject<string>();
 
   get activeSessionsCount(): number {
     return this.sessions.filter(session => session.is_active).length;
@@ -143,6 +146,19 @@ export class ControlPanelComponent implements OnInit, OnDestroy {
       }
     });
     this.loadSessions();
+    
+    // Setup reactive search with debounce and distinctUntilChanged
+    this.searchSubject$.pipe(
+      debounceTime(300), // Wait 300ms after user stops typing
+      distinctUntilChanged(), // Only emit if value actually changed
+      takeUntil(this.destroy$)
+    ).subscribe(searchQuery => {
+      this.userSearchQuery = searchQuery;
+      // Only search if dialog is visible to prevent unnecessary requests
+      if (this.isUserManagementDialogVisible) {
+        this.loadUsers(1, this.usersRows); // Reset to first page when searching
+      }
+    });
   }
 
   // Metodo da chiamare dopo login
@@ -662,8 +678,17 @@ export class ControlPanelComponent implements OnInit, OnDestroy {
   }
 
   onUserSearch() {
-    // Reset to first page when searching
-    this.loadUsers(1, this.usersRows);
+    // Trigger reactive search only if dialog is visible
+    if (this.isUserManagementDialogVisible) {
+      this.searchSubject$.next(this.userSearchQuery);
+    }
+  }
+  
+  onSearchInputChange(event: any) {
+    // Trigger search on input change only if dialog is visible
+    if (this.isUserManagementDialogVisible) {
+      this.searchSubject$.next(event.target.value);
+    }
   }
 
   deleteUser(user: any) {

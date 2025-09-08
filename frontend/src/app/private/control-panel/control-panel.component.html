@@ -453,7 +453,7 @@
 
 <!-- Security Logs Dialog -->
 <p-dialog [header]="'profile.dialogs.security-logs' | translate" [modal]="true"
-    [(visible)]="isSecurityLogsDialogVisible" [breakpoints]="{ '1199px': '75vw', '575px': '90vw' }" [draggable]="false"
+    [(visible)]="isSecurityLogsDialogVisible"     [breakpoints]="{ '1199px': '75vw', '575px': '90vw' }" [style]="{ width: '80vw', height: '70vh' }" [draggable]="false"
     [resizable]="false" [maximizable]="true">
     <div class="flex flex-column gap-3">
         <div *ngIf="isLoadingSecurityLogs" class="flex justify-content-center p-4">
@@ -538,11 +538,11 @@
 <!-- User Management Dialog -->
 <p-dialog [header]="'profile.dialogs.user-management' | translate" [modal]="true"
     [(visible)]="isUserManagementDialogVisible" [breakpoints]="{ '1199px': '75vw', '575px': '90vw' }"
-    [draggable]="false" [resizable]="false" [maximizable]="true">
+    [draggable]="false" [resizable]="false" [maximizable]="true" [style]="{ width: '80vw', height: '70vh' }">
     <div class="flex flex-column gap-3">
         <!-- Search Bar for Users -->
         <div class="flex gap-2 align-items-center">
-            <input pInputText type="text" [(ngModel)]="userSearchQuery" (keyup.enter)="onUserSearch()"
+            <input pInputText type="text" [(ngModel)]="userSearchQuery" (input)="onSearchInputChange($event)" (keyup.enter)="onUserSearch()"
                 [placeholder]="'profile.user-management.search-placeholder' | translate" class="w-full" />
             <p-button [label]="'common.search' | translate" icon="pi pi-search" severity="secondary" outlined="true"
                 (click)="onUserSearch()" [disabled]="isLoadingUsers" />
@@ -663,7 +663,7 @@
 
 <!-- Audit Logs Dialog -->
 <p-dialog [header]="'profile.dialogs.audit-logs' | translate" [modal]="true" [(visible)]="isAuditLogsDialogVisible"
-    [breakpoints]="{ '1199px': '75vw', '575px': '90vw' }" [draggable]="false" [resizable]="false" [maximizable]="true">
+    [breakpoints]="{ '1199px': '75vw', '575px': '90vw' }" [style]="{ width: '80vw', height: '70vh' }" [draggable]="false" [resizable]="false" [maximizable]="true">
     <div class="flex flex-column gap-3">
         <div *ngIf="isLoadingAuditLogs" class="flex justify-content-center p-4">
             <i class="pi pi-spin pi-spinner text-xl"></i>
@@ -798,7 +798,7 @@
 <!-- Backup Management Dialog -->
 <p-dialog [header]="'profile.system-status.backup-management' | translate" [modal]="true"
     [(visible)]="isBackupManagementDialogVisible" [breakpoints]="{ '1199px': '75vw', '575px': '90vw' }"
-    [draggable]="false" [resizable]="false" [maximizable]="true">
+    [style]="{ width: '80vw', height: '70vh' }" [draggable]="false" [resizable]="false" [maximizable]="true">
     <div class="flex flex-column gap-3">
         <!-- Backup Actions -->
         <div class="flex gap-2 justify-content-end">
