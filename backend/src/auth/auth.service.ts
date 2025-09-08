@@ -248,6 +248,10 @@ export class AuthService {
       const userAgent = req?.headers['user-agent'] || 'unknown';
       const deviceInfo = this.getDeviceInfo(userAgent);
 
+      // Update last login timestamp
+      user.last_login_at = new Date();
+      await this.userRepository.save(user);
+
       // Create session
       let session;
       try {
@@ -302,6 +306,15 @@ export class AuthService {
           tags: user.profile.tags
         };
       }
+
+      // Log successful login
+      await this.auditService.logLoginSuccess(
+        user.uuid,
+        user.email,
+        ipAddress,
+        userAgent,
+        session.id
+      );
 
       this.logger.log('User logged in successfully', { userId: user.uuid, email: user.email });
 
@@ -573,7 +586,8 @@ export class AuthService {
             is_verified: user.is_verified,
             is_active: user.is_active,
             created_at: user.created_at,
-            updated_at: user.updated_at
+            updated_at: user.updated_at,
+            last_login_at: user.last_login_at
           },
           profile: user.profile ? {
             uuid: user.profile.uuid,
